@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAppState } from '@/lib/state';
-import { ChecklistItemForm } from '@/lib/types';
+import { ChecklistItemForm, isChecklistItem } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
@@ -108,48 +108,50 @@ export function DayToDayTab() {
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm swipe-hint"
-              style={{ borderLeftColor: item.color, borderLeftWidth: '4px' }}
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={item.isDone}
-                  onChange={() => toggleChecklistItem(item.id)}
-                  className="h-5 w-5 text-primary-600 rounded focus:ring-primary-500"
-                />
-                <div className="flex-1">
-                  <h3 className={`font-medium ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.title}
-                  </h3>
-                  {item.category && (
-                    <span className="text-sm text-gray-500">{item.category}</span>
-                  )}
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => handleArchive(item.id)}
-                    className="text-gray-400 hover:text-gray-600 p-1"
-                    title="Archive"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="text-red-400 hover:text-red-600 p-1"
-                    title="Delete"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+            isChecklistItem(item) && (
+              <div
+                key={item.id}
+                className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm swipe-hint"
+                style={{ borderLeftColor: item.color, borderLeftWidth: '4px' }}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={item.isDone}
+                    onChange={() => toggleChecklistItem(item.id)}
+                    className="h-5 w-5 text-primary-600 rounded focus:ring-primary-500"
+                  />
+                  <div className="flex-1">
+                    <h3 className={`font-medium ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                      {item.title}
+                    </h3>
+                    {item.category && (
+                      <span className="text-sm text-gray-500">{item.category}</span>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleArchive(item.id)}
+                      className="text-gray-400 hover:text-gray-600 p-1"
+                      title="Archive"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-400 hover:text-red-600 p-1"
+                      title="Delete"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )
           ))}
           {items.length === 0 && (
             <div className="text-center py-12">
