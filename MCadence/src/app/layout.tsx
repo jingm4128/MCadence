@@ -5,7 +5,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'mcadence',
   description: 'Personal time & energy management tool',
-  metadataBase: new URL('http://localhost:3000'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

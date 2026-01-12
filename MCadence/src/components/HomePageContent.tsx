@@ -10,7 +10,6 @@ import { SpendMyTimeTab } from '@/components/tabs/SpendMyTimeTab';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { ImportExportModal } from '@/components/ui/ImportExportModal';
 import { exportState, clearState, saveStateImmediate } from '@/lib/storage';
-import { exportItemsToCSV, exportActionsToCSV, downloadCSV } from '@/lib/csvUtils';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 
 export default function HomePageContent() {
@@ -28,7 +27,7 @@ export default function HomePageContent() {
 
   const handleExport = () => {
     try {
-      // Export JSON backup
+      // Export JSON backup (includes all items, actions, and categories)
       const jsonData = exportState();
       const jsonBlob = new Blob([jsonData], { type: 'application/json' });
       const jsonUrl = URL.createObjectURL(jsonBlob);
@@ -39,13 +38,6 @@ export default function HomePageContent() {
       jsonLink.click();
       document.body.removeChild(jsonLink);
       URL.revokeObjectURL(jsonUrl);
-
-      // Export CSV files
-      const itemsCSV = exportItemsToCSV(state.items);
-      const actionsCSV = exportActionsToCSV(state.actions);
-      
-      downloadCSV(itemsCSV, `mcadence_items_${new Date().toISOString().split('T')[0]}.csv`);
-      downloadCSV(actionsCSV, `mcadence_actions_${new Date().toISOString().split('T')[0]}.csv`);
     } catch (error) {
       console.error('Export failed:', error);
     }

@@ -80,11 +80,6 @@ export interface AppState {
   categories: Category[]; // Pre-populated categories
 }
 
-// Export default categories for use in other files
-export const DEFAULT_CATEGORIES: Category[] = [
-  // This will be imported from constants
-];
-
 // Type guards
 export function isChecklistItem(item: Item): item is ChecklistItem {
   return item.tab === "dayToDay" || item.tab === "hitMyGoal";

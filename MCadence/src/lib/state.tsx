@@ -1,12 +1,11 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
-import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, Category, DEFAULT_CATEGORIES } from './types';
-import { DEFAULT_CATEGORIES as PREPOPULATED_CATEGORIES } from './constants';
+import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm } from './types';
+import { DEFAULT_CATEGORIES } from './constants';
 import { saveState, loadState } from './storage';
 import { generateId } from '@/utils/uuid';
 import { toISOStringLocal, getWeekStart, getWeekEnd, getNowInTimezone, needsWeekReset } from '@/utils/date';
-import { DEFAULT_COLOR } from './constants';
 
 // Action types for the reducer
 type AppStateAction =
@@ -169,7 +168,7 @@ const AppStateContext = createContext<{
 
 // Provider component
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(appStateReducer, { items: [], actions: [], categories: PREPOPULATED_CATEGORIES });
+  const [state, dispatch] = useReducer(appStateReducer, { items: [], actions: [], categories: DEFAULT_CATEGORIES });
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Load state from localStorage on mount
@@ -399,11 +398,5 @@ export function useAppState() {
 
 export type AppStateContextType = ReturnType<typeof useAppState>;
 
-// Type guards
-export function isChecklistItem(item: Item): item is ChecklistItem {
-  return item.tab === 'dayToDay' || item.tab === 'hitMyGoal';
-}
-
-export function isTimeProject(item: Item): item is TimeItem {
-  return item.tab === 'spendMyTime';
-}
+// Type guards are in types.ts - re-export them here for convenience
+export { isChecklistItem, isTimeProject } from './types';

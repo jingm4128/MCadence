@@ -1,8 +1,9 @@
+'use client';
+
 import { useState } from 'react';
-import { AppState, ActionLog } from '@/lib/types';
+import { AppState } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { importItemsFromCSV, importActionsFromCSV } from '@/lib/csvUtils';
 
 interface ImportExportModalProps {
   isOpen: boolean;
@@ -11,35 +12,27 @@ interface ImportExportModalProps {
 }
 
 export function ImportExportModal({ isOpen, onClose, onImport }: ImportExportModalProps) {
-  const [itemsFile, setItemsFile] = useState<File | null>(null);
-  const [actionsFile, setActionsFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [importMode, setImportMode] = useState<'combine' | 'overwrite'>('combine');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleItemsFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === 'text/csv') {
-      setItemsFile(file);
-      setError(null);
-    } else {
-      setError('Please select a valid CSV file for items');
-    }
-  };
-
-  const handleActionsFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === 'text/csv') {
-      setActionsFile(file);
-      setError(null);
-    } else {
-      setError('Please select a valid CSV file for actions');
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      if (selectedFile.type === 'application/json' || selectedFile.name.endsWith('.json')) {
+        setFile(selectedFile);
+        setError(null);
+      } else {
+        setError('Please select a valid JSON backup file');
+        setFile(null);
+      }
     }
   };
 
   const handleImport = async () => {
-    if (!itemsFile) {
-      setError('Items file is required');
+    if (!file) {
+      setError('Please select a backup file');
       return;
     }
 
@@ -47,68 +40,65 @@ export function ImportExportModal({ isOpen, onClose, onImport }: ImportExportMod
     setError(null);
 
     try {
-      // Read items file
-      const itemsText = await itemsFile.text();
-      const items = importItemsFromCSV(itemsText);
+      const text = await file.text();
+      const parsed = JSON.parse(text);
 
-      // Read actions file if provided
-      let actions: ActionLog[] = [];
-      if (actionsFile) {
-        const actionsText = await actionsFile.text();
-        actions = importActionsFromCSV(actionsText);
+      // Validate the imported state structure
+      if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.actions)) {
+        throw new Error('Invalid backup file format');
       }
 
-      // Create imported state
       const importedState: AppState = {
-        items,
-        actions,
-        categories: [] // Will be populated from constants
+        items: parsed.items || [],
+        actions: parsed.actions || [],
+        categories: parsed.categories || []
       };
 
       onImport({ state: importedState, mode: importMode });
       onClose();
       
       // Reset form
-      setItemsFile(null);
-      setActionsFile(null);
+      setFile(null);
       setImportMode('combine');
     } catch (err) {
-      setError(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      if (err instanceof SyntaxError) {
+        setError('Invalid JSON file. Please select a valid mcadence backup file.');
+      } else {
+        setError(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleClose = () => {
+    setFile(null);
+    setError(null);
+    setImportMode('combine');
+    onClose();
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Import Data">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Import Data">
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Items CSV * (required)
-          </label>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleItemsFileChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
-          {itemsFile && (
-            <p className="mt-1 text-sm text-green-600">Selected: {itemsFile.name}</p>
-          )}
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            Select a <strong>mcadence-backup-*.json</strong> file that was exported from this app.
+          </p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Actions CSV (optional)
+            Backup File (JSON)
           </label>
           <input
             type="file"
-            accept=".csv"
-            onChange={handleActionsFileChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            accept=".json,application/json"
+            onChange={handleFileChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
-          {actionsFile && (
-            <p className="mt-1 text-sm text-green-600">Selected: {actionsFile.name}</p>
+          {file && (
+            <p className="mt-1 text-sm text-green-600">✓ Selected: {file.name}</p>
           )}
         </div>
 
@@ -117,28 +107,28 @@ export function ImportExportModal({ isOpen, onClose, onImport }: ImportExportMod
             Import Mode
           </label>
           <div className="space-y-2">
-            <label className="flex items-center">
+            <label className="flex items-center cursor-pointer">
               <input
                 type="radio"
                 value="combine"
                 checked={importMode === 'combine'}
                 onChange={(e) => setImportMode(e.target.value as 'combine' | 'overwrite')}
-                className="mr-2"
+                className="mr-3 w-4 h-4 text-blue-600"
               />
               <span className="text-sm">
-                <strong>Combine</strong> - Merge imported data with existing data
+                <strong>Combine</strong> – Merge with existing data (keeps both)
               </span>
             </label>
-            <label className="flex items-center">
+            <label className="flex items-center cursor-pointer">
               <input
                 type="radio"
                 value="overwrite"
                 checked={importMode === 'overwrite'}
                 onChange={(e) => setImportMode(e.target.value as 'combine' | 'overwrite')}
-                className="mr-2"
+                className="mr-3 w-4 h-4 text-blue-600"
               />
               <span className="text-sm">
-                <strong>Overwrite</strong> - Replace all existing data with imported data
+                <strong>Overwrite</strong> – Replace all existing data
               </span>
             </label>
           </div>
@@ -150,17 +140,17 @@ export function ImportExportModal({ isOpen, onClose, onImport }: ImportExportMod
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Button
             variant="secondary"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={isProcessing}
           >
             Cancel
           </Button>
           <Button
             onClick={handleImport}
-            disabled={!itemsFile || isProcessing}
+            disabled={!file || isProcessing}
           >
             {isProcessing ? 'Importing...' : 'Import'}
           </Button>
