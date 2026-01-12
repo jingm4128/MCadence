@@ -16,9 +16,9 @@ MCadence is a personal time & energy management tool built with Next.js, TypeScr
 
 ### App Structure
 Single-page application with:
-- Top: App title "mcadence" and Menu button
+- Top: "Add Category" button (replacing tab titles)
 - Body: Active tab content
-- Bottom: 3-tab bar with icons + labels
+- Bottom: 3-tab bar with enhanced highlighting for active tab
 
 ## Data Models (TypeScript Interfaces)
 
@@ -27,19 +27,41 @@ export type TabId = "dayToDay" | "hitMyGoal" | "spendMyTime";
 
 export type ItemStatus = "active" | "done" | "archived";
 
-export type Frequency = "weekly"; // v1: just support weekly, Monday–Sunday, America/New_York
+export type Frequency = "daily" | "weekly" | "monthly" | "quarterly" | "annually";
+
+// Category System - Hierarchical (L1/L2)
+export interface Category {
+  id: string;
+  name: string; // L1 name (e.g., "必要日常")
+  color: string; // Black, Yellow, Green, Red, Orange
+  subcategories: Subcategory[];
+}
+
+export interface Subcategory {
+  id: string;
+  name: string; // L2 name (e.g., "睡觉/休息")
+  icon: string; // New icon system
+  parentId: string;
+}
+
+export interface RecurrenceSettings {
+  frequency: Frequency;
+  occurrences: number; // Number of times to repeat
+  isEnabled: boolean;
+  nextDue?: string; // EST timestamp
+}
 
 export interface BaseItem {
   id: string; // uuid
   tab: TabId;
   title: string;
-  category: string;  // string label (user-editable)
-  color: string;     // CSS color or tailwind class name; user can override
+  categoryId: string; // Reference to subcategory
   sortKey: number;   // for ordering within tab
   status: ItemStatus;
   createdAt: string;  // ISO
   updatedAt: string;  // ISO
   archivedAt?: string | null;
+  recurrence?: RecurrenceSettings; // For recurring items
 }
 
 export interface ChecklistItem extends BaseItem {
@@ -48,9 +70,8 @@ export interface ChecklistItem extends BaseItem {
   completedAt?: string | null;
 }
 
-export interface TimeProject extends BaseItem {
+export interface TimeItem extends BaseItem { // Renamed from TimeProject
   tab: "spendMyTime";
-  frequency: Frequency; // "weekly" for now
   requiredMinutes: number;   // e.g. 20h = 1200
   completedMinutes: number;  // accumulated in current period
   currentSessionStart?: string | null; // ISO when timing is running
@@ -58,7 +79,7 @@ export interface TimeProject extends BaseItem {
   periodEnd: string;    // current period end (week)
 }
 
-export type Item = ChecklistItem | TimeProject;
+export type Item = ChecklistItem | TimeItem;
 
 export type ActionType =
   | "create"
@@ -81,8 +102,34 @@ export interface ActionLog {
 export interface AppState {
   items: Item[];
   actions: ActionLog[];
+  categories: Category[]; // Pre-populated categories
+}
+
+// Helper functions
+export function isChecklistItem(item: Item): item is ChecklistItem {
+  return item.tab === "dayToDay" || item.tab === "hitMyGoal";
+}
+
+export function isTimeItem(item: Item): item is TimeItem {
+  return item.tab === "spendMyTime";
 }
 ```
+
+## Pre-populated Categories
+
+### L1 Categories (大类) with Colors:
+1. **必要日常** (Black)
+2. **副业** (Yellow) 
+3. **兴趣/成长** (Green)
+4. **休闲放松** (Red)
+5. **娃事相关** (Orange)
+
+### L2 Subcategories (细分):
+- **必要日常**: 睡觉/休息, 工作, 洗漱, 臭美, 吃饭, 家务, 通勤, 家庭, 医疗, 其他, 孕产相关
+- **副业**: 副业筹备, 换工作, 理财, 志愿
+- **兴趣/成长**: 健身/按摩/拉伸, 社交/助人/seminar, 读书, 专项学习, 规划, 艺术爱好, 语言学习, 运动
+- **休闲放松**: 娱乐, 购物, 聚会, 旅行
+- **娃事相关**: 带娃, 卷娃, 育儿学习
 
 ## Detailed Feature Implementation
 

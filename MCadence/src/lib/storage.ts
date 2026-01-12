@@ -6,7 +6,7 @@ export function loadState(): AppState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) {
-      return { items: [], actions: [] };
+      return { items: [], actions: [], categories: [] };
     }
     
     const parsed = JSON.parse(stored);
@@ -14,21 +14,22 @@ export function loadState(): AppState {
     // Validate the parsed state
     if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.actions)) {
       console.warn('Invalid state structure in localStorage, initializing empty state');
-      return { items: [], actions: [] };
+      return { items: [], actions: [], categories: [] };
     }
     
     return {
       items: parsed.items || [],
-      actions: parsed.actions || []
+      actions: parsed.actions || [],
+      categories: parsed.categories || []
     };
   } catch (error) {
     console.error('Error loading state from localStorage:', error);
-    return { items: [], actions: [] };
+    return { items: [], actions: [], categories: [] };
   }
 }
 
 // Save state to localStorage with debouncing
-let saveTimeout: number | null = null;
+let saveTimeout: NodeJS.Timeout | null = null;
 
 export function saveState(state: AppState): void {
   if (saveTimeout) {
@@ -80,7 +81,8 @@ export function importState(jsonString: string): AppState {
     
     return {
       items: parsed.items || [],
-      actions: parsed.actions || []
+      actions: parsed.actions || [],
+      categories: parsed.categories || []
     };
   } catch (error) {
     console.error('Error importing state:', error);

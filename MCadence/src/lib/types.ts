@@ -2,19 +2,41 @@ export type TabId = "dayToDay" | "hitMyGoal" | "spendMyTime";
 
 export type ItemStatus = "active" | "done" | "archived";
 
-export type Frequency = "weekly"; // v1: just support weekly, Monday–Sunday, America/New_York
+export type Frequency = "daily" | "weekly" | "monthly" | "quarterly" | "annually";
+
+// Category System - Hierarchical (L1/L2)
+export interface Category {
+  id: string;
+  name: string; // L1 name (e.g., "必要日常")
+  color: string; // Black, Yellow, Green, Red, Orange
+  subcategories: Subcategory[];
+}
+
+export interface Subcategory {
+  id: string;
+  name: string; // L2 name (e.g., "睡觉/休息")
+  icon: string; // New icon system
+  parentId: string;
+}
+
+export interface RecurrenceSettings {
+  frequency: Frequency;
+  occurrences: number; // Number of times to repeat
+  isEnabled: boolean;
+  nextDue?: string; // EST timestamp
+}
 
 export interface BaseItem {
   id: string; // uuid
   tab: TabId;
   title: string;
-  category: string;  // string label (user-editable)
-  color: string;     // CSS color or tailwind class name; user can override
+  categoryId: string; // Reference to subcategory
   sortKey: number;   // for ordering within tab
   status: ItemStatus;
   createdAt: string;  // ISO
   updatedAt: string;  // ISO
   archivedAt?: string | null;
+  recurrence?: RecurrenceSettings; // For recurring items
 }
 
 export interface ChecklistItem extends BaseItem {
@@ -23,9 +45,8 @@ export interface ChecklistItem extends BaseItem {
   completedAt?: string | null;
 }
 
-export interface TimeProject extends BaseItem {
+export interface TimeItem extends BaseItem { // Renamed from TimeProject
   tab: "spendMyTime";
-  frequency: Frequency; // "weekly" for now
   requiredMinutes: number;   // e.g. 20h = 1200
   completedMinutes: number;  // accumulated in current period
   currentSessionStart?: string | null; // ISO when timing is running
@@ -33,7 +54,7 @@ export interface TimeProject extends BaseItem {
   periodEnd: string;    // current period end (week)
 }
 
-export type Item = ChecklistItem | TimeProject;
+export type Item = ChecklistItem | TimeItem;
 
 export type ActionType =
   | "create"
@@ -56,6 +77,7 @@ export interface ActionLog {
 export interface AppState {
   items: Item[];
   actions: ActionLog[];
+  categories: Category[]; // Pre-populated categories
 }
 
 // Type guards
@@ -63,21 +85,24 @@ export function isChecklistItem(item: Item): item is ChecklistItem {
   return item.tab === "dayToDay" || item.tab === "hitMyGoal";
 }
 
-export function isTimeProject(item: Item): item is TimeProject {
+export function isTimeItem(item: Item): item is TimeItem {
+  return item.tab === "spendMyTime";
+}
+
+// Legacy type guard for backward compatibility
+export function isTimeProject(item: Item): item is TimeItem {
   return item.tab === "spendMyTime";
 }
 
 // Helper types for forms
 export interface ChecklistItemForm {
   title: string;
-  category: string;
-  color: string;
+  categoryId: string;
 }
 
-export interface TimeProjectForm {
+export interface TimeItemForm {
   title: string;
-  category: string;
-  color: string;
+  categoryId: string;
   requiredHours: number;
   requiredMinutes: number;
 }
