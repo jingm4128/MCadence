@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { AppState, Item, ChecklistItem, TimeProject, ActionLog, TabId, ChecklistItemForm, TimeProjectForm } from './types';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, Category, DEFAULT_CATEGORIES } from './types';
+import { DEFAULT_CATEGORIES as PREPOPULATED_CATEGORIES } from './constants';
 import { saveState, loadState } from './storage';
 import { generateId } from '@/utils/uuid';
 import { toISOStringLocal, getWeekStart, getWeekEnd, getNowInTimezone, needsWeekReset } from '@/utils/date';
@@ -35,11 +36,20 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
     case 'UPDATE_ITEM':
       return {
         ...state,
-        items: state.items.map(item =>
-          item.id === action.payload.id
-            ? { ...item, ...action.payload.updates, updatedAt: toISOStringLocal() }
-            : item
-        ),
+        items: state.items.map(item => {
+          if (item.id === action.payload.id) {
+            // Create a properly typed update by merging with type safety
+            const updatedItem = { ...item, ...action.payload.updates, updatedAt: toISOStringLocal() };
+            
+            // Ensure the updated item maintains correct type structure
+            if (item.tab === 'spendMyTime') {
+              return updatedItem as TimeItem;
+            } else {
+              return updatedItem as ChecklistItem;
+            }
+          }
+          return item;
+        }),
       };
 
     case 'DELETE_ITEM':
@@ -79,9 +89,9 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
 
     case 'START_TIMER':
       // Stop any existing timer first
-      const itemsWithStoppedTimer = state.items.map((item: Item) => {
+      const itemsWithStoppedTimer = state.items.map((item: Item): Item => {
         if ('currentSessionStart' in item && item.currentSessionStart) {
-          return { ...item, currentSessionStart: null, updatedAt: toISOStringLocal() } as TimeProject;
+          return { ...item, currentSessionStart: null, updatedAt: toISOStringLocal() };
         }
         return item;
       });
@@ -89,9 +99,9 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
       // Start new timer
       return {
         ...state,
-        items: itemsWithStoppedTimer.map((item: Item) => {
+        items: itemsWithStoppedTimer.map((item: Item): Item => {
           if (item.id === action.payload && 'currentSessionStart' in item) {
-            return { ...item, currentSessionStart: toISOStringLocal(), updatedAt: toISOStringLocal() } as TimeProject;
+            return { ...item, currentSessionStart: toISOStringLocal(), updatedAt: toISOStringLocal() };
           }
           return item;
         }),
@@ -111,7 +121,7 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
               currentSessionStart: null,
               completedMinutes: item.completedMinutes + elapsedMinutes,
               updatedAt: toISOStringLocal(),
-            } as TimeProject;
+            } as TimeItem;
           }
           return item;
         }),
@@ -133,7 +143,7 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
               periodStart: toISOStringLocal(newWeekStart),
               periodEnd: toISOStringLocal(newWeekEnd),
               updatedAt: toISOStringLocal(),
-            } as TimeProject;
+            } as TimeItem;
           }
           return item;
         }),
@@ -154,37 +164,42 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
 const AppStateContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppStateAction>;
+  isHydrated: boolean;
 } | null>(null);
 
 // Provider component
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(appStateReducer, { items: [], actions: [] });
+  const [state, dispatch] = useReducer(appStateReducer, { items: [], actions: [], categories: PREPOPULATED_CATEGORIES });
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Load state from localStorage on mount
   useEffect(() => {
     const loadedState = loadState();
     dispatch({ type: 'LOAD_STATE', payload: loadedState });
+    setIsHydrated(true);
   }, []);
 
-  // Save state to localStorage whenever it changes
+  // Save state to localStorage whenever it changes (only after hydration)
   useEffect(() => {
-    if (state.items.length > 0 || state.actions.length > 0) {
+    if (isHydrated && (state.items.length > 0 || state.actions.length > 0)) {
       saveState(state);
     }
-  }, [state]);
+  }, [state, isHydrated]);
 
   // Check for weekly period reset
   useEffect(() => {
-    const timeProjects = state.items.filter(item => 'periodEnd' in item) as TimeProject[];
-    const needsReset = timeProjects.some(project => needsWeekReset(project.periodEnd));
+    if (!isHydrated) return;
+    
+    const timeItems = state.items.filter((item): item is TimeItem => 'periodEnd' in item);
+    const needsReset = timeItems.some(item => needsWeekReset(item.periodEnd));
     
     if (needsReset) {
       dispatch({ type: 'RESET_WEEKLY_PERIODS' });
     }
-  }, [state.items]);
+  }, [state.items, isHydrated]);
 
   return (
-    <AppStateContext.Provider value={{ state, dispatch }}>
+    <AppStateContext.Provider value={{ state, dispatch, isHydrated }}>
       {children}
     </AppStateContext.Provider>
   );
@@ -197,7 +212,7 @@ export function useAppState() {
     throw new Error('useAppState must be used within an AppStateProvider');
   }
 
-  const { state, dispatch } = context;
+  const { state, dispatch, isHydrated } = context;
 
   // Action creators
   const logAction = (action: Omit<ActionLog, 'id' | 'timestamp'>) => {
@@ -215,8 +230,7 @@ export function useAppState() {
       id: generateId(),
       tab,
       title: form.title,
-      category: form.category,
-      color: form.color || DEFAULT_COLOR.value,
+      categoryId: form.categoryId,
       sortKey: Date.now(),
       status: 'active',
       isDone: false,
@@ -232,21 +246,19 @@ export function useAppState() {
     });
   };
 
-  const addTimeProject = (form: TimeProjectForm) => {
+  const addTimeItem = (form: TimeItemForm) => {
     const now = getNowInTimezone();
     const weekStart = getWeekStart(now);
     const weekEnd = getWeekEnd(now);
     const isoNow = toISOStringLocal();
 
-    const newItem: TimeProject = {
+    const newItem: TimeItem = {
       id: generateId(),
       tab: 'spendMyTime',
       title: form.title,
-      category: form.category,
-      color: form.color || DEFAULT_COLOR.value,
+      categoryId: form.categoryId,
       sortKey: Date.now(),
       status: 'active',
-      frequency: 'weekly',
       requiredMinutes: form.requiredHours * 60 + form.requiredMinutes,
       completedMinutes: 0,
       currentSessionStart: null,
@@ -360,18 +372,19 @@ export function useAppState() {
     });
   };
 
-  const getActiveTimerProject = () => {
+  const getActiveTimerItem = () => {
     return state.items.find(item => 
       'currentSessionStart' in item && item.currentSessionStart !== null
-    ) as TimeProject | undefined;
+    ) as TimeItem | undefined;
   };
 
   return {
     state,
     dispatch,
+    isHydrated,
     // Action creators
     addChecklistItem,
-    addTimeProject,
+    addTimeItem,
     updateItem,
     deleteItem,
     archiveItem,
@@ -379,7 +392,7 @@ export function useAppState() {
     startTimer,
     stopTimer,
     getItemsByTab,
-    getActiveTimerProject,
+    getActiveTimerItem,
     logAction,
   };
 }
@@ -391,6 +404,6 @@ export function isChecklistItem(item: Item): item is ChecklistItem {
   return item.tab === 'dayToDay' || item.tab === 'hitMyGoal';
 }
 
-export function isTimeProject(item: Item): item is TimeProject {
+export function isTimeProject(item: Item): item is TimeItem {
   return item.tab === 'spendMyTime';
 }

@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAppState, isTimeProject } from '@/lib/state';
-import { TimeProjectForm } from '@/lib/types';
+import { useAppState } from '@/lib/state';
+import { TimeItemForm, isTimeProject } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { DEFAULT_COLOR, PRESET_COLORS, WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
+import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
+import { WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset } from '@/utils/date';
 
 export function SpendMyTimeTab() {
@@ -15,35 +16,33 @@ export function SpendMyTimeTab() {
   const [showArchive, setShowArchive] = useState(false);
   const [itemToArchive, setItemToArchive] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [formData, setFormData] = useState<TimeProjectForm>({
+  const [formData, setFormData] = useState<TimeItemForm>({
     title: '',
-    category: '',
-    color: DEFAULT_COLOR.value,
+    categoryId: '',
     requiredHours: 1,
     requiredMinutes: 0,
   });
 
   const { 
     getItemsByTab, 
-    addTimeProject, 
+    addTimeItem, 
     startTimer, 
     stopTimer, 
     archiveItem, 
     deleteItem,
-    getActiveTimerProject 
+    getActiveTimerItem 
   } = useAppState();
 
   const items = getItemsByTab('spendMyTime').filter(isTimeProject);
   const archivedItems = getItemsByTab('spendMyTime', true).filter(item => item.status === 'archived' && isTimeProject(item));
-  const activeTimerProject = getActiveTimerProject();
+  const activeTimerProject = getActiveTimerItem();
 
   const handleAddProject = () => {
     if (formData.title.trim() && (formData.requiredHours > 0 || formData.requiredMinutes > 0)) {
-      addTimeProject(formData);
+      addTimeItem(formData);
       setFormData({ 
         title: '', 
-        category: '', 
-        color: DEFAULT_COLOR.value, 
+        categoryId: '', 
         requiredHours: 1, 
         requiredMinutes: 0 
       });
@@ -133,9 +132,8 @@ export function SpendMyTimeTab() {
 
   return (
     <div>
-      {/* Header with Add button */}
+      {/* Header with Add button - Title removed as requested */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Time Projects</h2>
         <div className="flex gap-2">
           {archivedItems.length > 0 && (
             <Button
@@ -145,8 +143,8 @@ export function SpendMyTimeTab() {
               {showArchive ? 'Active' : `Archived (${archivedItems.length})`}
             </Button>
           )}
-          <Button onClick={() => setShowAddModal(true)}>
-            + Add Project
+          <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
+            +
           </Button>
         </div>
       </div>
@@ -187,8 +185,8 @@ export function SpendMyTimeTab() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-700 line-through">{project.title}</h3>
-                  {project.category && (
-                    <span className="text-sm text-gray-500">{project.category}</span>
+                  {project.categoryId && (
+                    <span className="text-sm text-gray-500">{project.categoryId}</span>
                   )}
                 </div>
                 <div className="flex gap-2">
@@ -216,22 +214,25 @@ export function SpendMyTimeTab() {
             return (
               <div
                 key={project.id}
-                className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm swipe-hint cursor-pointer transition-all ${
+                className={`bg-white p-4 rounded-lg border border-gray-200 shadow-sm swipe-hint cursor-pointer transition-all category-transition hover-lift ${
                   isActive ? 'ring-2 ring-primary-500 border-primary-500' : 'hover:shadow-md'
                 } ${status === 'overdue' ? 'border-red-200' : ''}`}
-                style={{ borderLeftColor: project.color, borderLeftWidth: '4px' }}
+                style={{ borderLeftColor: getCategoryColor(project.categoryId), borderLeftWidth: '4px' }}
                 onClick={() => handleProjectClick(project.id)}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex-1">
                     <h3 className={`font-medium ${
-                      status === 'overdue' ? 'text-red-600' : 
+                      status === 'overdue' ? 'text-red-600' :
                       isActive ? 'text-primary-900' : 'text-gray-900'
                     }`}>
                       {project.title}
                     </h3>
-                    {project.category && (
-                      <span className="text-sm text-gray-500">{project.category}</span>
+                    {project.categoryId && (
+                      <span className="text-sm text-gray-500 flex items-center gap-1">
+                        <span>{getCategoryIcon(project.categoryId)}</span>
+                        {getCategoryDisplayName(project.categoryId)}
+                      </span>
                     )}
                   </div>
                   <div className="flex gap-1">
@@ -283,9 +284,10 @@ export function SpendMyTimeTab() {
             );
           })}
           {items.length === 0 && (
-            <div className="text-center py-12">
+            <div className="text-center py-12 empty-state">
+              <div className="empty-state-icon">⏱️</div>
               <p className="text-gray-500 mb-4">No time projects yet</p>
-              <Button onClick={() => setShowAddModal(true)}>
+              <Button onClick={() => setShowAddModal(true)} className="btn-press">
                 Add your first project
               </Button>
             </div>
@@ -314,11 +316,9 @@ export function SpendMyTimeTab() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Category
             </label>
-            <input
-              type="text"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            <CategorySelector
+              value={formData.categoryId}
+              onChange={(categoryId) => setFormData({ ...formData, categoryId })}
               placeholder="Optional category"
             />
           </div>
@@ -362,18 +362,9 @@ export function SpendMyTimeTab() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Color
             </label>
-            <div className="flex gap-2 flex-wrap">
-              {PRESET_COLORS.map((color) => (
-                <button
-                  key={color.value}
-                  onClick={() => setFormData({ ...formData, color: color.value })}
-                  className={`w-8 h-8 rounded-full border-2 ${
-                    formData.color === color.value ? 'border-gray-900' : 'border-gray-300'
-                  }`}
-                  style={{ backgroundColor: color.value }}
-                  title={color.name}
-                />
-              ))}
+            {/* Color will be determined by category */}
+            <div className="text-sm text-gray-500">
+              Color is automatically assigned based on the selected category
             </div>
           </div>
           
@@ -384,7 +375,7 @@ export function SpendMyTimeTab() {
             >
               Cancel
             </Button>
-            <Button onClick={handleAddProject}>
+            <Button onClick={handleAddProject} className="btn-press">
               Add Project
             </Button>
           </div>
