@@ -3,22 +3,21 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { useAppState } from '@/lib/state';
-import { PeriodSpec, InsightV1 } from '@/lib/insight/types';
-import { buildInsightStats } from '@/lib/insight/stats';
 import {
+  PeriodSpec,
+  InsightV1,
+  buildInsightStats,
   generateInsight,
   getCachedInsight,
   clearCachedInsight,
   isAIEnabled,
   getAISource,
-} from '@/lib/insight/generate';
-import {
   loadAISettings,
   saveAISettings,
   isValidAPIKeyFormat,
   maskAPIKey,
   AISettings,
-} from '@/lib/insight/settings';
+} from '@/lib/ai/insight';
 import {
   getThisWeekRangeNY,
   getLast7DaysRangeNY,

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { InsightV1, HighlightItem, PatternItem, FrictionItem } from '@/lib/insight/types';
+import { InsightV1, HighlightItem, PatternItem, FrictionItem } from '@/lib/ai/insight';
 import { formatDate } from '@/utils/date';
 
 // ============================================================================

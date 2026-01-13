@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { InsightStats, InsightV1, InsightAPIResponse, InsightAPIError } from '@/lib/insight/types';
+import { InsightStats, InsightV1, InsightAPIResponse, InsightAPIError } from '@/lib/ai/insight';
 
 // ============================================================================
 // Configuration

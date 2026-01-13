@@ -9,7 +9,6 @@ import {
   PeriodSpec,
   InsightStats,
   DataQuality,
-  ConfidenceLevel,
   TimeTrackingStats,
   DayOfWeekHistogram,
   SessionMetrics,
@@ -20,6 +19,7 @@ import {
   ChecklistStats,
   ChecklistTabStats,
 } from './types';
+import { ConfidenceLevel } from '../types';
 
 import { AppState, ActionLog, Item, TimeItem, ChecklistItem, isTimeItem, isChecklistItem } from '@/lib/types';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';

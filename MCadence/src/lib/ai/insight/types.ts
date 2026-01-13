@@ -6,6 +6,8 @@
  * statistics - it never sees raw action logs.
  */
 
+import { ConfidenceLevel } from '../types';
+
 // ============================================================================
 // Period Types
 // ============================================================================
@@ -22,8 +24,6 @@ export interface PeriodSpec {
 // ============================================================================
 // Data Quality & Confidence
 // ============================================================================
-
-export type ConfidenceLevel = 'low' | 'medium' | 'high';
 
 export interface DataQuality {
   hasTimeSessions: boolean;
