@@ -170,6 +170,15 @@ export function isOlderThanDaysNY(timestamp: string, days: number): boolean {
 }
 
 /**
+ * Get the number of days between a timestamp and now in NY timezone.
+ */
+export function getDaysDiffFromNow(timestamp: string): number {
+  const ts = parseISOInNY(timestamp);
+  const now = getNowNY();
+  return now.diff(ts, 'day');
+}
+
+/**
  * Format a date for display in YYYY-MM-DD format.
  */
 export function formatDateYMD(date: Date | string | dayjs.Dayjs): string {

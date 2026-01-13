@@ -2,7 +2,6 @@
  * Insight Generator (v1)
  *
  * Handles insight generation with:
- * - Mock mode (when AI is disabled): Generates deterministic insights from stats
  * - Real mode: Calls the API route to get AI-generated insights
  * - Caching: 15-minute TTL for generated insights
  */
@@ -14,7 +13,6 @@ import {
   PeriodSpec,
   INSIGHT_CACHE_TTL_MS,
 } from './types';
-import { formatMinutes } from '@/utils/date';
 import { loadAISettings, isUserAIEnabled } from './settings';
 
 // ============================================================================
@@ -84,177 +82,6 @@ export function clearCachedInsight(period: PeriodSpec): void {
   } catch {
     // Ignore errors
   }
-}
-
-// ============================================================================
-// Mock Insight Generator
-// ============================================================================
-
-/**
- * Generate a deterministic mock insight from stats.
- * Used when AI is disabled (NEXT_PUBLIC_AI_ENABLED !== "true").
- */
-export function generateMockInsight(stats: InsightStats): InsightV1 {
-  const { timeTracking, projectHealth, checklists, dataQuality, period } = stats;
-  
-  // Build highlights based on available data
-  const highlights: InsightV1['highlights'] = [];
-  
-  if (timeTracking.totalTrackedMinutes > 0) {
-    highlights.push({
-      title: 'Time Tracked',
-      detail: `You logged ${formatMinutes(timeTracking.totalTrackedMinutes)} across ${timeTracking.sessionMetrics.totalSessions} sessions`,
-      metric: formatMinutes(timeTracking.totalTrackedMinutes),
-    });
-    
-    if (timeTracking.topCategories.length > 0) {
-      const top = timeTracking.topCategories[0];
-      highlights.push({
-        title: 'Top Category',
-        detail: `${top.category} took ${Math.round(top.ratio * 100)}% of your tracked time`,
-        metric: formatMinutes(top.minutes),
-      });
-    }
-  }
-  
-  const totalChecklist = checklists.dayToDay.completedCount + checklists.hitMyGoal.completedCount;
-  if (totalChecklist > 0) {
-    highlights.push({
-      title: 'Tasks Completed',
-      detail: `${totalChecklist} checklist items completed this period`,
-      metric: String(totalChecklist),
-    });
-  }
-  
-  if (projectHealth.liveProjectsCount > 0) {
-    highlights.push({
-      title: 'Active Projects',
-      detail: `${projectHealth.liveProjectsCount} time-tracked project(s) active`,
-      metric: String(projectHealth.liveProjectsCount),
-    });
-  }
-  
-  // Build patterns based on rhythm signals
-  const patterns: InsightV1['patterns'] = [];
-  
-  if (timeTracking.rhythmSignals.weekendRatio !== null) {
-    const weekendPct = Math.round(timeTracking.rhythmSignals.weekendRatio * 100);
-    if (weekendPct > 30) {
-      patterns.push({
-        title: 'Weekend Worker',
-        evidence: `${weekendPct}% of time tracked on weekends`,
-        suggestion: 'Consider if weekend work aligns with your goals',
-      });
-    } else if (weekendPct < 10 && timeTracking.totalTrackedMinutes > 60) {
-      patterns.push({
-        title: 'Weekday Focus',
-        evidence: `Only ${weekendPct}% of time on weekends`,
-        suggestion: 'Good work-life boundary—keep it up!',
-      });
-    }
-  }
-  
-  if (timeTracking.rhythmSignals.nightTimeRatio !== null) {
-    const nightPct = Math.round(timeTracking.rhythmSignals.nightTimeRatio * 100);
-    if (nightPct > 50) {
-      patterns.push({
-        title: 'Night Owl',
-        evidence: `${nightPct}% of sessions after 6pm`,
-        suggestion: 'Late sessions can impact sleep—monitor your energy levels',
-      });
-    } else if (nightPct < 20 && timeTracking.totalTrackedMinutes > 60) {
-      patterns.push({
-        title: 'Early Bird',
-        evidence: `${100 - nightPct}% of sessions during daytime`,
-        suggestion: 'Daytime productivity often aligns with natural energy',
-      });
-    }
-  }
-  
-  if (timeTracking.sessionMetrics.shortSessionRatio > 0.5 && timeTracking.sessionMetrics.totalSessions >= 3) {
-    patterns.push({
-      title: 'Short Sessions',
-      evidence: `${Math.round(timeTracking.sessionMetrics.shortSessionRatio * 100)}% of sessions under 15 min`,
-      suggestion: 'Consider longer focus blocks for deep work',
-    });
-  }
-  
-  // Build friction points
-  const friction: InsightV1['friction'] = [];
-  
-  if (projectHealth.under20ProgressProjects.length > 0) {
-    friction.push({
-      title: 'Projects Need Attention',
-      evidence: `${projectHealth.under20ProgressProjects.length} project(s) under 20% progress`,
-      nudge: 'Pick one and schedule dedicated time',
-      examples: projectHealth.under20ProgressProjects.map(p => p.title).slice(0, 3),
-    });
-  }
-  
-  const staleD2D = checklists.dayToDay.staleItems;
-  const staleHMG = checklists.hitMyGoal.staleItems;
-  const allStale = [...staleD2D, ...staleHMG].slice(0, 5);
-  
-  if (allStale.length > 0) {
-    friction.push({
-      title: 'Stale Items',
-      evidence: `${allStale.length} item(s) unfinished for 14+ days`,
-      nudge: 'Archive or tackle these to reduce mental load',
-      examples: allStale,
-    });
-  }
-  
-  if (checklists.dayToDay.totalActiveUnfinished + checklists.hitMyGoal.totalActiveUnfinished > 20) {
-    friction.push({
-      title: 'Task Overload',
-      evidence: `${checklists.dayToDay.totalActiveUnfinished + checklists.hitMyGoal.totalActiveUnfinished} unfinished tasks`,
-      nudge: 'Consider pruning or prioritizing your lists',
-    });
-  }
-  
-  // Build encouragement
-  let encouragement: InsightV1['encouragement'];
-  
-  if (dataQuality.confidenceHint === 'low') {
-    encouragement = {
-      line1: 'Not enough data yet to provide meaningful insights.',
-      line2: 'Keep using the app and check back soon!',
-    };
-  } else if (timeTracking.totalTrackedMinutes > 300) {
-    encouragement = {
-      line1: `You've invested ${formatMinutes(timeTracking.totalTrackedMinutes)} into your goals this period.`,
-      line2: 'Every minute tracked is a step forward. Keep building momentum!',
-    };
-  } else if (totalChecklist > 5) {
-    encouragement = {
-      line1: `${totalChecklist} tasks completed—consistent progress matters!`,
-      line2: "Small wins add up. You're doing great.",
-    };
-  } else {
-    encouragement = {
-      line1: 'Progress happens one step at a time.',
-      line2: 'Keep showing up, and the results will follow.',
-    };
-  }
-  
-  return {
-    period: {
-      label: period.label,
-      start: period.startISO,
-      end: period.endISO,
-      timezone: period.timezone,
-    },
-    highlights,
-    patterns,
-    friction,
-    encouragement,
-    meta: {
-      confidence: dataQuality.confidenceHint,
-      notes: dataQuality.notes.length > 0 
-        ? dataQuality.notes.join(' ') 
-        : undefined,
-    },
-  };
 }
 
 // ============================================================================
@@ -352,17 +179,22 @@ export interface GenerateInsightResult {
 
 /**
  * Generate insight for a period.
- * 
+ *
  * - Checks cache first (unless forceRefresh)
- * - Uses mock generator if AI is disabled
- * - Calls API route if AI is enabled
+ * - Calls API route to get AI-generated insights
  * - Caches the result
+ * - Throws error if AI is not enabled or API fails
  */
 export async function generateInsight(
   stats: InsightStats,
   options: GenerateInsightOptions = {}
 ): Promise<GenerateInsightResult> {
   const { forceRefresh = false } = options;
+  
+  // Check if AI is enabled
+  if (!isAIEnabled()) {
+    throw new Error('AI is not enabled. Please configure your OpenAI API key in settings.');
+  }
   
   // Check cache first
   if (!forceRefresh) {
@@ -372,38 +204,11 @@ export async function generateInsight(
     }
   }
   
-  let insight: InsightV1;
+  // Call AI API
+  const insight = await fetchAIInsight(stats);
   
-  try {
-    if (isAIEnabled()) {
-      // Use real AI
-      insight = await fetchAIInsight(stats);
-    } else {
-      // Use mock generator
-      insight = generateMockInsight(stats);
-    }
-    
-    // Cache the result
-    setCachedInsight(stats.period, insight);
-    
-    return { insight, fromCache: false };
-  } catch (error) {
-    // On error, try to return cached version if available
-    const cached = getCachedInsight(stats.period);
-    if (cached) {
-      return {
-        insight: cached,
-        fromCache: true,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-    
-    // No cache available, generate mock as fallback
-    insight = generateMockInsight(stats);
-    return {
-      insight,
-      fromCache: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
+  // Cache the result
+  setCachedInsight(stats.period, insight);
+  
+  return { insight, fromCache: false };
 }
