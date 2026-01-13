@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { TabId, Category } from '@/lib/types';
 import { useAppState } from '@/lib/state';
 import { Layout } from '@/components/layout/Layout';
@@ -13,6 +13,9 @@ import { CategoryEditorModal } from '@/components/ui/CategoryEditorModal';
 import { exportState, clearState, saveStateImmediate, saveCategories } from '@/lib/storage';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 
+// Lazy load AiPanel to keep main app fast
+const AiPanel = lazy(() => import('@/components/ai/AiPanel'));
+
 export default function HomePageContent() {
   const [activeTab, setActiveTab] = useState<TabId>('dayToDay');
   const [showMenu, setShowMenu] = useState(false);
@@ -20,6 +23,7 @@ export default function HomePageContent() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showCategoryEditor, setShowCategoryEditor] = useState(false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
   
   const { state, dispatch } = useAppState();
 
@@ -143,6 +147,7 @@ export default function HomePageContent() {
       activeTab={activeTab}
       onTabChange={setActiveTab}
       onMenuClick={handleMenuClick}
+      onAIClick={() => setShowAiPanel(true)}
     >
       {renderActiveTab()}
 
@@ -235,6 +240,23 @@ export default function HomePageContent() {
         categories={state.categories && state.categories.length > 0 ? state.categories : DEFAULT_CATEGORIES}
         onSave={handleSaveCategories}
       />
+
+      {/* AI Panel - Lazy loaded for performance */}
+      {showAiPanel && (
+        <Suspense fallback={
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading AI Panel...</p>
+            </div>
+          </div>
+        }>
+          <AiPanel
+            isOpen={showAiPanel}
+            onClose={() => setShowAiPanel(false)}
+          />
+        </Suspense>
+      )}
 
     </Layout>
   );
