@@ -34,7 +34,7 @@ export function isQuickAddEnabled(): boolean {
 export function buildCategoryPalette(categories: {
   id: string;
   name: string;
-  subcategories: { id: string; name: string }[]
+  subcategories: { id: string; name: string; icon?: string }[]
 }[]): CategoryPalette[] {
   return categories.map(cat => ({
     id: cat.id,
@@ -42,6 +42,7 @@ export function buildCategoryPalette(categories: {
     subcategories: cat.subcategories.map(sub => ({
       id: sub.id,
       name: sub.name,
+      icon: sub.icon,
     })),
   }));
 }

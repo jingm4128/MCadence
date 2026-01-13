@@ -5,16 +5,21 @@ import { useAppState } from '@/lib/state';
 import {
   QuickAddProposal,
   ProposalSelection,
-  isChecklistProposal,
-  isTimeProjectProposal,
+  QuickAddTab,
+  RecurrenceType,
   generateQuickAddProposals,
   buildCategoryPalette,
   isQuickAddEnabled,
+  TAB_LABELS,
+  TAB_ICONS,
+  RECURRENCE_LABELS,
+  computeWeeklyMinutes,
+  getDefaultTypeFromTab,
 } from '@/lib/ai/quickadd';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 
 // ============================================================================
-// Proposal Card Component
+// Proposal Card Component - Full Inline Editing
 // ============================================================================
 
 interface ProposalCardProps {
@@ -22,7 +27,7 @@ interface ProposalCardProps {
   selection: ProposalSelection;
   categories: typeof DEFAULT_CATEGORIES;
   onToggle: (id: string) => void;
-  onEdit: (id: string, field: string, value: string | number) => void;
+  onUpdate: (id: string, updates: Partial<ProposalSelection>) => void;
 }
 
 function ProposalCard({
@@ -30,20 +35,26 @@ function ProposalCard({
   selection,
   categories,
   onToggle,
-  onEdit,
+  onUpdate,
 }: ProposalCardProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  // Get current values (edited or original)
+  const currentTab = selection.editedTab ?? proposal.tab;
+  const currentTitle = selection.editedTitle ?? proposal.title;
+  const currentCategoryId = selection.editedCategoryId ?? proposal.categoryId;
+  const currentRecurrence = selection.editedRecurrence ?? proposal.recurrence;
+  const currentDurationMinutes = selection.editedDurationMinutes ?? proposal.durationMinutes ?? 0;
+  const currentFrequencyPerWeek = selection.editedFrequencyPerWeek ?? proposal.frequencyPerWeek ?? 1;
+  const currentRequiredMinutes = selection.editedRequiredMinutes ?? proposal.requiredMinutes ?? 0;
   
-  const typeBadge = {
-    task: { label: 'Task', color: 'bg-blue-100 text-blue-700' },
-    goal: { label: 'Goal', color: 'bg-purple-100 text-purple-700' },
-    time_project: { label: 'Time Project', color: 'bg-green-100 text-green-700' },
-  };
+  // Compute weekly total for display
+  const computedWeeklyMinutes = computeWeeklyMinutes(
+    currentDurationMinutes,
+    currentRecurrence,
+    currentFrequencyPerWeek
+  );
   
-  const badge = typeBadge[proposal.type];
-  
-  // Get all subcategories flattened
-  const allSubcategories = categories.flatMap(cat => 
+  // Get all subcategories flattened for the dropdown
+  const allSubcategories = categories.flatMap(cat =>
     cat.subcategories.map(sub => ({
       id: sub.id,
       name: `${cat.name} > ${sub.name}`,
@@ -51,124 +62,195 @@ function ProposalCard({
     }))
   );
   
-  const currentCategoryId = selection.editedCategoryId || proposal.categoryId;
-  const currentTitle = selection.editedTitle || proposal.title;
-  const currentMinutes = selection.editedRequiredMinutes ?? 
-    (isTimeProjectProposal(proposal) ? proposal.requiredMinutes : 0);
+  // Is this a time project tab?
+  const isTimeProject = currentTab === 'spendMyTime';
+  
+  // Handle tab change - also update type
+  const handleTabChange = (newTab: QuickAddTab) => {
+    onUpdate(proposal.id, { editedTab: newTab });
+  };
+  
+  // Handle duration change and recalculate required minutes
+  const handleDurationChange = (minutes: number) => {
+    const newRequired = computeWeeklyMinutes(minutes, currentRecurrence, currentFrequencyPerWeek);
+    onUpdate(proposal.id, { 
+      editedDurationMinutes: minutes,
+      editedRequiredMinutes: newRequired,
+    });
+  };
+  
+  // Handle recurrence change and recalculate required minutes
+  const handleRecurrenceChange = (recurrence: RecurrenceType) => {
+    const newRequired = computeWeeklyMinutes(currentDurationMinutes, recurrence, currentFrequencyPerWeek);
+    onUpdate(proposal.id, { 
+      editedRecurrence: recurrence,
+      editedRequiredMinutes: newRequired,
+    });
+  };
+  
+  // Handle frequency change and recalculate required minutes
+  const handleFrequencyChange = (freq: number) => {
+    const newRequired = computeWeeklyMinutes(currentDurationMinutes, currentRecurrence, freq);
+    onUpdate(proposal.id, { 
+      editedFrequencyPerWeek: freq,
+      editedRequiredMinutes: newRequired,
+    });
+  };
   
   return (
-    <div className={`border rounded-lg p-3 transition-colors ${
+    <div className={`border rounded-lg p-3 transition-all ${
       selection.selected 
-        ? 'border-primary-300 bg-primary-50' 
+        ? 'border-primary-300 bg-primary-50 shadow-sm' 
         : 'border-gray-200 bg-white opacity-60'
     }`}>
-      <div className="flex items-start gap-3">
-        {/* Checkbox */}
+      {/* Header Row: Checkbox + Tab Selector + Confidence */}
+      <div className="flex items-center gap-3 mb-3">
         <input
           type="checkbox"
           checked={selection.selected}
           onChange={() => onToggle(proposal.id)}
-          className="mt-1 h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+          className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
         />
         
-        <div className="flex-1 min-w-0">
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.color}`}>
-              {badge.label}
-            </span>
-            <span className="text-xs text-gray-400">
-              {Math.round(proposal.confidence * 100)}% confidence
-            </span>
+        {/* Tab Selector */}
+        <div className="flex gap-1 flex-1">
+          {(['dayToDay', 'hitMyGoal', 'spendMyTime'] as QuickAddTab[]).map(tab => (
+            <button
+              key={tab}
+              onClick={() => handleTabChange(tab)}
+              className={`px-2 py-1 text-xs rounded-md transition-colors flex items-center gap-1 ${
+                currentTab === tab
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title={TAB_LABELS[tab]}
+            >
+              <span>{TAB_ICONS[tab]}</span>
+              <span className="hidden sm:inline">{TAB_LABELS[tab]}</span>
+            </button>
+          ))}
+        </div>
+        
+        {/* Confidence Badge */}
+        <span className="text-xs text-gray-400 whitespace-nowrap">
+          {Math.round(proposal.confidence * 100)}%
+        </span>
+      </div>
+      
+      {/* Title Input */}
+      <div className="mb-3">
+        <input
+          type="text"
+          value={currentTitle}
+          onChange={(e) => onUpdate(proposal.id, { editedTitle: e.target.value })}
+          placeholder="Title"
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+      </div>
+      
+      {/* Category Selector */}
+      <div className="mb-3">
+        <select
+          value={currentCategoryId}
+          onChange={(e) => onUpdate(proposal.id, { editedCategoryId: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          {allSubcategories.map(sub => (
+            <option key={sub.id} value={sub.id}>
+              {sub.icon} {sub.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      {/* Time Project Fields */}
+      {isTimeProject && (
+        <div className="space-y-3 pt-2 border-t border-gray-100">
+          {/* Recurrence Selector */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Recurrence</label>
+            <div className="flex gap-1 flex-wrap">
+              {(['one_off', 'daily', 'weekly', 'monthly'] as RecurrenceType[]).map(rec => (
+                <button
+                  key={rec}
+                  onClick={() => handleRecurrenceChange(rec)}
+                  className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                    currentRecurrence === rec
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {RECURRENCE_LABELS[rec]}
+                </button>
+              ))}
+            </div>
           </div>
           
-          {/* Title */}
-          {isEditing ? (
-            <input
-              type="text"
-              value={currentTitle}
-              onChange={(e) => onEdit(proposal.id, 'title', e.target.value)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-primary-500"
-            />
-          ) : (
-            <p className="font-medium text-gray-900 mb-2 truncate">{currentTitle}</p>
-          )}
-          
-          {/* Category Selector */}
-          {isEditing ? (
-            <select
-              value={currentCategoryId}
-              onChange={(e) => onEdit(proposal.id, 'categoryId', e.target.value)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-primary-500"
-            >
-              {allSubcategories.map(sub => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.icon} {sub.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <p className="text-sm text-gray-500">
-              {allSubcategories.find(s => s.id === currentCategoryId)?.name || 'No category'}
-            </p>
-          )}
-          
-          {/* Time Project: Required Minutes */}
-          {isTimeProjectProposal(proposal) && isEditing && (
-            <div className="flex items-center gap-2 mt-2">
-              <label className="text-sm text-gray-600">Weekly:</label>
+          {/* Duration per Session */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">
+              Duration {currentRecurrence !== 'one_off' ? 'per session' : ''}
+            </label>
+            <div className="flex items-center gap-2">
               <input
                 type="number"
-                value={Math.floor(currentMinutes / 60)}
-                onChange={(e) => onEdit(
-                  proposal.id, 
-                  'requiredMinutes', 
-                  parseInt(e.target.value) * 60 + (currentMinutes % 60)
-                )}
-                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded"
+                value={Math.floor(currentDurationMinutes / 60)}
+                onChange={(e) => {
+                  const hours = Math.max(0, parseInt(e.target.value) || 0);
+                  const mins = currentDurationMinutes % 60;
+                  handleDurationChange(hours * 60 + mins);
+                }}
+                className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 min={0}
               />
               <span className="text-sm text-gray-500">h</span>
               <input
                 type="number"
-                value={currentMinutes % 60}
-                onChange={(e) => onEdit(
-                  proposal.id, 
-                  'requiredMinutes', 
-                  Math.floor(currentMinutes / 60) * 60 + parseInt(e.target.value)
-                )}
-                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded"
+                value={currentDurationMinutes % 60}
+                onChange={(e) => {
+                  const mins = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                  const hours = Math.floor(currentDurationMinutes / 60);
+                  handleDurationChange(hours * 60 + mins);
+                }}
+                className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 min={0}
                 max={59}
               />
               <span className="text-sm text-gray-500">m</span>
             </div>
+          </div>
+          
+          {/* Frequency per Week (for weekly recurrence) */}
+          {currentRecurrence === 'weekly' && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Times per week</label>
+              <input
+                type="number"
+                value={currentFrequencyPerWeek}
+                onChange={(e) => handleFrequencyChange(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
+                min={1}
+                max={7}
+              />
+            </div>
           )}
           
-          {isTimeProjectProposal(proposal) && !isEditing && (
-            <p className="text-sm text-gray-500 mt-1">
-              📊 {Math.floor(currentMinutes / 60)}h {currentMinutes % 60}m / week
-            </p>
-          )}
-          
-          {/* Reason */}
-          {proposal.reason && (
-            <p className="text-xs text-gray-400 mt-2 italic">{proposal.reason}</p>
-          )}
+          {/* Weekly Total Display */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+            <span>📊</span>
+            <span>
+              Weekly total: <strong>{Math.floor(computedWeeklyMinutes / 60)}h {computedWeeklyMinutes % 60}m</strong>
+            </span>
+          </div>
         </div>
-        
-        {/* Edit Button */}
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className={`text-xs px-2 py-1 rounded ${
-            isEditing 
-              ? 'bg-primary-100 text-primary-700' 
-              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          {isEditing ? 'Done' : 'Edit'}
-        </button>
-      </div>
+      )}
+      
+      {/* Reason (if provided) */}
+      {proposal.reason && (
+        <p className="text-xs text-gray-400 mt-2 italic border-t border-gray-100 pt-2">
+          {proposal.reason}
+        </p>
+      )}
     </div>
   );
 }
@@ -253,16 +335,13 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
     });
   }, []);
   
-  // Edit proposal
-  const handleEdit = useCallback((id: string, field: string, value: string | number) => {
+  // Update proposal selection fields
+  const handleUpdate = useCallback((id: string, updates: Partial<ProposalSelection>) => {
     setSelections(prev => {
       const newMap = new Map(prev);
       const current = newMap.get(id);
       if (current) {
-        newMap.set(id, {
-          ...current,
-          [`edited${field.charAt(0).toUpperCase() + field.slice(1)}`]: value,
-        });
+        newMap.set(id, { ...current, ...updates });
       }
       return newMap;
     });
@@ -281,14 +360,17 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
     
     for (const proposal of selectedProposals) {
       const selection = selections.get(proposal.id);
-      const title = selection?.editedTitle || proposal.title;
-      const categoryId = selection?.editedCategoryId || proposal.categoryId;
+      const title = selection?.editedTitle ?? proposal.title;
+      const categoryId = selection?.editedCategoryId ?? proposal.categoryId;
+      const tab = selection?.editedTab ?? proposal.tab;
       
-      if (isChecklistProposal(proposal)) {
-        addChecklistItem(proposal.tab, { title, categoryId });
+      if (tab === 'dayToDay' || tab === 'hitMyGoal') {
+        // Add as checklist item
+        addChecklistItem(tab, { title, categoryId });
         addedCount++;
-      } else if (isTimeProjectProposal(proposal)) {
-        const requiredMinutes = selection?.editedRequiredMinutes ?? proposal.requiredMinutes;
+      } else if (tab === 'spendMyTime') {
+        // Add as time project
+        const requiredMinutes = selection?.editedRequiredMinutes ?? proposal.requiredMinutes ?? 60;
         addTimeItem({
           title,
           categoryId,
@@ -302,6 +384,7 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
     setSuccessMessage(`Added ${addedCount} item${addedCount !== 1 ? 's' : ''}`);
     setProposals([]);
     setSelections(new Map());
+    setInputText(''); // Clear input after successful add
     
     // Clear success message after 3 seconds
     setTimeout(() => setSuccessMessage(null), 3000);
@@ -317,19 +400,18 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
       {/* Input Area */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Paste text or chat here
+          Paste text or describe what you want to add
         </label>
         <textarea
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Paste your chat, notes, or thoughts here...
-
-Examples:
-- Buy groceries
-- Learn TypeScript this month
-- Exercise 3 hours per week
-- Finish the project report"
-          rows={6}
+          placeholder="Examples:
+• Buy groceries
+• Learn TypeScript this month
+• 每天跑步10分钟
+• Study math 2 hours every week
+• Call mom tomorrow"
+          rows={5}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
           disabled={isLoading}
         />
@@ -348,7 +430,7 @@ Examples:
               Analyzing...
             </span>
           ) : (
-            'Generate Proposals'
+            '✨ Generate Proposals'
           )}
         </button>
         
@@ -399,7 +481,7 @@ Examples:
                 selection={selections.get(proposal.id) || { id: proposal.id, selected: false }}
                 categories={categories}
                 onToggle={handleToggle}
-                onEdit={handleEdit}
+                onUpdate={handleUpdate}
               />
             ))}
           </div>
@@ -410,7 +492,7 @@ Examples:
             disabled={selectedCount === 0}
             className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-medium"
           >
-            Approve & Add ({selectedCount} item{selectedCount !== 1 ? 's' : ''})
+            ✓ Approve & Add ({selectedCount} item{selectedCount !== 1 ? 's' : ''})
           </button>
         </>
       )}
@@ -419,8 +501,11 @@ Examples:
       {proposals.length === 0 && !isLoading && !error && (
         <div className="text-center py-8">
           <div className="text-4xl mb-3">📝</div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-sm mb-2">
             Paste some text above and click "Generate Proposals" to get started.
+          </p>
+          <p className="text-gray-400 text-xs">
+            Supports English, Chinese, and other languages. AI will detect tasks, goals, and time projects.
           </p>
         </div>
       )}

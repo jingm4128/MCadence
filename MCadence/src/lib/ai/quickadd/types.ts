@@ -7,33 +7,41 @@
 import { TabId } from '@/lib/types';
 
 // ============================================================================
+// Tab Types
+// ============================================================================
+
+export type QuickAddTab = 'dayToDay' | 'hitMyGoal' | 'spendMyTime';
+
+// ============================================================================
+// Recurrence Types
+// ============================================================================
+
+export type RecurrenceType = 'one_off' | 'daily' | 'weekly' | 'monthly';
+
+// ============================================================================
 // Proposal Types
 // ============================================================================
 
 export type ProposalType = 'task' | 'goal' | 'time_project';
 
-export interface BaseProposal {
+export interface QuickAddProposal {
   id: string;
   type: ProposalType;
+  tab: QuickAddTab;
   title: string;
   categoryId: string;
   categoryName?: string; // For display purposes
   confidence: number; // 0-1, how confident AI is about this proposal
   reason?: string; // Why AI thinks this should be added
+  
+  // Recurrence (for time projects or recurring tasks)
+  recurrence: RecurrenceType;
+  
+  // Time/duration fields (for time projects)
+  durationMinutes?: number; // Per-session duration in minutes
+  frequencyPerWeek?: number; // How many times per week (for daily/weekly recurrence)
+  requiredMinutes?: number; // Total weekly time requirement (computed or specified)
 }
-
-export interface ChecklistProposal extends BaseProposal {
-  type: 'task' | 'goal';
-  tab: 'dayToDay' | 'hitMyGoal';
-}
-
-export interface TimeProjectProposal extends BaseProposal {
-  type: 'time_project';
-  tab: 'spendMyTime';
-  requiredMinutes: number; // Default weekly time requirement
-}
-
-export type QuickAddProposal = ChecklistProposal | TimeProjectProposal;
 
 // ============================================================================
 // Selection State
@@ -44,7 +52,11 @@ export interface ProposalSelection {
   selected: boolean;
   // Edited values (if user changed them)
   editedTitle?: string;
+  editedTab?: QuickAddTab;
   editedCategoryId?: string;
+  editedRecurrence?: RecurrenceType;
+  editedDurationMinutes?: number;
+  editedFrequencyPerWeek?: number;
   editedRequiredMinutes?: number; // For time projects
 }
 
@@ -55,9 +67,11 @@ export interface ProposalSelection {
 export interface CategoryPalette {
   id: string;
   name: string;
+  icon?: string;
   subcategories: {
     id: string;
     name: string;
+    icon?: string;
   }[];
 }
 
@@ -92,12 +106,12 @@ export interface QuickAddResult {
 // Type Guards
 // ============================================================================
 
-export function isChecklistProposal(proposal: QuickAddProposal): proposal is ChecklistProposal {
-  return proposal.type === 'task' || proposal.type === 'goal';
+export function isChecklistProposal(proposal: QuickAddProposal): boolean {
+  return proposal.tab === 'dayToDay' || proposal.tab === 'hitMyGoal';
 }
 
-export function isTimeProjectProposal(proposal: QuickAddProposal): proposal is TimeProjectProposal {
-  return proposal.type === 'time_project';
+export function isTimeProjectProposal(proposal: QuickAddProposal): boolean {
+  return proposal.tab === 'spendMyTime';
 }
 
 // ============================================================================
@@ -114,3 +128,67 @@ export function getTabIdFromProposalType(type: ProposalType): TabId {
       return 'spendMyTime';
   }
 }
+
+// ============================================================================
+// Helper to get default type from tab
+// ============================================================================
+
+export function getDefaultTypeFromTab(tab: QuickAddTab): ProposalType {
+  switch (tab) {
+    case 'dayToDay':
+      return 'task';
+    case 'hitMyGoal':
+      return 'goal';
+    case 'spendMyTime':
+      return 'time_project';
+  }
+}
+
+// ============================================================================
+// Helper to compute weekly minutes from recurrence
+// ============================================================================
+
+export function computeWeeklyMinutes(
+  durationMinutes: number,
+  recurrence: RecurrenceType,
+  frequencyPerWeek?: number
+): number {
+  switch (recurrence) {
+    case 'daily':
+      return durationMinutes * 7;
+    case 'weekly':
+      return durationMinutes * (frequencyPerWeek || 1);
+    case 'monthly':
+      // Approximate: 4.33 weeks per month
+      return Math.round(durationMinutes / 4.33);
+    case 'one_off':
+      return durationMinutes;
+  }
+}
+
+// ============================================================================
+// Tab Labels
+// ============================================================================
+
+export const TAB_LABELS: Record<QuickAddTab, string> = {
+  dayToDay: 'Day to Day',
+  hitMyGoal: 'Hit My Goal',
+  spendMyTime: 'Spend My Time',
+};
+
+export const TAB_ICONS: Record<QuickAddTab, string> = {
+  dayToDay: '📝',
+  hitMyGoal: '🎯',
+  spendMyTime: '⏱️',
+};
+
+// ============================================================================
+// Recurrence Labels
+// ============================================================================
+
+export const RECURRENCE_LABELS: Record<RecurrenceType, string> = {
+  one_off: 'One-off',
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+};
