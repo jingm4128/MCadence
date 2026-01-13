@@ -1,6 +1,6 @@
 /**
  * AI Insight Module
- * 
+ *
  * Re-exports all insight-related types and functions.
  */
 
@@ -15,7 +15,6 @@ export {
   getCachedInsight,
   setCachedInsight,
   clearCachedInsight,
-  generateMockInsight,
   isAIEnabled,
   getAISource,
   generateInsight,

@@ -26,6 +26,55 @@ import {
   getNowNY,
 } from '@/utils/date';
 import { InsightCard } from './InsightCard';
+import { QuickAddSection } from './QuickAddSection';
+import { CleanupSection } from './CleanupSection';
+
+// ============================================================================
+// Tab Types
+// ============================================================================
+
+type AIFeatureTab = 'insight' | 'quickadd' | 'cleanup';
+
+// ============================================================================
+// Tab Navigation Component
+// ============================================================================
+
+interface TabNavProps {
+  activeTab: AIFeatureTab;
+  onTabChange: (tab: AIFeatureTab) => void;
+}
+
+function TabNav({ activeTab, onTabChange }: TabNavProps) {
+  const tabs: { id: AIFeatureTab; label: string; icon: string }[] = [
+    { id: 'insight', label: 'Insight', icon: '🔮' },
+    { id: 'quickadd', label: 'Quick Add', icon: '✨' },
+    { id: 'cleanup', label: 'Clean-up', icon: '🧹' },
+  ];
+  
+  return (
+    <div className="flex border-b border-gray-200 mb-4">
+      {tabs.map(tab => (
+        <button
+          key={tab.id}
+          onClick={() => onTabChange(tab.id)}
+          className={`flex-1 px-4 py-2 text-sm font-medium transition-colors relative ${
+            activeTab === tab.id
+              ? 'text-primary-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <span className="flex items-center justify-center gap-1.5">
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+          </span>
+          {activeTab === tab.id && (
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"></span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 // ============================================================================
 // Period Selector Component
@@ -313,31 +362,31 @@ function EmptyState({ onGenerate, isLoading, aiEnabled }: EmptyStateProps) {
       <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
         Get personalized insights based on your tracked activities and goals.
       </p>
-      <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
-        <span className={`w-2 h-2 rounded-full ${aiEnabled ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
-        {aiEnabled ? 'AI enabled' : 'Mock mode (AI disabled)'}
-      </div>
       <button
         onClick={onGenerate}
-        disabled={isLoading}
+        disabled={isLoading || !aiEnabled}
         className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 font-medium"
       >
         Generate Insight
       </button>
+      {!aiEnabled && (
+        <p className="text-xs text-amber-600 mt-3 text-center">
+          ⚠️ AI is not enabled. Configure your API key in Settings to use Insight.
+        </p>
+      )}
     </div>
   );
 }
 
 // ============================================================================
-// Main AI Panel Component
+// Insight Tab Content
 // ============================================================================
 
-interface AiPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface InsightTabProps {
+  aiEnabled: boolean;
 }
 
-export function AiPanel({ isOpen, onClose }: AiPanelProps) {
+function InsightTab({ aiEnabled }: InsightTabProps) {
   const { state } = useAppState();
   
   // Period selection state
@@ -353,23 +402,6 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [insight, setInsight] = useState<InsightV1 | null>(null);
   const [fromCache, setFromCache] = useState(false);
-  
-  // Settings state
-  const [showSettings, setShowSettings] = useState(false);
-  const [aiSettings, setAiSettings] = useState<AISettings>(() => loadAISettings());
-  const [aiEnabled, setAiEnabled] = useState(() => isAIEnabled());
-  
-  // Refresh AI enabled status when settings change
-  useEffect(() => {
-    setAiEnabled(isAIEnabled());
-  }, [aiSettings]);
-  
-  // Handle settings save
-  const handleSaveSettings = useCallback((newSettings: Partial<AISettings>) => {
-    const updated = saveAISettings(newSettings);
-    setAiSettings(updated);
-    setAiEnabled(isAIEnabled());
-  }, []);
   
   // Get current period spec
   const period = useMemo((): PeriodSpec => {
@@ -401,18 +433,13 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   
   // Check for cached insight on period change
   useEffect(() => {
-    if (isOpen) {
-      const cached = getCachedInsight(period);
-      if (cached) {
-        setInsight(cached);
-        setFromCache(true);
-        setError(null);
-      } else {
-        // Don't clear existing insight when period changes
-        // User needs to click generate again
-      }
+    const cached = getCachedInsight(period);
+    if (cached) {
+      setInsight(cached);
+      setFromCache(true);
+      setError(null);
     }
-  }, [period, isOpen]);
+  }, [period]);
   
   // Generate insight
   const handleGenerate = useCallback(async (forceRefresh = false) => {
@@ -420,19 +447,11 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
     setError(null);
     
     try {
-      // Build stats from current app state
       const stats = buildInsightStats(period, state);
-      
-      // Generate insight (mock or AI)
       const result = await generateInsight(stats, { forceRefresh });
       
       setInsight(result.insight);
       setFromCache(result.fromCache);
-      
-      if (result.error) {
-        // Partial error - we got cached result but generation failed
-        console.warn('Insight generation warning:', result.error);
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate insight');
     } finally {
@@ -446,13 +465,6 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
     handleGenerate(true);
   }, [period, handleGenerate]);
   
-  // Reset state when closing
-  const handleClose = useCallback(() => {
-    // Don't reset insight state - keep it for next open
-    setShowSettings(false);
-    onClose();
-  }, [onClose]);
-  
   // Handle period change
   const handlePeriodChange = useCallback((option: PeriodOption) => {
     setPeriodOption(option);
@@ -461,16 +473,99 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
     setError(null);
   }, []);
   
+  return (
+    <>
+      {/* Period Selector */}
+      <PeriodSelector
+        selected={periodOption}
+        onSelect={handlePeriodChange}
+        customStart={customStart}
+        customEnd={customEnd}
+        onCustomStartChange={setCustomStart}
+        onCustomEndChange={setCustomEnd}
+      />
+      
+      {/* Content */}
+      {isLoading ? (
+        <LoadingState />
+      ) : error && !insight ? (
+        <ErrorState message={error} onRetry={() => handleGenerate(false)} />
+      ) : insight ? (
+        <InsightCard
+          insight={insight}
+          fromCache={fromCache}
+          onRegenerate={handleRegenerate}
+          isRegenerating={isLoading}
+        />
+      ) : (
+        <EmptyState
+          onGenerate={() => handleGenerate(false)}
+          isLoading={isLoading}
+          aiEnabled={aiEnabled}
+        />
+      )}
+    </>
+  );
+}
+
+// ============================================================================
+// Main AI Panel Component
+// ============================================================================
+
+interface AiPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function AiPanel({ isOpen, onClose }: AiPanelProps) {
+  // Tab state
+  const [activeTab, setActiveTab] = useState<AIFeatureTab>('insight');
+  
+  // Settings state
+  const [showSettings, setShowSettings] = useState(false);
+  const [aiSettings, setAiSettings] = useState<AISettings>(() => loadAISettings());
+  const [aiEnabled, setAiEnabled] = useState(() => isAIEnabled());
+  
+  // Refresh AI enabled status when settings change
+  useEffect(() => {
+    setAiEnabled(isAIEnabled());
+  }, [aiSettings]);
+  
+  // Handle settings save
+  const handleSaveSettings = useCallback((newSettings: Partial<AISettings>) => {
+    const updated = saveAISettings(newSettings);
+    setAiSettings(updated);
+    setAiEnabled(isAIEnabled());
+  }, []);
+  
+  // Reset state when closing
+  const handleClose = useCallback(() => {
+    setShowSettings(false);
+    onClose();
+  }, [onClose]);
+  
   // Get AI status info
   const aiSource = getAISource();
   const getStatusText = () => {
     if (aiSource === 'user') return 'AI enabled (your key)';
     if (aiSource === 'env') return 'AI enabled (server)';
-    return 'Mock mode (configure API key)';
+    return 'AI disabled (configure API key)';
+  };
+  
+  // Get modal title based on active tab
+  const getModalTitle = () => {
+    switch (activeTab) {
+      case 'insight':
+        return 'AI Insight';
+      case 'quickadd':
+        return 'Quick Add with AI';
+      case 'cleanup':
+        return 'Clean-up with AI';
+    }
   };
   
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="AI Insight" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title={getModalTitle()} size="lg">
       <div className="max-h-[70vh] overflow-y-auto -mx-6 px-6">
         {/* AI Status Bar */}
         <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
@@ -503,35 +598,13 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
           />
         )}
         
-        {/* Period Selector */}
-        <PeriodSelector
-          selected={periodOption}
-          onSelect={handlePeriodChange}
-          customStart={customStart}
-          customEnd={customEnd}
-          onCustomStartChange={setCustomStart}
-          onCustomEndChange={setCustomEnd}
-        />
+        {/* Tab Navigation */}
+        <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
         
-        {/* Content */}
-        {isLoading ? (
-          <LoadingState />
-        ) : error && !insight ? (
-          <ErrorState message={error} onRetry={() => handleGenerate(false)} />
-        ) : insight ? (
-          <InsightCard
-            insight={insight}
-            fromCache={fromCache}
-            onRegenerate={handleRegenerate}
-            isRegenerating={isLoading}
-          />
-        ) : (
-          <EmptyState
-            onGenerate={() => handleGenerate(false)}
-            isLoading={isLoading}
-            aiEnabled={aiEnabled}
-          />
-        )}
+        {/* Tab Content */}
+        {activeTab === 'insight' && <InsightTab aiEnabled={aiEnabled} />}
+        {activeTab === 'quickadd' && <QuickAddSection aiEnabled={aiEnabled} />}
+        {activeTab === 'cleanup' && <CleanupSection aiEnabled={aiEnabled} />}
       </div>
     </Modal>
   );
