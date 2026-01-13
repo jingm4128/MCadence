@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useAppState } from '@/lib/state';
-import { ChecklistItemForm, isChecklistItem } from '@/lib/types';
+import { ChecklistItemForm, isChecklistItem, RecurrenceFormSettings } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
+import { RecurrenceSelector, getRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 
 export function HitMyGoalTab() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -16,6 +17,7 @@ export function HitMyGoalTab() {
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
     categoryId: '',
+    recurrence: undefined,
   });
 
   const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, deleteItem } = useAppState();
@@ -26,7 +28,7 @@ export function HitMyGoalTab() {
   const handleAddItem = () => {
     if (formData.title.trim()) {
       addChecklistItem('hitMyGoal', formData);
-      setFormData({ title: '', categoryId: '' });
+      setFormData({ title: '', categoryId: '', recurrence: undefined });
       setShowAddModal(false);
     }
   };
@@ -194,7 +196,13 @@ export function HitMyGoalTab() {
             />
           </div>
           
-          {/* Color is now determined by category */}
+          {/* Recurrence Settings */}
+          <div>
+            <RecurrenceSelector
+              value={formData.recurrence}
+              onChange={(recurrence) => setFormData({ ...formData, recurrence })}
+            />
+          </div>
           
           <div className="flex justify-end gap-3 pt-4">
             <Button

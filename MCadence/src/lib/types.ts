@@ -2,7 +2,7 @@ export type TabId = "dayToDay" | "hitMyGoal" | "spendMyTime";
 
 export type ItemStatus = "active" | "done" | "archived";
 
-export type Frequency = "daily" | "weekly" | "monthly" | "quarterly" | "annually";
+export type Frequency = "daily" | "weekly" | "monthly" | "annually";
 
 // Category System - Hierarchical (L1/L2)
 export interface Category {
@@ -21,9 +21,11 @@ export interface Subcategory {
 
 export interface RecurrenceSettings {
   frequency: Frequency;
-  occurrences: number; // Number of times to repeat
-  isEnabled: boolean;
-  nextDue?: string; // EST timestamp
+  totalOccurrences: number | null; // null = forever, number = stop after X times
+  completedOccurrences: number; // How many times the item has been completed
+  timezone: string; // IANA timezone string (e.g., 'America/New_York')
+  startDate: string; // ISO date when recurrence started
+  nextDue?: string; // ISO timestamp for next due date
 }
 
 export interface BaseItem {
@@ -95,9 +97,17 @@ export function isTimeProject(item: Item): item is TimeItem {
 }
 
 // Helper types for forms
+export interface RecurrenceFormSettings {
+  enabled: boolean;
+  frequency: Frequency;
+  totalOccurrences: number | null; // null = forever
+  timezone: string;
+}
+
 export interface ChecklistItemForm {
   title: string;
   categoryId: string;
+  recurrence?: RecurrenceFormSettings; // Only for hitMyGoal tab
 }
 
 export interface TimeItemForm {
@@ -105,6 +115,7 @@ export interface TimeItemForm {
   categoryId: string;
   requiredHours: number;
   requiredMinutes: number;
+  recurrence?: RecurrenceFormSettings;
 }
 
 export interface ImportOptions {

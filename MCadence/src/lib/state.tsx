@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
-import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm } from './types';
-import { DEFAULT_CATEGORIES } from './constants';
+import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings } from './types';
+import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE } from './constants';
 import { saveState, loadState } from './storage';
 import { generateId } from '@/utils/uuid';
 import { toISOStringLocal, getWeekStart, getWeekEnd, getNowInTimezone, needsWeekReset } from '@/utils/date';
@@ -223,8 +223,27 @@ export function useAppState() {
     dispatch({ type: 'LOG_ACTION', payload: actionLog });
   };
 
+  // Helper to convert form recurrence to full RecurrenceSettings
+  const convertRecurrenceFormToSettings = (formRecurrence: RecurrenceFormSettings | undefined): RecurrenceSettings | undefined => {
+    if (!formRecurrence || !formRecurrence.enabled) {
+      return undefined;
+    }
+    
+    const now = toISOStringLocal();
+    return {
+      frequency: formRecurrence.frequency,
+      totalOccurrences: formRecurrence.totalOccurrences,
+      completedOccurrences: 0,
+      timezone: formRecurrence.timezone || DEFAULT_TIMEZONE,
+      startDate: now,
+      nextDue: now, // First occurrence is due now
+    };
+  };
+
   const addChecklistItem = (tab: 'dayToDay' | 'hitMyGoal', form: ChecklistItemForm) => {
     const now = toISOStringLocal();
+    const recurrence = convertRecurrenceFormToSettings(form.recurrence);
+    
     const newItem: ChecklistItem = {
       id: generateId(),
       tab,
@@ -235,6 +254,7 @@ export function useAppState() {
       isDone: false,
       createdAt: now,
       updatedAt: now,
+      ...(recurrence && { recurrence }),
     };
 
     dispatch({ type: 'ADD_ITEM', payload: newItem });
@@ -242,6 +262,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab,
       type: 'create',
+      payload: recurrence ? { recurrence } : undefined,
     });
   };
 
@@ -250,6 +271,7 @@ export function useAppState() {
     const weekStart = getWeekStart(now);
     const weekEnd = getWeekEnd(now);
     const isoNow = toISOStringLocal();
+    const recurrence = convertRecurrenceFormToSettings(form.recurrence);
 
     const newItem: TimeItem = {
       id: generateId(),
@@ -265,6 +287,7 @@ export function useAppState() {
       periodEnd: toISOStringLocal(weekEnd),
       createdAt: isoNow,
       updatedAt: isoNow,
+      ...(recurrence && { recurrence }),
     };
 
     dispatch({ type: 'ADD_ITEM', payload: newItem });
@@ -272,6 +295,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab: 'spendMyTime',
       type: 'create',
+      payload: recurrence ? { recurrence } : undefined,
     });
   };
 

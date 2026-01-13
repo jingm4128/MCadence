@@ -1,5 +1,8 @@
-import { AppState } from './types';
-import { STORAGE_KEY, DEBOUNCE_MS } from './constants';
+import { AppState, Category } from './types';
+import { STORAGE_KEY, DEBOUNCE_MS, DEFAULT_CATEGORIES } from './constants';
+
+// Separate storage key for categories (for independent export/import)
+export const CATEGORIES_STORAGE_KEY = 'mcadence_categories_v1';
 
 // Read state from localStorage
 export function loadState(): AppState {
@@ -88,6 +91,125 @@ export function importState(jsonString: string): AppState {
     console.error('Error importing state:', error);
     throw new Error('Invalid data format');
   }
+}
+
+// === Category-specific storage functions ===
+
+// Load categories from storage (falls back to DEFAULT_CATEGORIES)
+export function loadCategories(): Category[] {
+  try {
+    const stored = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+    if (!stored) {
+      // Check if categories exist in main state
+      const mainState = loadState();
+      if (mainState.categories && mainState.categories.length > 0) {
+        return mainState.categories;
+      }
+      return DEFAULT_CATEGORIES;
+    }
+    
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      console.warn('Invalid categories structure in localStorage, using defaults');
+      return DEFAULT_CATEGORIES;
+    }
+    
+    return parsed;
+  } catch (error) {
+    console.error('Error loading categories from localStorage:', error);
+    return DEFAULT_CATEGORIES;
+  }
+}
+
+// Save categories to storage
+export function saveCategories(categories: Category[]): void {
+  try {
+    localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
+  } catch (error) {
+    console.error('Error saving categories to localStorage:', error);
+  }
+}
+
+// Export categories as JSON string
+export function exportCategories(): string {
+  const categories = loadCategories();
+  return JSON.stringify(categories, null, 2);
+}
+
+// Import categories from JSON string
+export function importCategories(jsonString: string): Category[] {
+  try {
+    const parsed = JSON.parse(jsonString);
+    
+    if (!Array.isArray(parsed)) {
+      throw new Error('Invalid categories structure: expected array');
+    }
+    
+    // Validate each category has required fields
+    for (const cat of parsed) {
+      if (!cat.id || !cat.name || !cat.color || !Array.isArray(cat.subcategories)) {
+        throw new Error('Invalid category structure: missing required fields');
+      }
+      for (const sub of cat.subcategories) {
+        if (!sub.id || !sub.name || !sub.parentId) {
+          throw new Error('Invalid subcategory structure: missing required fields');
+        }
+      }
+    }
+    
+    return parsed;
+  } catch (error) {
+    console.error('Error importing categories:', error);
+    throw new Error('Invalid categories format');
+  }
+}
+
+// Merge imported categories with existing ones
+export function mergeCategories(
+  existing: Category[],
+  imported: Category[],
+  mode: 'combine' | 'overwrite'
+): Category[] {
+  if (mode === 'overwrite') {
+    return imported;
+  }
+  
+  // Combine mode: merge categories by id
+  const merged = [...existing];
+  
+  for (const importedCat of imported) {
+    const existingIndex = merged.findIndex(c => c.id === importedCat.id);
+    if (existingIndex >= 0) {
+      // Merge subcategories
+      const existingSubs = merged[existingIndex].subcategories || [];
+      const importedSubs = importedCat.subcategories || [];
+      const mergedSubs = [...existingSubs];
+      
+      for (const importedSub of importedSubs) {
+        const subIndex = mergedSubs.findIndex(s => s.id === importedSub.id);
+        if (subIndex >= 0) {
+          mergedSubs[subIndex] = importedSub; // Replace existing
+        } else {
+          mergedSubs.push(importedSub); // Add new
+        }
+      }
+      
+      merged[existingIndex] = {
+        ...importedCat,
+        subcategories: mergedSubs
+      };
+    } else {
+      merged.push(importedCat); // Add new category
+    }
+  }
+  
+  return merged;
+}
+
+// Reset categories to defaults
+export function resetCategoriesToDefaults(): Category[] {
+  saveCategories(DEFAULT_CATEGORIES);
+  return DEFAULT_CATEGORIES;
 }
 
 // Get storage usage info

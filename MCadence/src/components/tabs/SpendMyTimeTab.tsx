@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/state';
-import { TimeItemForm, isTimeProject } from '@/lib/types';
+import { TimeItemForm, isTimeProject, RecurrenceFormSettings } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
+import { RecurrenceSelector, getRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset } from '@/utils/date';
 
@@ -21,6 +22,7 @@ export function SpendMyTimeTab() {
     categoryId: '',
     requiredHours: 1,
     requiredMinutes: 0,
+    recurrence: undefined,
   });
 
   const { 
@@ -40,11 +42,12 @@ export function SpendMyTimeTab() {
   const handleAddProject = () => {
     if (formData.title.trim() && (formData.requiredHours > 0 || formData.requiredMinutes > 0)) {
       addTimeItem(formData);
-      setFormData({ 
-        title: '', 
-        categoryId: '', 
-        requiredHours: 1, 
-        requiredMinutes: 0 
+      setFormData({
+        title: '',
+        categoryId: '',
+        requiredHours: 1,
+        requiredMinutes: 0,
+        recurrence: undefined
       });
       setShowAddModal(false);
     }
@@ -358,14 +361,12 @@ export function SpendMyTimeTab() {
             </div>
           </div>
           
+          {/* Recurrence Settings */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Color
-            </label>
-            {/* Color will be determined by category */}
-            <div className="text-sm text-gray-500">
-              Color is automatically assigned based on the selected category
-            </div>
+            <RecurrenceSelector
+              value={formData.recurrence}
+              onChange={(recurrence) => setFormData({ ...formData, recurrence })}
+            />
           </div>
           
           <div className="flex justify-end gap-3 pt-4">

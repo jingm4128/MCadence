@@ -109,5 +109,47 @@ export const DEBOUNCE_MS = 300;
 
 export const WEEKLY_PROGRESS_ALERT_THRESHOLD = 0.8; // 80%
 
-// America/New_York timezone constants
-export const TIMEZONE = 'America/New_York';
+// Default timezone
+export const DEFAULT_TIMEZONE = 'America/New_York';
+
+// Timezone options for user selection
+export const TIMEZONE_OPTIONS = [
+  { value: 'America/New_York', label: 'Eastern Time (EST/EDT)' },
+  { value: 'America/Chicago', label: 'Central Time (CST/CDT)' },
+  { value: 'America/Denver', label: 'Mountain Time (MST/MDT)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PST/PDT)' },
+  { value: 'America/Phoenix', label: 'Arizona (MST)' },
+  { value: 'America/Anchorage', label: 'Alaska Time' },
+  { value: 'Pacific/Honolulu', label: 'Hawaii Time' },
+  { value: 'Europe/London', label: 'London (GMT/BST)' },
+  { value: 'Europe/Paris', label: 'Central European (CET/CEST)' },
+  { value: 'Asia/Tokyo', label: 'Japan (JST)' },
+  { value: 'Asia/Shanghai', label: 'China (CST)' },
+  { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
+  { value: 'UTC', label: 'UTC' },
+];
+
+// Frequency options for recurrence
+export const FREQUENCY_OPTIONS = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'annually', label: 'Annually' },
+];
+
+// Occurrence limit options
+export const OCCURRENCE_OPTIONS = [
+  { value: null, label: 'Forever' },
+  { value: 1, label: '1 time' },
+  { value: 2, label: '2 times' },
+  { value: 3, label: '3 times' },
+  { value: 4, label: '4 times' },
+  { value: 5, label: '5 times' },
+  { value: 10, label: '10 times' },
+  { value: 12, label: '12 times' },
+  { value: 52, label: '52 times' },
+];
+
+// Legacy alias for backward compatibility
+export const TIMEZONE = DEFAULT_TIMEZONE;

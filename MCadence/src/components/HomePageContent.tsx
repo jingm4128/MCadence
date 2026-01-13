@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TabId } from '@/lib/types';
+import { TabId, Category } from '@/lib/types';
 import { useAppState } from '@/lib/state';
 import { Layout } from '@/components/layout/Layout';
 import { DayToDayTab } from '@/components/tabs/DayToDayTab';
@@ -9,7 +9,8 @@ import { HitMyGoalTab } from '@/components/tabs/HitMyGoalTab';
 import { SpendMyTimeTab } from '@/components/tabs/SpendMyTimeTab';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { ImportExportModal } from '@/components/ui/ImportExportModal';
-import { exportState, clearState, saveStateImmediate } from '@/lib/storage';
+import { CategoryEditorModal } from '@/components/ui/CategoryEditorModal';
+import { exportState, clearState, saveStateImmediate, saveCategories } from '@/lib/storage';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 
 export default function HomePageContent() {
@@ -18,6 +19,7 @@ export default function HomePageContent() {
   const [showExportConfirm, setShowExportConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showCategoryEditor, setShowCategoryEditor] = useState(false);
   
   const { state, dispatch } = useAppState();
 
@@ -45,22 +47,32 @@ export default function HomePageContent() {
   };
 
   const handleImport = ({ state: importedState, mode }: { state: any; mode: 'combine' | 'overwrite' }) => {
+    // Use imported categories if available, otherwise keep existing or use defaults
+    const importedCategories = importedState.categories && importedState.categories.length > 0
+      ? importedState.categories
+      : DEFAULT_CATEGORIES;
+    
     if (mode === 'overwrite') {
-      // Replace entire state
+      // Replace entire state including categories
       const finalState = {
-        ...importedState,
-        categories: DEFAULT_CATEGORIES // Ensure we always have default categories
+        items: importedState.items || [],
+        actions: importedState.actions || [],
+        categories: importedCategories
       };
       dispatch({ type: 'LOAD_STATE', payload: finalState });
       saveStateImmediate(finalState);
+      saveCategories(importedCategories); // Also save to separate categories storage
     } else {
       // Combine with existing state
       const existingItems = state.items;
       const existingActions = state.actions;
+      const existingCategories = state.categories && state.categories.length > 0
+        ? state.categories
+        : DEFAULT_CATEGORIES;
       
       // For items, replace by ID if exists, otherwise add new
       const combinedItems = [...existingItems];
-      importedState.items.forEach((importedItem: any) => {
+      (importedState.items || []).forEach((importedItem: any) => {
         const existingIndex = combinedItems.findIndex(item => item.id === importedItem.id);
         if (existingIndex >= 0) {
           combinedItems[existingIndex] = importedItem;
@@ -70,22 +82,47 @@ export default function HomePageContent() {
       });
       
       // For actions, just append all imported actions
-      const combinedActions = [...existingActions, ...importedState.actions];
+      const combinedActions = [...existingActions, ...(importedState.actions || [])];
+      
+      // For categories, merge by ID
+      const combinedCategories = [...existingCategories];
+      (importedCategories || []).forEach((importedCat: Category) => {
+        const existingIndex = combinedCategories.findIndex(c => c.id === importedCat.id);
+        if (existingIndex >= 0) {
+          combinedCategories[existingIndex] = importedCat;
+        } else {
+          combinedCategories.push(importedCat);
+        }
+      });
       
       const finalState = {
         items: combinedItems,
         actions: combinedActions,
-        categories: DEFAULT_CATEGORIES
+        categories: combinedCategories
       };
       
       dispatch({ type: 'LOAD_STATE', payload: finalState });
       saveStateImmediate(finalState);
+      saveCategories(combinedCategories);
     }
   };
 
   const handleClearData = () => {
     clearState();
     window.location.reload();
+  };
+
+  const handleSaveCategories = (categories: Category[]) => {
+    // Save to separate storage key
+    saveCategories(categories);
+    
+    // Update state with new categories
+    const updatedState = {
+      ...state,
+      categories
+    };
+    dispatch({ type: 'LOAD_STATE', payload: updatedState });
+    saveStateImmediate(updatedState);
   };
 
   const renderActiveTab = () => {
@@ -135,6 +172,18 @@ export default function HomePageContent() {
               </button>
               <button
                 onClick={() => {
+                  setShowCategoryEditor(true);
+                  setShowMenu(false);
+                }}
+                className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Edit Categories
+              </button>
+              <div className="pt-2 border-t border-gray-200">
+                <div className="text-xs text-gray-500 px-3 py-1">Danger Zone</div>
+              </div>
+              <button
+                onClick={() => {
                   setShowClearConfirm(true);
                   setShowMenu(false);
                 }}
@@ -178,6 +227,15 @@ export default function HomePageContent() {
         onClose={() => setShowImportModal(false)}
         onImport={handleImport}
       />
+
+      {/* Category Editor Modal */}
+      <CategoryEditorModal
+        isOpen={showCategoryEditor}
+        onClose={() => setShowCategoryEditor(false)}
+        categories={state.categories && state.categories.length > 0 ? state.categories : DEFAULT_CATEGORIES}
+        onSave={handleSaveCategories}
+      />
+
     </Layout>
   );
 }

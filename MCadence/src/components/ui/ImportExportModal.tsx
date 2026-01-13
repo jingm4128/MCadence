@@ -45,13 +45,13 @@ export function ImportExportModal({ isOpen, onClose, onImport }: ImportExportMod
 
       // Validate the imported state structure
       if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.actions)) {
-        throw new Error('Invalid backup file format');
+        throw new Error('Invalid backup file format. Expected a mcadence backup file with items and actions.');
       }
 
       const importedState: AppState = {
         items: parsed.items || [],
         actions: parsed.actions || [],
-        categories: parsed.categories || []
+        categories: parsed.categories || [] // Categories are included in the full backup
       };
 
       onImport({ state: importedState, mode: importMode });
@@ -84,6 +84,7 @@ export function ImportExportModal({ isOpen, onClose, onImport }: ImportExportMod
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
             Select a <strong>mcadence-backup-*.json</strong> file that was exported from this app.
+            This will import all items, actions, and categories.
           </p>
         </div>
 

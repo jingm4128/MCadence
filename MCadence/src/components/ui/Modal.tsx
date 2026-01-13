@@ -5,22 +5,30 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+const sizeClasses = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
+};
+
+export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         {/* Backdrop */}
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
           onClick={onClose}
         />
         
         {/* Modal panel */}
-        <div className="relative w-full max-w-md transform rounded-lg bg-white p-6 shadow-xl transition-all">
+        <div className={`relative w-full ${sizeClasses[size]} transform rounded-lg bg-white p-6 shadow-xl transition-all`}>
           {/* Close button */}
           <button
             onClick={onClose}

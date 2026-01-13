@@ -1,28 +1,80 @@
 import { useState } from 'react';
 import { Category, Subcategory } from '@/lib/types';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { useAppState } from '@/lib/state';
 
 interface CategorySelectorProps {
   value: string;
   onChange: (categoryId: string) => void;
   placeholder?: string;
   className?: string;
+  categories?: Category[]; // Optional: if not provided, will use state categories
 }
 
-export function CategorySelector({ 
-  value, 
-  onChange, 
-  placeholder = "Select category", 
-  className = "" 
+// Get categories from storage for helper functions (called outside component context)
+let cachedCategories: Category[] | null = null;
+
+function getCategoriesFromStorage(): Category[] {
+  if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
+  
+  try {
+    // Use the storage module directly to avoid circular dependencies
+    const stored = localStorage.getItem('mcadence_categories_v1');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedCategories = parsed;
+        return parsed;
+      }
+    }
+    
+    // Fallback to main state categories
+    const mainState = localStorage.getItem('mcadence_state_v1');
+    if (mainState) {
+      const parsed = JSON.parse(mainState);
+      if (parsed.categories && Array.isArray(parsed.categories) && parsed.categories.length > 0) {
+        cachedCategories = parsed.categories;
+        return parsed.categories;
+      }
+    }
+  } catch (error) {
+    console.error('Error loading categories:', error);
+  }
+  
+  return DEFAULT_CATEGORIES;
+}
+
+export function CategorySelector({
+  value,
+  onChange,
+  placeholder = "Select category",
+  className = "",
+  categories: propCategories
 }: CategorySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   
+  // Try to get categories from state, fall back to prop, then defaults
+  let stateCategories: Category[] | undefined;
+  try {
+    const { state } = useAppState();
+    stateCategories = state?.categories;
+  } catch {
+    // useAppState might fail if not in provider context
+  }
+  
+  const categories = propCategories
+    || (stateCategories && stateCategories.length > 0 ? stateCategories : null)
+    || DEFAULT_CATEGORIES;
+  
+  // Update cache for helper functions
+  cachedCategories = categories;
+  
   // Find selected subcategory
-  const selectedSubcategory = DEFAULT_CATEGORIES.flatMap(cat => cat.subcategories)
+  const selectedSubcategory = categories.flatMap(cat => cat.subcategories)
     .find(sub => sub.id === value);
   
   // Find parent category of the selected subcategory
-  const selectedCategory = DEFAULT_CATEGORIES.find(cat => 
+  const selectedCategory = categories.find(cat =>
     cat.subcategories.some(sub => sub.id === value)
   );
 
@@ -43,16 +95,16 @@ export function CategorySelector({
             <span>{selectedSubcategory.icon}</span>
           )}
           <span className={selectedSubcategory ? 'text-gray-900' : 'text-gray-500'}>
-            {selectedSubcategory 
+            {selectedSubcategory
               ? `${selectedCategory?.name} > ${selectedSubcategory.name}`
               : placeholder
             }
           </span>
         </span>
-        <svg 
-          className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-          fill="none" 
-          viewBox="0 0 24 24" 
+        <svg
+          className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
           stroke="currentColor"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -62,9 +114,13 @@ export function CategorySelector({
       {isOpen && (
         <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto page-transition">
           <div className="p-2">
-            {DEFAULT_CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <div key={category.id} className="mb-2">
-                <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                  <span
+                    className="w-3 h-3 rounded-full inline-block"
+                    style={{ backgroundColor: category.color }}
+                  />
                   {category.name}
                 </div>
                 {category.subcategories.map((subcategory) => (
@@ -92,10 +148,12 @@ export function CategorySelector({
 }
 
 // Helper function to get color by category ID
-export function getCategoryColor(categoryId: string): string {
+export function getCategoryColor(categoryId: string, providedCategories?: Category[]): string {
   if (!categoryId) return '#3b82f6'; // Default blue
   
-  const category = DEFAULT_CATEGORIES.find(cat => 
+  const categories = providedCategories || cachedCategories || getCategoriesFromStorage();
+  
+  const category = categories.find(cat =>
     cat.subcategories.some(sub => sub.id === categoryId)
   );
   
@@ -103,25 +161,29 @@ export function getCategoryColor(categoryId: string): string {
 }
 
 // Helper function to get category icon
-export function getCategoryIcon(categoryId: string): string {
+export function getCategoryIcon(categoryId: string, providedCategories?: Category[]): string {
   if (!categoryId) return '📌';
   
-  const subcategory = DEFAULT_CATEGORIES.flatMap(cat => cat.subcategories)
+  const categories = providedCategories || cachedCategories || getCategoriesFromStorage();
+  
+  const subcategory = categories.flatMap(cat => cat.subcategories)
     .find(sub => sub.id === categoryId);
   
   return subcategory?.icon || '📌';
 }
 
 // Helper function to get category display name
-export function getCategoryDisplayName(categoryId: string): string {
+export function getCategoryDisplayName(categoryId: string, providedCategories?: Category[]): string {
   if (!categoryId) return '';
   
-  const subcategory = DEFAULT_CATEGORIES.flatMap(cat => cat.subcategories)
+  const categories = providedCategories || cachedCategories || getCategoriesFromStorage();
+  
+  const subcategory = categories.flatMap(cat => cat.subcategories)
     .find(sub => sub.id === categoryId);
   
   if (!subcategory) return '';
   
-  const category = DEFAULT_CATEGORIES.find(cat => 
+  const category = categories.find(cat =>
     cat.subcategories.some(sub => sub.id === categoryId)
   );
   
