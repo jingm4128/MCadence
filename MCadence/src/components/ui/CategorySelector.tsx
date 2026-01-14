@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Category, Subcategory } from '@/lib/types';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';

@@ -1,3 +1,5 @@
+'use client';
+
 interface HeaderProps {
   title: string;
   onMenuClick: () => void;

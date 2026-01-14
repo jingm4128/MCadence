@@ -24,15 +24,13 @@ export const DEFAULT_CATEGORIES = [
     subcategories: [
       { id: 'sub-sleep', name: '睡觉/休息', icon: '🛏️', parentId: 'cat-daily-essentials' },
       { id: 'sub-work', name: '工作', icon: '💼', parentId: 'cat-daily-essentials' },
-      { id: 'sub-hygiene', name: '洗漱', icon: '🚿', parentId: 'cat-daily-essentials' },
-      { id: 'sub-grooming', name: '臭美', icon: '💄', parentId: 'cat-daily-essentials' },
+      { id: 'sub-hygiene', name: '洗漱/臭美', icon: '🚿', parentId: 'cat-daily-essentials' },
       { id: 'sub-eating', name: '吃饭', icon: '🍽️', parentId: 'cat-daily-essentials' },
       { id: 'sub-chores', name: '家务', icon: '🧹', parentId: 'cat-daily-essentials' },
       { id: 'sub-commute', name: '通勤', icon: '🚗', parentId: 'cat-daily-essentials' },
       { id: 'sub-family', name: '家庭', icon: '👨‍👩‍👧‍👦', parentId: 'cat-daily-essentials' },
       { id: 'sub-medical', name: '医疗', icon: '🏥', parentId: 'cat-daily-essentials' },
       { id: 'sub-other', name: '其他', icon: '📌', parentId: 'cat-daily-essentials' },
-      { id: 'sub-pregnancy', name: '孕产相关', icon: '🤱', parentId: 'cat-daily-essentials' },
     ]
   },
   {
@@ -56,9 +54,8 @@ export const DEFAULT_CATEGORIES = [
       { id: 'sub-reading', name: '读书', icon: '📚', parentId: 'cat-growth' },
       { id: 'sub-learning', name: '专项学习', icon: '🎓', parentId: 'cat-growth' },
       { id: 'sub-planning', name: '规划', icon: '📋', parentId: 'cat-growth' },
-      { id: 'sub-art', name: '艺术爱好', icon: '🎨', parentId: 'cat-growth' },
+      { id: 'sub-art', name: '艺术/爱好', icon: '🎨', parentId: 'cat-growth' },
       { id: 'sub-language', name: '语言学习', icon: '🗣️', parentId: 'cat-growth' },
-      { id: 'sub-sports', name: '运动', icon: '⚽', parentId: 'cat-growth' },
     ]
   },
   {
@@ -79,7 +76,8 @@ export const DEFAULT_CATEGORIES = [
     subcategories: [
       { id: 'sub-childcare', name: '带娃', icon: '👶', parentId: 'cat-kids' },
       { id: 'sub-education', name: '卷娃', icon: '📖', parentId: 'cat-kids' },
-      { id: 'sub-parenting', name: '育儿学习', icon: '🧑‍🏫', parentId: 'cat-kids' },
+      { id: 'sub-parenting', name: '育儿知识', icon: '🧑‍🏫', parentId: 'cat-kids' },
+      { id: 'sub-pregnancy', name: '孕产相关', icon: '🤱', parentId: 'cat-kids' },
     ]
   },
 ];
@@ -108,6 +106,46 @@ export const TAB_CONFIG = {
 export const DEBOUNCE_MS = 300;
 
 export const WEEKLY_PROGRESS_ALERT_THRESHOLD = 0.8; // 80%
+
+// Item Status Definitions
+// Status is based on completion vs deadline:
+// - active: Within deadline, not yet completed
+// - done: Completed the goal before deadline
+// - missed: Deadline passed without completion
+//
+// Archived is a separate flag (isArchived: boolean)
+export const ITEM_STATUS = {
+  ACTIVE: 'active' as const,
+  DONE: 'done' as const,
+  MISSED: 'missed' as const,
+};
+
+export type ItemStatusType = typeof ITEM_STATUS[keyof typeof ITEM_STATUS];
+
+export const ITEM_STATUS_CONFIG = {
+  [ITEM_STATUS.ACTIVE]: {
+    label: 'Active',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+  },
+  [ITEM_STATUS.DONE]: {
+    label: 'Completed',
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+  },
+  [ITEM_STATUS.MISSED]: {
+    label: 'Missed',
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+  },
+};
+
+// Urgency thresholds for recurring items (in hours)
+export const URGENCY_RED_THRESHOLD_HOURS = 12; // Less than 12 hours = urgent (red)
+export const URGENCY_YELLOW_THRESHOLD_HOURS = 24; // Less than 24 hours = warning (yellow)
 
 // Default timezone
 export const DEFAULT_TIMEZONE = 'America/New_York';

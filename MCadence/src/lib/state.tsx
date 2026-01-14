@@ -1,11 +1,24 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE } from './constants';
 import { saveState, loadState } from './storage';
 import { generateId } from '@/utils/uuid';
-import { toISOStringLocal, getWeekStart, getWeekEnd, getNowInTimezone, needsWeekReset } from '@/utils/date';
+import {
+  toISOStringLocal,
+  getWeekStart,
+  getWeekEnd,
+  getNowInTimezone,
+  needsWeekReset,
+  advanceRecurrence,
+  calculateNextDue,
+  getCurrentPeriodKey,
+  getNextPeriodKey,
+  formatTitleWithPeriod,
+  getPeriodDueDate,
+  isPeriodPassed
+} from '@/utils/date';
 
 // Action types for the reducer
 type AppStateAction =
@@ -64,11 +77,66 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
         items: state.items.map(item => {
           if (item.id === action.payload && 'isDone' in item) {
             const now = toISOStringLocal();
+            const checklistItem = item as ChecklistItem;
+            
+            // For items with periodKey (new date-tagged system), simply toggle done status
+            if (checklistItem.periodKey && checklistItem.recurrence) {
+              const newIsDone = !checklistItem.isDone;
+              const newCompletedOccurrences = newIsDone
+                ? checklistItem.recurrence.completedOccurrences + 1
+                : Math.max(0, checklistItem.recurrence.completedOccurrences - 1);
+              
+              return {
+                ...checklistItem,
+                isDone: newIsDone,
+                completedAt: newIsDone ? now : null,
+                status: newIsDone ? 'done' as const : 'active' as const,
+                updatedAt: now,
+                recurrence: {
+                  ...checklistItem.recurrence,
+                  completedOccurrences: newCompletedOccurrences,
+                },
+              } as ChecklistItem;
+            }
+            
+            // Legacy recurring items without periodKey - old behavior (reset on complete)
+            if (checklistItem.recurrence && !checklistItem.isDone) {
+              const advancedRecurrence = advanceRecurrence(checklistItem.recurrence);
+              
+              if (advancedRecurrence === null) {
+                // Occurrence limit reached - archive the item
+                return {
+                  ...checklistItem,
+                  isDone: true,
+                  completedAt: now,
+                  status: 'done' as const,
+                  isArchived: true,
+                  archivedAt: now,
+                  updatedAt: now,
+                  recurrence: {
+                    ...checklistItem.recurrence,
+                    completedOccurrences: checklistItem.recurrence.completedOccurrences + 1,
+                  },
+                } as ChecklistItem;
+              }
+              
+              // Auto-reset for next occurrence - keep active, update recurrence
+              return {
+                ...checklistItem,
+                isDone: false,
+                completedAt: null,
+                status: 'active' as const,
+                updatedAt: now,
+                recurrence: advancedRecurrence,
+              } as ChecklistItem;
+            }
+            
+            // Non-recurring item - standard toggle behavior
             return {
               ...item,
               isDone: !item.isDone,
               completedAt: !item.isDone ? now : null,
-              status: !item.isDone ? 'done' : 'active',
+              status: !item.isDone ? 'done' as const : 'active' as const,
               updatedAt: now,
             } as ChecklistItem;
           }
@@ -81,7 +149,7 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
         ...state,
         items: state.items.map(item =>
           item.id === action.payload
-            ? { ...item, status: 'archived' as const, archivedAt: toISOStringLocal(), updatedAt: toISOStringLocal() }
+            ? { ...item, isArchived: true, archivedAt: toISOStringLocal(), updatedAt: toISOStringLocal() }
             : item
         ),
       };
@@ -223,34 +291,58 @@ export function useAppState() {
     dispatch({ type: 'LOG_ACTION', payload: actionLog });
   };
 
-  // Helper to convert form recurrence to full RecurrenceSettings
-  const convertRecurrenceFormToSettings = (formRecurrence: RecurrenceFormSettings | undefined): RecurrenceSettings | undefined => {
+  // Helper to convert form recurrence to full RecurrenceSettings with period key
+  const convertRecurrenceFormToSettings = (
+    formRecurrence: RecurrenceFormSettings | undefined,
+    periodKey?: string
+  ): RecurrenceSettings | undefined => {
     if (!formRecurrence || !formRecurrence.enabled) {
       return undefined;
     }
     
     const now = toISOStringLocal();
+    const tz = formRecurrence.timezone || DEFAULT_TIMEZONE;
+    // Use periodKey to determine nextDue, or calculate based on current period
+    const nextDue = periodKey
+      ? getPeriodDueDate(periodKey)
+      : calculateNextDue(now, formRecurrence.frequency, tz);
+    
     return {
       frequency: formRecurrence.frequency,
       totalOccurrences: formRecurrence.totalOccurrences,
       completedOccurrences: 0,
-      timezone: formRecurrence.timezone || DEFAULT_TIMEZONE,
+      timezone: tz,
       startDate: now,
-      nextDue: now, // First occurrence is due now
+      nextDue,
     };
   };
 
   const addChecklistItem = (tab: 'dayToDay' | 'hitMyGoal', form: ChecklistItemForm) => {
     const now = toISOStringLocal();
-    const recurrence = convertRecurrenceFormToSettings(form.recurrence);
+    const hasRecurrence = form.recurrence?.enabled;
+    
+    // For recurring items, add period key and format title with date
+    const periodKey = hasRecurrence
+      ? getCurrentPeriodKey(form.recurrence!.frequency)
+      : undefined;
+    
+    const recurrence = convertRecurrenceFormToSettings(form.recurrence, periodKey);
+    
+    // Title includes period suffix for recurring items
+    const displayTitle = hasRecurrence && periodKey
+      ? formatTitleWithPeriod(form.title, periodKey)
+      : form.title;
     
     const newItem: ChecklistItem = {
       id: generateId(),
       tab,
-      title: form.title,
+      title: displayTitle,
+      baseTitle: hasRecurrence ? form.title : undefined,
+      periodKey,
       categoryId: form.categoryId,
       sortKey: Date.now(),
       status: 'active',
+      isArchived: false,
       isDone: false,
       createdAt: now,
       updatedAt: now,
@@ -262,7 +354,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab,
       type: 'create',
-      payload: recurrence ? { recurrence } : undefined,
+      payload: recurrence ? { recurrence, periodKey } : undefined,
     });
   };
 
@@ -271,15 +363,30 @@ export function useAppState() {
     const weekStart = getWeekStart(now);
     const weekEnd = getWeekEnd(now);
     const isoNow = toISOStringLocal();
-    const recurrence = convertRecurrenceFormToSettings(form.recurrence);
+    const hasRecurrence = form.recurrence?.enabled;
+    
+    // For recurring items, add period key and format title with date
+    const periodKey = hasRecurrence
+      ? getCurrentPeriodKey(form.recurrence!.frequency)
+      : undefined;
+    
+    const recurrence = convertRecurrenceFormToSettings(form.recurrence, periodKey);
+    
+    // Title includes period suffix for recurring items
+    const displayTitle = hasRecurrence && periodKey
+      ? formatTitleWithPeriod(form.title, periodKey)
+      : form.title;
 
     const newItem: TimeItem = {
       id: generateId(),
       tab: 'spendMyTime',
-      title: form.title,
+      title: displayTitle,
+      baseTitle: hasRecurrence ? form.title : undefined,
+      periodKey,
       categoryId: form.categoryId,
       sortKey: Date.now(),
       status: 'active',
+      isArchived: false,
       requiredMinutes: form.requiredHours * 60 + form.requiredMinutes,
       completedMinutes: 0,
       currentSessionStart: null,
@@ -295,7 +402,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab: 'spendMyTime',
       type: 'create',
-      payload: recurrence ? { recurrence } : undefined,
+      payload: recurrence ? { recurrence, periodKey } : undefined,
     });
   };
 
@@ -339,13 +446,50 @@ export function useAppState() {
   const toggleChecklistItem = (id: string) => {
     const item = state.items.find(i => i.id === id);
     if (item && 'isDone' in item) {
+      const checklistItem = item as ChecklistItem;
+      const hasRecurrence = !!checklistItem.recurrence;
+      const wasNotDone = !checklistItem.isDone;
+      
       dispatch({ type: 'TOGGLE_CHECKLIST_ITEM', payload: id });
-      logAction({
-        itemId: id,
-        tab: item.tab,
-        type: 'complete',
-        payload: { isDone: !item.isDone },
-      });
+      
+      if (hasRecurrence && wasNotDone) {
+        // Log recurrence completion
+        const rec = checklistItem.recurrence!;
+        const newOccurrenceCount = rec.completedOccurrences + 1;
+        const reachedLimit = rec.totalOccurrences !== null && newOccurrenceCount >= rec.totalOccurrences;
+        
+        logAction({
+          itemId: id,
+          tab: item.tab,
+          type: 'complete',
+          payload: {
+            isDone: true,
+            recurrence: {
+              completedOccurrence: newOccurrenceCount,
+              totalOccurrences: rec.totalOccurrences,
+              reachedLimit,
+              autoReset: !reachedLimit,
+            }
+          },
+        });
+        
+        if (reachedLimit) {
+          logAction({
+            itemId: id,
+            tab: item.tab,
+            type: 'archive',
+            payload: { reason: 'recurrence_limit_reached' },
+          });
+        }
+      } else {
+        // Standard toggle log
+        logAction({
+          itemId: id,
+          tab: item.tab,
+          type: 'complete',
+          payload: { isDone: !checklistItem.isDone },
+        });
+      }
     }
   };
 
@@ -379,19 +523,11 @@ export function useAppState() {
   };
 
   const getItemsByTab = (tab: TabId, includeArchived = false) => {
-    return state.items.filter(item => 
-      item.tab === tab && (includeArchived || item.status !== 'archived')
+    return state.items.filter(item =>
+      item.tab === tab && (includeArchived || !item.isArchived)
     ).sort((a, b) => {
-      // Sort by status first, then by sortKey
-      const statusOrder = { active: 0, done: 1, archived: 2 };
-      const aStatus = statusOrder[a.status];
-      const bStatus = statusOrder[b.status];
-      
-      if (aStatus !== bStatus) {
-        return aStatus - bStatus;
-      }
-      
-      return a.sortKey - b.sortKey;
+      // Sort by title (name)
+      return a.title.localeCompare(b.title);
     });
   };
 

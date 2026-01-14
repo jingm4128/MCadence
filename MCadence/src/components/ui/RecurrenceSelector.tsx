@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { RecurrenceFormSettings, Frequency } from '@/lib/types';
+import { RecurrenceFormSettings, RecurrenceSettings, Frequency } from '@/lib/types';
 import { TIMEZONE_OPTIONS, FREQUENCY_OPTIONS, DEFAULT_TIMEZONE } from '@/lib/constants';
 
 interface RecurrenceSelectorProps {
@@ -143,14 +143,28 @@ export function RecurrenceSelector({ value, onChange, className = '' }: Recurren
   );
 }
 
-// Helper function to get display text for recurrence settings
+// Helper function to get display text for recurrence form settings
 export function getRecurrenceDisplayText(settings: RecurrenceFormSettings | undefined): string {
   if (!settings || !settings.enabled) return '';
   
   const frequency = FREQUENCY_OPTIONS.find(f => f.value === settings.frequency)?.label || settings.frequency;
-  const occurrences = settings.totalOccurrences === null 
-    ? 'forever' 
+  const occurrences = settings.totalOccurrences === null
+    ? 'forever'
     : `${settings.totalOccurrences} times`;
   
   return `${frequency}, ${occurrences}`;
+}
+
+// Helper function to get display text for saved recurrence settings (stored on items)
+export function getSavedRecurrenceDisplayText(settings: RecurrenceSettings | undefined): string {
+  if (!settings) return '';
+  
+  const frequency = FREQUENCY_OPTIONS.find(f => f.value === settings.frequency)?.label || settings.frequency;
+  
+  if (settings.totalOccurrences === null) {
+    return `${frequency}`;
+  }
+  
+  const remaining = settings.totalOccurrences - settings.completedOccurrences;
+  return `${frequency} (${remaining} left)`;
 }

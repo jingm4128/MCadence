@@ -16,7 +16,8 @@ import {
   computeWeeklyMinutes,
   getDefaultTypeFromTab,
 } from '@/lib/ai/quickadd';
-import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE } from '@/lib/constants';
+import { Frequency, RecurrenceFormSettings } from '@/lib/types';
 
 // ============================================================================
 // Proposal Card Component - Full Inline Editing
@@ -62,8 +63,9 @@ function ProposalCard({
     }))
   );
   
-  // Is this a time project tab?
+  // Tab type checks
   const isTimeProject = currentTab === 'spendMyTime';
+  const isHitMyGoal = currentTab === 'hitMyGoal';
   
   // Handle tab change - also update type
   const handleTabChange = (newTab: QuickAddTab) => {
@@ -162,6 +164,47 @@ function ProposalCard({
           ))}
         </select>
       </div>
+      
+      {/* Hit My Goal - Recurrence Selector */}
+      {isHitMyGoal && (
+        <div className="space-y-3 pt-2 border-t border-gray-100">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Recurrence</label>
+            <div className="flex gap-1 flex-wrap">
+              {(['one_off', 'daily', 'weekly', 'monthly'] as RecurrenceType[]).map(rec => (
+                <button
+                  key={rec}
+                  onClick={() => handleRecurrenceChange(rec)}
+                  className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                    currentRecurrence === rec
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {RECURRENCE_LABELS[rec]}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Occurrences limit for recurring goals */}
+          {currentRecurrence !== 'one_off' && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Total occurrences (leave empty for forever)</label>
+              <input
+                type="number"
+                value={selection.editedTotalOccurrences ?? ''}
+                onChange={(e) => onUpdate(proposal.id, {
+                  editedTotalOccurrences: e.target.value ? parseInt(e.target.value) : undefined
+                })}
+                placeholder="Forever"
+                className="w-24 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
+                min={1}
+              />
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Time Project Fields */}
       {isTimeProject && (
@@ -347,6 +390,29 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
     });
   }, []);
   
+  // Helper to convert RecurrenceType to RecurrenceFormSettings
+  const convertToRecurrenceForm = (
+    recurrence: RecurrenceType,
+    totalOccurrences?: number
+  ): RecurrenceFormSettings | undefined => {
+    if (recurrence === 'one_off') return undefined;
+    
+    // Map RecurrenceType to Frequency
+    const frequencyMap: Record<RecurrenceType, Frequency> = {
+      'one_off': 'weekly', // shouldn't be used
+      'daily': 'daily',
+      'weekly': 'weekly',
+      'monthly': 'monthly',
+    };
+    
+    return {
+      enabled: true,
+      frequency: frequencyMap[recurrence],
+      totalOccurrences: totalOccurrences ?? null,
+      timezone: DEFAULT_TIMEZONE,
+    };
+  };
+  
   // Approve and add items
   const handleApprove = useCallback(() => {
     const selectedProposals = proposals.filter(p => selections.get(p.id)?.selected);
@@ -363,10 +429,17 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
       const title = selection?.editedTitle ?? proposal.title;
       const categoryId = selection?.editedCategoryId ?? proposal.categoryId;
       const tab = selection?.editedTab ?? proposal.tab;
+      const recurrence = selection?.editedRecurrence ?? proposal.recurrence;
+      const totalOccurrences = selection?.editedTotalOccurrences;
       
-      if (tab === 'dayToDay' || tab === 'hitMyGoal') {
-        // Add as checklist item
+      if (tab === 'dayToDay') {
+        // Add as checklist item (no recurrence for day-to-day)
         addChecklistItem(tab, { title, categoryId });
+        addedCount++;
+      } else if (tab === 'hitMyGoal') {
+        // Add as checklist item with optional recurrence
+        const recurrenceForm = convertToRecurrenceForm(recurrence, totalOccurrences);
+        addChecklistItem(tab, { title, categoryId, recurrence: recurrenceForm });
         addedCount++;
       } else if (tab === 'spendMyTime') {
         // Add as time project

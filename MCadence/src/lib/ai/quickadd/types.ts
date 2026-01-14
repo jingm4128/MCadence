@@ -58,6 +58,7 @@ export interface ProposalSelection {
   editedDurationMinutes?: number;
   editedFrequencyPerWeek?: number;
   editedRequiredMinutes?: number; // For time projects
+  editedTotalOccurrences?: number; // For hitMyGoal recurring items
 }
 
 // ============================================================================

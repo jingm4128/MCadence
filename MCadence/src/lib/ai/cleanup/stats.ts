@@ -226,7 +226,7 @@ export function buildCleanupStats(period: PeriodSpec, state: AppState): CleanupS
   const notes: string[] = [];
   
   // Filter out already archived items
-  const relevantItems = state.items.filter(item => item.status !== 'archived');
+  const relevantItems = state.items.filter(item => !item.isArchived);
   
   // Count by status
   const activeItems = relevantItems.filter(item => item.status === 'active').length;

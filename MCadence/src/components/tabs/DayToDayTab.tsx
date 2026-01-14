@@ -21,7 +21,7 @@ export function DayToDayTab() {
   const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, deleteItem } = useAppState();
 
   const items = getItemsByTab('dayToDay');
-  const archivedItems = getItemsByTab('dayToDay', true).filter(item => item.status === 'archived');
+  const archivedItems = getItemsByTab('dayToDay', true).filter(item => item.isArchived);
 
   const handleAddItem = () => {
     if (formData.title.trim()) {

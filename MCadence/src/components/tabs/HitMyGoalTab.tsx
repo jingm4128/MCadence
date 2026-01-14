@@ -1,29 +1,83 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/state';
-import { ChecklistItemForm, isChecklistItem, RecurrenceFormSettings } from '@/lib/types';
+import { ChecklistItem, ChecklistItemForm, isChecklistItem, RecurrenceFormSettings, RecurrenceSettings } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
-import { RecurrenceSelector, getRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
+import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
+import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
+
+// Toast notification component
+function Toast({ message, type, onClose }: { message: string; type: 'success' | 'info'; onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in ${
+      type === 'success' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
+    }`}>
+      {message}
+    </div>
+  );
+}
+
+// Edit recurrence state
+interface EditRecurrenceState {
+  itemId: string;
+  recurrence: RecurrenceFormSettings | undefined;
+  hasExistingRecurrence: boolean;
+}
 
 export function HitMyGoalTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToArchive, setItemToArchive] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
     categoryId: '',
     recurrence: undefined,
   });
 
-  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, deleteItem } = useAppState();
+  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, deleteItem, updateItem, state } = useAppState();
 
   const items = getItemsByTab('hitMyGoal');
-  const archivedItems = getItemsByTab('hitMyGoal', true).filter(item => item.status === 'archived');
+  const archivedItems = getItemsByTab('hitMyGoal', true).filter(item => item.isArchived);
+
+  // Custom toggle handler with toast notification
+  const handleToggle = (item: ChecklistItem) => {
+    const hasRecurrence = !!item.recurrence;
+    
+    if (hasRecurrence && !item.isDone) {
+      const rec = item.recurrence!;
+      const newCount = rec.completedOccurrences + 1;
+      const reachedLimit = rec.totalOccurrences !== null && newCount >= rec.totalOccurrences;
+      
+      toggleChecklistItem(item.id);
+      
+      if (reachedLimit) {
+        setToast({
+          message: `🎉 Goal completed! All ${rec.totalOccurrences} occurrences done!`,
+          type: 'success'
+        });
+      } else {
+        const remaining = rec.totalOccurrences ? `${rec.totalOccurrences - newCount} left` : 'recurring';
+        setToast({
+          message: `✓ Completed! Reset for next ${rec.frequency} cycle (${remaining})`,
+          type: 'info'
+        });
+      }
+    } else {
+      toggleChecklistItem(item.id);
+    }
+  };
 
   const handleAddItem = () => {
     if (formData.title.trim()) {
@@ -52,6 +106,51 @@ export function HitMyGoalTab() {
     if (itemToDelete) {
       deleteItem(itemToDelete);
       setItemToDelete(null);
+    }
+  };
+
+  // Edit recurrence functions
+  const handleEditRecurrence = (item: ChecklistItem) => {
+    const existingRecurrence = item.recurrence;
+    setEditRecurrenceState({
+      itemId: item.id,
+      recurrence: existingRecurrence ? {
+        enabled: true,
+        frequency: existingRecurrence.frequency,
+        totalOccurrences: existingRecurrence.totalOccurrences,
+        timezone: existingRecurrence.timezone,
+      } : undefined,
+      hasExistingRecurrence: !!existingRecurrence,
+    });
+  };
+
+  const confirmEditRecurrence = () => {
+    if (editRecurrenceState) {
+      const { itemId, recurrence } = editRecurrenceState;
+      
+      // Find the item to preserve existing recurrence data
+      const allItems = getItemsByTab('hitMyGoal', true);
+      const item = allItems.find(i => i.id === itemId);
+      const existingRecurrence = item && isChecklistItem(item) ? item.recurrence : undefined;
+      
+      if (!recurrence || !recurrence.enabled) {
+        // Remove recurrence
+        updateItem(itemId, { recurrence: undefined });
+      } else {
+        // Update recurrence - preserve existing completedOccurrences
+        const newRecurrence: RecurrenceSettings = {
+          frequency: recurrence.frequency,
+          totalOccurrences: recurrence.totalOccurrences,
+          completedOccurrences: existingRecurrence?.completedOccurrences || 0,
+          timezone: recurrence.timezone,
+          startDate: existingRecurrence?.startDate || new Date().toISOString(),
+          nextDue: existingRecurrence?.nextDue || new Date().toISOString(),
+        };
+        
+        updateItem(itemId, { recurrence: newRecurrence });
+      }
+      
+      setEditRecurrenceState(null);
     }
   };
 
@@ -107,24 +206,54 @@ export function HitMyGoalTab() {
         </div>
       ) : (
         <div className="space-y-3">
-          {items.map((item) => (
-            isChecklistItem(item) && (
+          {items.map((item) => {
+            if (!isChecklistItem(item)) return null;
+            
+            // Calculate urgency for recurring items
+            const hasRecurrence = !!item.recurrence;
+            const urgencyStatus: UrgencyStatus = hasRecurrence
+              ? getUrgencyStatus(item.recurrence?.nextDue, item.isDone)
+              : item.isDone ? 'complete' : 'normal';
+            const urgencyClasses = getUrgencyClasses(urgencyStatus);
+            const timeUntilDue = hasRecurrence ? formatTimeUntilDue(item.recurrence?.nextDue) : '';
+            
+            return (
               <div
                 key={item.id}
-                className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm swipe-hint category-transition hover-lift"
+                className={`bg-white p-4 rounded-lg border shadow-sm swipe-hint category-transition hover-lift ${
+                  urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
+                    ? `${urgencyClasses.border} ${urgencyClasses.bg}`
+                    : urgencyStatus === 'warning'
+                    ? `${urgencyClasses.border} ${urgencyClasses.bg}`
+                    : 'border-gray-200'
+                }`}
                 style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: '4px' }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 mb-2">
                   <input
                     type="checkbox"
                     checked={item.isDone}
-                    onChange={() => toggleChecklistItem(item.id)}
+                    onChange={() => handleToggle(item)}
                     className="h-5 w-5 text-primary-600 rounded focus:ring-primary-500"
                   />
                   <div className="flex-1">
-                    <h3 className={`font-medium ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                      {item.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className={`font-medium ${
+                        item.isDone
+                          ? 'text-gray-500 line-through'
+                          : urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
+                          ? urgencyClasses.text
+                          : 'text-gray-900'
+                      }`}>
+                        {item.title}
+                      </h3>
+                      {/* Time left badge for recurring items */}
+                      {hasRecurrence && timeUntilDue && !item.isDone && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${urgencyClasses.badge}`}>
+                          {timeUntilDue}
+                        </span>
+                      )}
+                    </div>
                     {item.categoryId && (
                       <span className="text-sm text-gray-500 flex items-center gap-1">
                         <span>{getCategoryIcon(item.categoryId)}</span>
@@ -133,6 +262,15 @@ export function HitMyGoalTab() {
                     )}
                   </div>
                   <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEditRecurrence(item)}
+                      className="text-gray-400 hover:text-gray-600 p-1"
+                      title="Edit Recurrence"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
                     <button
                       onClick={() => handleArchive(item.id)}
                       className="text-gray-400 hover:text-gray-600 p-1"
@@ -154,8 +292,8 @@ export function HitMyGoalTab() {
                   </div>
                 </div>
               </div>
-            )
-          ))}
+            );
+          })}
           {items.length === 0 && (
             <div className="text-center py-12 empty-state">
               <div className="empty-state-icon">🎯</div>
@@ -238,6 +376,50 @@ export function HitMyGoalTab() {
         confirmText="Delete"
         danger={true}
       />
+
+      {/* Edit Recurrence Modal */}
+      <Modal
+        isOpen={!!editRecurrenceState}
+        onClose={() => setEditRecurrenceState(null)}
+        title="Edit Recurrence"
+      >
+        {editRecurrenceState && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              {editRecurrenceState.hasExistingRecurrence
+                ? 'Modify or remove the recurrence settings for this goal.'
+                : 'Add recurrence settings to make this a recurring goal.'}
+            </p>
+            <RecurrenceSelector
+              value={editRecurrenceState.recurrence}
+              onChange={(recurrence) => setEditRecurrenceState({
+                ...editRecurrenceState,
+                recurrence
+              })}
+            />
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="secondary"
+                onClick={() => setEditRecurrenceState(null)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={confirmEditRecurrence}>
+                Save
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

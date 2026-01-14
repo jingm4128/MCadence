@@ -1,3 +1,5 @@
+'use client';
+
 import { TAB_CONFIG } from '@/lib/constants';
 import type { TabId } from '@/lib/types';
 
