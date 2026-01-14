@@ -36,7 +36,6 @@ interface EditRecurrenceState {
 export function HitMyGoalTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
-  const [itemToArchive, setItemToArchive] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
@@ -88,14 +87,8 @@ export function HitMyGoalTab() {
   };
 
   const handleArchive = (id: string) => {
-    setItemToArchive(id);
-  };
-
-  const confirmArchive = () => {
-    if (itemToArchive) {
-      archiveItem(itemToArchive);
-      setItemToArchive(null);
-    }
+    archiveItem(id);
+    setToast({ message: 'Archived, go to archived to recover', type: 'info' });
   };
 
   const handleDelete = (id: string) => {
@@ -396,16 +389,6 @@ export function HitMyGoalTab() {
           </div>
         </div>
       </Modal>
-
-      {/* Archive Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToArchive}
-        onClose={() => setItemToArchive(null)}
-        onConfirm={confirmArchive}
-        title="Archive Goal"
-        message="Archive this goal? You can restore it from archived view."
-        confirmText="Archive"
-      />
 
       {/* Delete Confirmation */}
       <ConfirmDialog

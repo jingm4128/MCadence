@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/state';
 import { ChecklistItemForm, isChecklistItem } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
@@ -11,8 +11,8 @@ import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplay
 export function DayToDayTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
-  const [itemToArchive, setItemToArchive] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
     categoryId: '',
@@ -23,6 +23,14 @@ export function DayToDayTab() {
   const items = getItemsByTab('dayToDay');
   const archivedItems = getItemsByTab('dayToDay', true).filter(item => item.isArchived);
 
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   const handleAddItem = () => {
     if (formData.title.trim()) {
       addChecklistItem('dayToDay', formData);
@@ -32,14 +40,8 @@ export function DayToDayTab() {
   };
 
   const handleArchive = (id: string) => {
-    setItemToArchive(id);
-  };
-
-  const confirmArchive = () => {
-    if (itemToArchive) {
-      archiveItem(itemToArchive);
-      setItemToArchive(null);
-    }
+    archiveItem(id);
+    setToastMessage('Archived, go to archived to recover');
   };
 
   const handleDelete = (id: string) => {
@@ -245,16 +247,6 @@ export function DayToDayTab() {
         </div>
       </Modal>
 
-      {/* Archive Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToArchive}
-        onClose={() => setItemToArchive(null)}
-        onConfirm={confirmArchive}
-        title="Archive Task"
-        message="Archive this task? You can restore it from the archived view."
-        confirmText="Archive"
-      />
-
       {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={!!itemToDelete}
@@ -265,6 +257,13 @@ export function DayToDayTab() {
         confirmText="Delete"
         danger={true}
       />
+
+      {/* Toast Message */}
+      {toastMessage && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

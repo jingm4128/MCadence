@@ -28,11 +28,11 @@ interface EditRecurrenceState {
 export function SpendMyTimeTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
-  const [itemToArchive, setItemToArchive] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [editTimeState, setEditTimeState] = useState<EditTimeState | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [elapsedMinutes, setElapsedMinutes] = useState(0); // Real-time elapsed minutes for active timer
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<TimeItemForm>({
     title: '',
     categoryId: '',
@@ -80,6 +80,14 @@ export function SpendMyTimeTab() {
     return () => clearInterval(interval);
   }, [activeTimerProject?.currentSessionStart]);
 
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   const handleAddProject = () => {
     if (formData.title.trim() && (formData.requiredHours > 0 || formData.requiredMinutes > 0)) {
       addTimeItem(formData);
@@ -95,14 +103,8 @@ export function SpendMyTimeTab() {
   };
 
   const handleArchive = (id: string) => {
-    setItemToArchive(id);
-  };
-
-  const confirmArchive = () => {
-    if (itemToArchive) {
-      archiveItem(itemToArchive);
-      setItemToArchive(null);
-    }
+    archiveItem(id);
+    setToastMessage('Archived, go to archived to recover');
   };
 
   const handleDelete = (id: string) => {
@@ -592,16 +594,6 @@ export function SpendMyTimeTab() {
         </div>
       </Modal>
 
-      {/* Archive Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToArchive}
-        onClose={() => setItemToArchive(null)}
-        onConfirm={confirmArchive}
-        title="Archive Project"
-        message="Archive this project? You can restore it from archived view."
-        confirmText="Archive"
-      />
-
       {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={!!itemToDelete}
@@ -713,6 +705,13 @@ export function SpendMyTimeTab() {
           </div>
         )}
       </Modal>
+
+      {/* Toast Message */}
+      {toastMessage && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }
