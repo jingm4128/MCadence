@@ -1,23 +1,14 @@
 /**
  * Server-Side AI Configuration
- * 
+ *
  * This file contains server-side only configuration for AI providers.
- * Default API keys are managed here and never exposed to clients.
- * 
- * Environment Variables:
- * - DEFAULT_AI_PROVIDER: Default provider (openai, gemini, anthropic)
- * - DEFAULT_OPENAI_API_KEY: Default OpenAI API key
- * - DEFAULT_GEMINI_API_KEY: Default Gemini API key
- * - DEFAULT_ANTHROPIC_API_KEY: Default Anthropic API key
- * 
- * Legacy Support:
- * - OPENAI_API_KEY: Falls back to this if DEFAULT_OPENAI_API_KEY not set
+ * OpenAI API key is hardcoded for deployment simplicity.
  */
 
-import { 
-  AIProvider, 
-  PROVIDERS, 
-  callAIProvider, 
+import {
+  AIProvider,
+  PROVIDERS,
+  callAIProvider,
   getDefaultModel,
   validateAPIKeyForProvider,
 } from './providers';
@@ -26,26 +17,23 @@ import {
 // Server Configuration
 // ============================================================================
 
+// Hardcoded OpenAI API key for deployment
+const OPENAI_API_KEY = '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';
+
 /**
- * Get the default AI provider from environment.
+ * Get the default AI provider (always OpenAI).
  */
 export function getServerDefaultProvider(): AIProvider {
-  const provider = process.env.DEFAULT_AI_PROVIDER as AIProvider;
-  if (provider && PROVIDERS[provider]) {
-    return provider;
-  }
-  // Default to openai
   return 'openai';
 }
 
 /**
- * Get the default API key for a provider from environment.
- * Returns null if no default key is configured.
+ * Get the API key for a provider.
  */
 export function getServerDefaultApiKey(provider: AIProvider): string | null {
   switch (provider) {
     case 'openai':
-      return process.env.DEFAULT_OPENAI_API_KEY || process.env.OPENAI_API_KEY || null;
+      return OPENAI_API_KEY;
     case 'gemini':
       return process.env.DEFAULT_GEMINI_API_KEY || null;
     case 'anthropic':

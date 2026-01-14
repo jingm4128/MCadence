@@ -1,14 +1,9 @@
 /**
  * AI Settings Management
- * 
- * Manages user-configurable AI settings with provider defaults and user overrides.
- * 
- * Behavior:
- * - Developer sets default provider/key via environment variables
- * - Users see the default provider on first use
- * - Users can override provider and supply their own API key
- * - User overrides persist and take precedence over env defaults
- * - Users can reset to defaults (clears overrides)
+ *
+ * Manages user-configurable AI settings.
+ * Default provider is OpenAI with hardcoded API key.
+ * Users can override with their own API key if desired.
  */
 
 import { AIProvider, PROVIDERS, getDefaultModel, validateAPIKeyForProvider } from './providers';
@@ -57,28 +52,21 @@ const DEFAULT_USER_SETTINGS: UserAISettings = {
 };
 
 // ============================================================================
-// Environment Configuration
+// Configuration
 // ============================================================================
 
 /**
- * Get default AI provider from environment.
+ * Get default AI provider (always OpenAI).
  */
 export function getEnvDefaultProvider(): AIProvider {
-  const provider = process.env.NEXT_PUBLIC_DEFAULT_AI_PROVIDER as AIProvider;
-  if (provider && PROVIDERS[provider]) {
-    return provider;
-  }
-  // Default to openai
   return 'openai';
 }
 
 /**
- * Check if server has a default API key configured.
- * Note: The actual key is never exposed to the client.
+ * Check if default API key is available (always true - hardcoded).
  */
 export function hasEnvDefaultKey(): boolean {
-  // This is checked server-side via NEXT_PUBLIC flag
-  return process.env.NEXT_PUBLIC_AI_ENABLED === 'true';
+  return true;
 }
 
 // ============================================================================
@@ -252,76 +240,12 @@ export function getAIRequestConfig(): AIRequestConfig {
   };
 }
 
-// ============================================================================
-// Legacy Compatibility
-// ============================================================================
-
-// Re-export types for backward compatibility
+// Re-export types
 export type { AIProvider };
 
-// Legacy AISettings interface for backward compatibility
-export interface AISettings {
-  apiKey: string;
-  model: string;
-  enabled: boolean;
-  provider?: AIProvider;
-}
-
 /**
- * Load AI settings (legacy compatibility).
- */
-export function loadAISettings(): AISettings {
-  const effective = getEffectiveSettings();
-  return {
-    apiKey: effective.userApiKey,
-    model: effective.model,
-    enabled: effective.enabled,
-    provider: effective.provider,
-  };
-}
-
-/**
- * Save AI settings (legacy compatibility).
- */
-export function saveAISettings(settings: Partial<AISettings>): AISettings {
-  if (settings.apiKey !== undefined) {
-    setUserApiKey(settings.apiKey);
-  }
-  if (settings.model !== undefined) {
-    const effective = getEffectiveSettings();
-    setUserModel(effective.provider, settings.model);
-  }
-  if (settings.provider !== undefined) {
-    setUserProvider(settings.provider);
-  }
-  return loadAISettings();
-}
-
-/**
- * Clear AI settings (legacy compatibility).
- */
-export function clearAISettings(): void {
-  resetUserSettings();
-}
-
-/**
- * Check if user has configured their own API key (legacy compatibility).
- */
-export function isUserAIEnabled(): boolean {
-  const effective = getEffectiveSettings();
-  return effective.source === 'user';
-}
-
-/**
- * Check if AI is enabled (either user key or default key).
+ * Check if AI is enabled.
  */
 export function isAIEnabled(): boolean {
   return getEffectiveSettings().enabled;
-}
-
-/**
- * Get the source of AI configuration.
- */
-export function getAISource(): 'user' | 'env' | 'none' {
-  return getEffectiveSettings().source;
 }

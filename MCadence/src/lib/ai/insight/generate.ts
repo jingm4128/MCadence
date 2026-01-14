@@ -18,7 +18,6 @@ import {
   getEffectiveSettings,
   getAIRequestConfig,
   isAIEnabled as checkAIEnabled,
-  getAISource as checkAISource,
 } from '../settings';
 
 // ============================================================================
@@ -110,7 +109,8 @@ export function isAIEnabled(): boolean {
  */
 export function getAISource(): 'user' | 'env' | 'none' {
   if (typeof window === 'undefined') return 'none';
-  return checkAISource();
+  const settings = getEffectiveSettings();
+  return settings.source;
 }
 
 /**

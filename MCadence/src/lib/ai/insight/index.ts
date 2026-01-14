@@ -22,17 +22,10 @@ export {
   type GenerateInsightResult,
 } from './generate';
 
-// Settings - re-export from central settings module for backward compatibility
+// Settings
 export {
-  loadAISettings,
-  saveAISettings,
-  clearAISettings,
-  isUserAIEnabled,
-  isAIEnabled as checkAIEnabled,
-  getAISource as checkAISource,
   getEffectiveSettings,
   getAIRequestConfig,
-  type AISettings,
   type EffectiveAISettings,
   type UserAISettings,
   type AIRequestConfig,
@@ -42,7 +35,6 @@ export {
 export {
   maskAPIKey,
   validateAPIKeyForProvider,
-  validateAPIKeyForProvider as isValidAPIKeyFormat, // Legacy alias
   PROVIDERS,
   PROVIDER_LIST,
   getProviderConfig,
