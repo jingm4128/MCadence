@@ -428,7 +428,9 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
   // Count selected
   const selectedCount = Array.from(selections.values()).filter(s => s.selected).length;
   
-  const quickAddEnabled = isQuickAddEnabled();
+  // Use the aiEnabled prop from parent (which stays in sync with localStorage)
+  // rather than calling isQuickAddEnabled() which only reads at render time
+  const quickAddEnabled = aiEnabled;
   
   return (
     <div>

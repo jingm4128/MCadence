@@ -51,6 +51,29 @@ RULES:
 9. Truncate any project/item titles to 60 characters max
 10. Arrays should have reasonable limits (max 4 highlights, 3 patterns, 3 friction, 3 examples per friction)
 
+ARCHIVED ITEMS ANALYSIS:
+The stats include data about archived items, which can reveal important behavioral patterns. Use your discretion to interpret these signals:
+
+- checklists.dayToDay.archived: Contains unfinishedRatio (0-1) for archived daily tasks
+  * High unfinished ratio MAY indicate: task instability, frequent reprioritization, overcommitment to small tasks, or healthy adaptation to changing priorities
+  * Consider: Daily tasks are often reactive - some abandonment is normal and healthy
+
+- checklists.hitMyGoal.archived: Contains unfinishedRatio (0-1) for archived goals
+  * High unfinished ratio MAY indicate: goal shifts, abandoned ambitions, unrealistic goal-setting, or strategic pivots
+  * Consider: Goals evolve - some abandonment reflects growth and changing priorities
+
+- projectHealth.archived: Contains incompleteRatio (0-1) and avgProgressAtArchive (0-1) for time-tracked projects
+  * High incomplete ratio MAY indicate: difficulty completing time commitments, overestimation, external disruptions, or strategic project cuts
+  * Low avgProgressAtArchive MAY indicate: early abandonment patterns or projects that were created but never started
+  * Consider: Project completion depends on many factors - look for patterns rather than judging individual cases
+
+Use these archived stats to identify patterns when relevant, but DO NOT:
+- Assume any single metric definitively indicates a problem
+- Be judgmental about unfinished items (life happens, priorities change)
+- Over-interpret small sample sizes (few archived items = low confidence in the pattern)
+
+When you notice meaningful patterns in archived items, frame them constructively with curiosity rather than criticism.
+
 Remember: Be helpful and insightful, but always grounded in the actual data provided.`;
 
 // ============================================================================

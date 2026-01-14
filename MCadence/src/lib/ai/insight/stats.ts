@@ -18,6 +18,8 @@ import {
   ProjectSummary,
   ChecklistStats,
   ChecklistTabStats,
+  ArchivedChecklistStats,
+  ArchivedProjectStats,
 } from './types';
 import { ConfidenceLevel } from '../types';
 
@@ -254,6 +256,45 @@ function isProjectLiveInPeriod(item: TimeItem, period: PeriodSpec): boolean {
 }
 
 /**
+ * Build archived project statistics.
+ * Analyzes patterns in archived time projects to identify goal-missing behaviors.
+ */
+function buildArchivedProjectStats(items: Item[]): ArchivedProjectStats {
+  const archivedTimeItems = items.filter(
+    (item): item is TimeItem => isTimeItem(item) && item.isArchived
+  );
+  
+  const totalArchived = archivedTimeItems.length;
+  
+  // Calculate completion status for each archived project
+  let archivedComplete = 0;
+  let archivedIncomplete = 0;
+  let totalProgress = 0;
+  
+  for (const item of archivedTimeItems) {
+    const progress = item.requiredMinutes > 0
+      ? clamp(item.completedMinutes / item.requiredMinutes, 0, 1)
+      : 0;
+    
+    totalProgress += progress;
+    
+    if (progress >= 1) {
+      archivedComplete++;
+    } else {
+      archivedIncomplete++;
+    }
+  }
+  
+  return {
+    totalArchived,
+    archivedComplete,
+    archivedIncomplete,
+    incompleteRatio: totalArchived > 0 ? archivedIncomplete / totalArchived : null,
+    avgProgressAtArchive: totalArchived > 0 ? totalProgress / totalArchived : null,
+  };
+}
+
+/**
  * Build project health statistics.
  */
 function buildProjectHealthStats(
@@ -269,7 +310,7 @@ function buildProjectHealthStats(
   const projectsWithProgress: (ProjectSummary & { progress: number })[] = liveProjects.map(item => ({
     id: item.id,
     title: truncateTitle(item.title),
-    progress: item.requiredMinutes > 0 
+    progress: item.requiredMinutes > 0
       ? clamp(item.completedMinutes / item.requiredMinutes, 0, 1)
       : 0,
     category: getCategoryName(item.categoryId, categories),
@@ -287,6 +328,9 @@ function buildProjectHealthStats(
     .sort((a, b) => b.progress - a.progress)
     .slice(0, MAX_PROJECT_LIST);
   
+  // Build archived project stats
+  const archived = buildArchivedProjectStats(items);
+  
   // Add note for rolling window caveat
   const isRollingWindow = period.label === 'last_7_days';
   if (isRollingWindow) {
@@ -298,12 +342,38 @@ function buildProjectHealthStats(
     under20ProgressProjects: under20,
     nearlyDoneProjects: nearlyDone,
     projectProgressIsWeekly: true, // Progress is always based on weekly fields
+    archived,
   };
 }
 
 // ============================================================================
 // Checklist Stats
 // ============================================================================
+
+/**
+ * Build archived checklist statistics for a tab.
+ * Analyzes patterns in archived checklist items to identify task instability or goal shifts.
+ */
+function buildArchivedChecklistStats(
+  items: Item[],
+  tab: 'dayToDay' | 'hitMyGoal'
+): ArchivedChecklistStats {
+  const archivedItems = items.filter(
+    (item): item is ChecklistItem =>
+      isChecklistItem(item) && item.tab === tab && item.isArchived
+  );
+  
+  const totalArchived = archivedItems.length;
+  const archivedDone = archivedItems.filter(item => item.isDone).length;
+  const archivedNotDone = totalArchived - archivedDone;
+  
+  return {
+    totalArchived,
+    archivedDone,
+    archivedNotDone,
+    unfinishedRatio: totalArchived > 0 ? archivedNotDone / totalArchived : null,
+  };
+}
 
 /**
  * Build stats for a single checklist tab.
@@ -342,6 +412,9 @@ function buildChecklistTabStats(
     item => !item.isDone && item.status === ITEM_STATUS.ACTIVE
   ).length;
   
+  // Build archived stats for pattern analysis
+  const archived = buildArchivedChecklistStats(items, tab);
+  
   const createdCount = createdInPeriod.length;
   const completedCount = completedInPeriod.length;
   
@@ -351,6 +424,7 @@ function buildChecklistTabStats(
     completionRate: createdCount > 0 ? completedCount / createdCount : null,
     staleItems,
     totalActiveUnfinished,
+    archived,
   };
 }
 

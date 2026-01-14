@@ -385,7 +385,9 @@ export function CleanupSection({ aiEnabled }: CleanupSectionProps) {
   const archiveSuggestions = suggestions.filter(s => s.action === 'archive');
   const deleteSuggestions = suggestions.filter(s => s.action === 'delete');
   
-  const cleanupEnabled = isCleanupEnabled();
+  // Use the aiEnabled prop from parent (which stays in sync with localStorage)
+  // rather than calling isCleanupEnabled() which only reads at render time
+  const cleanupEnabled = aiEnabled;
   
   return (
     <div>
