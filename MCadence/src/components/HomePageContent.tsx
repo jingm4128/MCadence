@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, useCallback, useEffect } from 'react';
 import { TabId, Category } from '@/lib/types';
 import { useAppState } from '@/lib/state';
 import { Layout } from '@/components/layout/Layout';
@@ -12,23 +12,92 @@ import { ImportExportModal } from '@/components/ui/ImportExportModal';
 import { CategoryEditorModal } from '@/components/ui/CategoryEditorModal';
 import { exportState, clearState, saveStateImmediate, saveCategories } from '@/lib/storage';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { useHistoryGuard, useModalHistory, ModalId } from '@/hooks/useHistoryGuard';
 
 // Lazy load AiPanel to keep main app fast
 const AiPanel = lazy(() => import('@/components/ai/AiPanel'));
 
+// Storage key for active tab
+const ACTIVE_TAB_KEY = 'mcadence_active_tab';
+
+/**
+ * Load saved active tab from localStorage
+ */
+function loadActiveTab(): TabId {
+  if (typeof window === 'undefined') return 'dayToDay';
+  
+  const saved = localStorage.getItem(ACTIVE_TAB_KEY);
+  if (saved === 'dayToDay' || saved === 'hitMyGoal' || saved === 'spendMyTime') {
+    return saved;
+  }
+  return 'dayToDay';
+}
+
+/**
+ * Save active tab to localStorage
+ */
+function saveActiveTab(tab: TabId): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(ACTIVE_TAB_KEY, tab);
+  }
+}
+
+/**
+ * Custom hook to manage modal state with browser history integration.
+ * When a modal opens, it pushes a history state.
+ * When the user presses Back, the modal closes.
+ */
+function useModalWithHistory(modalId: ModalId) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const open = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  // Integrate with browser history
+  useModalHistory(modalId, isOpen, close);
+
+  return { isOpen, open, close };
+}
+
 export default function HomePageContent() {
+  // Initialize active tab from localStorage (with SSR safety)
   const [activeTab, setActiveTab] = useState<TabId>('dayToDay');
-  const [showMenu, setShowMenu] = useState(false);
-  const [showExportConfirm, setShowExportConfirm] = useState(false);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [showCategoryEditor, setShowCategoryEditor] = useState(false);
-  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [isTabHydrated, setIsTabHydrated] = useState(false);
+
+  // Load saved tab on mount (client-side only)
+  useEffect(() => {
+    const savedTab = loadActiveTab();
+    setActiveTab(savedTab);
+    setIsTabHydrated(true);
+  }, []);
+  
+  // Initialize the history guard to prevent accidental exit
+  const { markUserNavigation } = useHistoryGuard(true);
+  
+  // Modal states using history-integrated hooks
+  const menuModal = useModalWithHistory('menu');
+  const exportModal = useModalWithHistory('export');
+  const clearModal = useModalWithHistory('clear');
+  const importModal = useModalWithHistory('import');
+  const categoryModal = useModalWithHistory('categories');
+  const aiModal = useModalWithHistory('ai');
   
   const { state, dispatch } = useAppState();
 
+  // Mark user navigation when tab changes (intentional in-app navigation)
+  const handleTabChange = useCallback((tab: TabId) => {
+    setActiveTab(tab);
+    saveActiveTab(tab); // Persist to localStorage
+    markUserNavigation();
+  }, [markUserNavigation]);
+
   const handleMenuClick = () => {
-    setShowMenu(true);
+    menuModal.open();
   };
 
   const handleExport = () => {
@@ -47,7 +116,7 @@ export default function HomePageContent() {
     } catch (error) {
       console.error('Export failed:', error);
     }
-    setShowMenu(false);
+    menuModal.close();
   };
 
   const handleImport = ({ state: importedState, mode }: { state: any; mode: 'combine' | 'overwrite' }) => {
@@ -109,6 +178,9 @@ export default function HomePageContent() {
       saveStateImmediate(finalState);
       saveCategories(combinedCategories);
     }
+    
+    // Mark as user navigation after import
+    markUserNavigation();
   };
 
   const handleClearData = () => {
@@ -127,6 +199,9 @@ export default function HomePageContent() {
     };
     dispatch({ type: 'LOAD_STATE', payload: updatedState });
     saveStateImmediate(updatedState);
+    
+    // Mark as user navigation after category change
+    markUserNavigation();
   };
 
   const renderActiveTab = () => {
@@ -145,22 +220,22 @@ export default function HomePageContent() {
   return (
     <Layout
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
       onMenuClick={handleMenuClick}
-      onAIClick={() => setShowAiPanel(true)}
+      onAIClick={() => aiModal.open()}
     >
       {renderActiveTab()}
 
       {/* Menu Modal */}
-      {showMenu && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setShowMenu(false)}>
+      {menuModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => menuModal.close()}>
           <div className="absolute right-4 top-16 w-64 bg-white rounded-lg shadow-lg p-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-semibold text-gray-900 mb-4">Menu</h3>
             <div className="space-y-2">
               <button
                 onClick={() => {
-                  setShowExportConfirm(true);
-                  setShowMenu(false);
+                  exportModal.open();
+                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -168,8 +243,8 @@ export default function HomePageContent() {
               </button>
               <button
                 onClick={() => {
-                  setShowImportModal(true);
-                  setShowMenu(false);
+                  importModal.open();
+                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -177,8 +252,8 @@ export default function HomePageContent() {
               </button>
               <button
                 onClick={() => {
-                  setShowCategoryEditor(true);
-                  setShowMenu(false);
+                  categoryModal.open();
+                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -189,8 +264,8 @@ export default function HomePageContent() {
               </div>
               <button
                 onClick={() => {
-                  setShowClearConfirm(true);
-                  setShowMenu(false);
+                  clearModal.open();
+                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
@@ -208,8 +283,8 @@ export default function HomePageContent() {
 
       {/* Export Confirmation */}
       <ConfirmDialog
-        isOpen={showExportConfirm}
-        onClose={() => setShowExportConfirm(false)}
+        isOpen={exportModal.isOpen}
+        onClose={() => exportModal.close()}
         onConfirm={handleExport}
         title="Export Data"
         message="Export your data as a JSON backup file?"
@@ -217,8 +292,8 @@ export default function HomePageContent() {
 
       {/* Clear Data Confirmation */}
       <ConfirmDialog
-        isOpen={showClearConfirm}
-        onClose={() => setShowClearConfirm(false)}
+        isOpen={clearModal.isOpen}
+        onClose={() => clearModal.close()}
         onConfirm={handleClearData}
         title="Clear All Data"
         message="Are you sure you want to delete all items and actions? This cannot be undone."
@@ -228,21 +303,21 @@ export default function HomePageContent() {
 
       {/* Import Modal */}
       <ImportExportModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
+        isOpen={importModal.isOpen}
+        onClose={() => importModal.close()}
         onImport={handleImport}
       />
 
       {/* Category Editor Modal */}
       <CategoryEditorModal
-        isOpen={showCategoryEditor}
-        onClose={() => setShowCategoryEditor(false)}
+        isOpen={categoryModal.isOpen}
+        onClose={() => categoryModal.close()}
         categories={state.categories && state.categories.length > 0 ? state.categories : DEFAULT_CATEGORIES}
         onSave={handleSaveCategories}
       />
 
       {/* AI Panel - Lazy loaded for performance */}
-      {showAiPanel && (
+      {aiModal.isOpen && (
         <Suspense fallback={
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg">
@@ -252,8 +327,8 @@ export default function HomePageContent() {
           </div>
         }>
           <AiPanel
-            isOpen={showAiPanel}
-            onClose={() => setShowAiPanel(false)}
+            isOpen={aiModal.isOpen}
+            onClose={() => aiModal.close()}
           />
         </Suspense>
       )}
