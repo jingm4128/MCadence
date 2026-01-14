@@ -6,7 +6,14 @@ export type TabId = "dayToDay" | "hitMyGoal" | "spendMyTime";
 // - missed: Deadline passed without completion
 export type ItemStatus = "active" | "done" | "missed";
 
+// Recurrence frequency for recurring items
 export type Frequency = "daily" | "weekly" | "monthly" | "annually";
+
+// RecurrenceType includes 'one_off' for non-recurring items (used by AI Quick Add)
+export type RecurrenceType = "one_off" | Frequency;
+
+// AI confidence levels
+export type ConfidenceLevel = "low" | "medium" | "high";
 
 // Category System - Hierarchical (L1/L2)
 export interface Category {

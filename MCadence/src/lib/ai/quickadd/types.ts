@@ -1,7 +1,8 @@
 /**
  * Quick Add with AI Types
- * 
+ *
  * Types for parsing user text into structured item proposals.
+ * Uses centralized types from lib/types.ts for consistency.
  */
 
 import { TabId } from '@/lib/types';
@@ -10,10 +11,12 @@ import { TabId } from '@/lib/types';
 // Tab Types
 // ============================================================================
 
-export type QuickAddTab = 'dayToDay' | 'hitMyGoal' | 'spendMyTime';
+// QuickAddTab is now an alias for TabId for backward compatibility
+export type QuickAddTab = TabId;
 
 // ============================================================================
 // Recurrence Types
+// QuickAdd uses a subset of RecurrenceType (excludes 'annually')
 // ============================================================================
 
 export type RecurrenceType = 'one_off' | 'daily' | 'weekly' | 'monthly';
