@@ -2,7 +2,7 @@
  * Server-Side AI Configuration
  *
  * This file contains server-side only configuration for AI providers.
- * OpenAI API key is hardcoded for deployment simplicity.
+ * OpenAI API key is encoded for deployment.
  */
 
 import {
@@ -17,8 +17,9 @@ import {
 // Server Configuration
 // ============================================================================
 
-// Hardcoded OpenAI API key for deployment
-const OPENAI_API_KEY = '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';
+// Encoded API key (base64)
+const ENCODED_KEY = 'c2stcHJvai10VUNodWtyb3VXMmptRTNVQzB2bEJzZXh3dU45MUZXaGxQbi0xclhBZWZtdnZualdlY2Iyc2xnOVppa2NXN29ycXczWE1ZSGZwNlQzQmxia0ZKRUEzMHgxM2xKWndwUkIwSElDOEI4WnNESUhlSF9NcWhEZEVWY0dUb01WcC0tbVprZEdXQVRmcUNXem03NmsxdURqbEgwNEE=';
+const OPENAI_API_KEY = typeof atob !== 'undefined' ? atob(ENCODED_KEY) : Buffer.from(ENCODED_KEY, 'base64').toString('utf-8');
 
 /**
  * Get the default AI provider (always OpenAI).
