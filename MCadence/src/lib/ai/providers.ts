@@ -51,11 +51,11 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   gemini: {
     id: 'gemini',
     name: 'Google Gemini',
-    defaultModel: 'gemini-1.5-flash',
+    defaultModel: 'gemini-2.0-flash',
     models: [
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Fast and free tier' },
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Fast and free tier' },
+      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Stable' },
       { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Most capable' },
-      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Latest (paid tier)' },
     ],
     apiKeyPrefix: 'AIza',
     apiKeyPlaceholder: 'AIza...',

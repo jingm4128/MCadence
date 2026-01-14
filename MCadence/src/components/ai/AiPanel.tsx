@@ -218,15 +218,8 @@ function AISettingsPanel({
   const providerConfig = getProviderConfig(currentProvider);
   const currentModel = effectiveSettings.model;
   
-  // Check if user has deviated from the default settings
-  // Default key only works with default provider + default model (gemini + gemini-1.5-flash)
-  const defaultModel = getDefaultModel(envDefaultProvider);
-  const isUsingDefaultProvider = !userSettings.provider || userSettings.provider === envDefaultProvider;
-  const isUsingDefaultModel = !userSettings.models[currentProvider] || currentModel === defaultModel;
+  // Check if user can use the default API key
   const canUseDefault = canUseDefaultKey(currentProvider, currentModel);
-  
-  // User needs their own API key if they changed provider or model
-  const needsOwnApiKey = !canUseDefault && !userSettings.apiKey;
 
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -313,25 +306,7 @@ function AISettingsPanel({
             ✓ Using developer-provided API key
           </p>
         )}
-        {!isUsingDefaultProvider && (
-          <p className="text-xs text-amber-600 mt-1">
-            ⚠️ Switching provider requires your own API key
-          </p>
-        )}
       </div>
-      
-      {/* API Key Required Warning */}
-      {needsOwnApiKey && (
-        <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-sm text-amber-700 font-medium">⚠️ API Key Required</p>
-          <p className="text-xs text-amber-600 mt-1">
-            {!isUsingDefaultProvider
-              ? `Switching to ${providerConfig.name} requires your own API key.`
-              : `The ${currentModel} model requires a paid API key. The free default key only supports ${defaultModel}.`
-            }
-          </p>
-        </div>
-      )}
       
       {/* API Key Input */}
       <div className="mb-3">
@@ -339,9 +314,6 @@ function AISettingsPanel({
           {providerConfig.name} API Key
           {canUseDefault && (
             <span className="text-xs text-gray-400 ml-2">(optional - using default)</span>
-          )}
-          {needsOwnApiKey && (
-            <span className="text-xs text-red-500 ml-2">(required)</span>
           )}
         </label>
         <div className="relative">

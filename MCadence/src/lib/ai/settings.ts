@@ -68,9 +68,8 @@ export function getEnvDefaultProvider(): AIProvider {
   if (provider && PROVIDERS[provider]) {
     return provider;
   }
-  // Legacy fallback: if OPENAI_API_KEY was set, default to openai
-  // Otherwise default to gemini as specified by user
-  return 'gemini';
+  // Default to openai
+  return 'openai';
 }
 
 /**

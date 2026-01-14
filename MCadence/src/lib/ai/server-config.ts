@@ -34,8 +34,8 @@ export function getServerDefaultProvider(): AIProvider {
   if (provider && PROVIDERS[provider]) {
     return provider;
   }
-  // Default to gemini as specified by user
-  return 'gemini';
+  // Default to openai
+  return 'openai';
 }
 
 /**
