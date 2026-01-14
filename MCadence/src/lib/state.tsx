@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings } from './types';
-import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE } from './constants';
+import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE, ITEM_STATUS } from './constants';
 import { saveState, loadState } from './storage';
 import { generateId } from '@/utils/uuid';
 import {
@@ -24,7 +24,9 @@ import {
 type AppStateAction =
   | { type: 'LOAD_STATE'; payload: AppState }
   | { type: 'ADD_ITEM'; payload: Item }
+  | { type: 'ADD_ITEMS'; payload: Item[] }
   | { type: 'UPDATE_ITEM'; payload: { id: string; updates: Partial<Item> } }
+  | { type: 'UPDATE_ITEMS'; payload: { id: string; updates: Partial<Item> }[] }
   | { type: 'DELETE_ITEM'; payload: string }
   | { type: 'TOGGLE_CHECKLIST_ITEM'; payload: string }
   | { type: 'ARCHIVE_ITEM'; payload: string }
@@ -45,6 +47,12 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
         items: [...state.items, action.payload],
       };
 
+    case 'ADD_ITEMS':
+      return {
+        ...state,
+        items: [...state.items, ...action.payload],
+      };
+
     case 'UPDATE_ITEM':
       return {
         ...state,
@@ -54,6 +62,23 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
             const updatedItem = { ...item, ...action.payload.updates, updatedAt: toISOStringLocal() };
             
             // Ensure the updated item maintains correct type structure
+            if (item.tab === 'spendMyTime') {
+              return updatedItem as TimeItem;
+            } else {
+              return updatedItem as ChecklistItem;
+            }
+          }
+          return item;
+        }),
+      };
+
+    case 'UPDATE_ITEMS':
+      return {
+        ...state,
+        items: state.items.map(item => {
+          const update = action.payload.find(u => u.id === item.id);
+          if (update) {
+            const updatedItem = { ...item, ...update.updates, updatedAt: toISOStringLocal() };
             if (item.tab === 'spendMyTime') {
               return updatedItem as TimeItem;
             } else {
@@ -90,7 +115,7 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
                 ...checklistItem,
                 isDone: newIsDone,
                 completedAt: newIsDone ? now : null,
-                status: newIsDone ? 'done' as const : 'active' as const,
+                status: newIsDone ? ITEM_STATUS.DONE : ITEM_STATUS.ACTIVE,
                 updatedAt: now,
                 recurrence: {
                   ...checklistItem.recurrence,
@@ -109,7 +134,7 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
                   ...checklistItem,
                   isDone: true,
                   completedAt: now,
-                  status: 'done' as const,
+                  status: ITEM_STATUS.DONE,
                   isArchived: true,
                   archivedAt: now,
                   updatedAt: now,
@@ -125,7 +150,7 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
                 ...checklistItem,
                 isDone: false,
                 completedAt: null,
-                status: 'active' as const,
+                status: ITEM_STATUS.ACTIVE,
                 updatedAt: now,
                 recurrence: advancedRecurrence,
               } as ChecklistItem;
@@ -136,7 +161,7 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
               ...item,
               isDone: !item.isDone,
               completedAt: !item.isDone ? now : null,
-              status: !item.isDone ? 'done' as const : 'active' as const,
+              status: !item.isDone ? ITEM_STATUS.DONE : ITEM_STATUS.ACTIVE,
               updatedAt: now,
             } as ChecklistItem;
           }
@@ -265,6 +290,126 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.items, isHydrated]);
 
+  // Auto-create new period items when period passes (for date-tagged recurring items)
+  useEffect(() => {
+    if (!isHydrated) return;
+    
+    // Find all recurring items with periodKey
+    const recurringItems = state.items.filter(item =>
+      item.periodKey &&
+      item.recurrence &&
+      !item.isArchived
+    );
+    
+    if (recurringItems.length === 0) return;
+    
+    const newItems: Item[] = [];
+    const updates: { id: string; updates: Partial<Item> }[] = [];
+    
+    for (const item of recurringItems) {
+      const { periodKey, recurrence, baseTitle } = item;
+      if (!periodKey || !recurrence || !baseTitle) continue;
+      
+      // Check if the period has passed
+      if (!isPeriodPassed(periodKey, recurrence.frequency)) continue;
+      
+      // Get the current period key
+      const currentPeriodKey = getCurrentPeriodKey(recurrence.frequency);
+      
+      // Check if we already have an item for the current period (by baseTitle + currentPeriodKey)
+      const existingCurrentPeriodItem = state.items.find(i =>
+        i.baseTitle === baseTitle &&
+        i.periodKey === currentPeriodKey &&
+        !i.isArchived
+      );
+      
+      if (existingCurrentPeriodItem) continue; // Already have current period item
+      
+      // Check recurrence limit
+      if (recurrence.totalOccurrences !== null &&
+          recurrence.completedOccurrences >= recurrence.totalOccurrences) {
+        continue; // Limit reached, don't create new item
+      }
+      
+      // Mark old item as missed if not completed
+      if (item.status === ITEM_STATUS.ACTIVE) {
+        updates.push({
+          id: item.id,
+          updates: { status: ITEM_STATUS.MISSED },
+        });
+      }
+      
+      // Create new item for current period
+      const now = toISOStringLocal();
+      const newPeriodKey = currentPeriodKey;
+      const newTitle = formatTitleWithPeriod(baseTitle, newPeriodKey);
+      const newNextDue = getPeriodDueDate(newPeriodKey);
+      
+      if ('isDone' in item) {
+        // ChecklistItem
+        const checklistItem = item as ChecklistItem;
+        const newChecklistItem: ChecklistItem = {
+          id: generateId(),
+          tab: checklistItem.tab,
+          title: newTitle,
+          baseTitle,
+          periodKey: newPeriodKey,
+          categoryId: checklistItem.categoryId,
+          sortKey: Date.now(),
+          status: ITEM_STATUS.ACTIVE,
+          isArchived: false,
+          isDone: false,
+          createdAt: now,
+          updatedAt: now,
+          recurrence: {
+            ...recurrence,
+            nextDue: newNextDue,
+          },
+        };
+        newItems.push(newChecklistItem);
+      } else if ('completedMinutes' in item) {
+        // TimeItem
+        const timeItem = item as TimeItem;
+        const weekStart = getWeekStart(getNowInTimezone());
+        const weekEnd = getWeekEnd(getNowInTimezone());
+        
+        const newTimeItem: TimeItem = {
+          id: generateId(),
+          tab: 'spendMyTime',
+          title: newTitle,
+          baseTitle,
+          periodKey: newPeriodKey,
+          categoryId: timeItem.categoryId,
+          sortKey: Date.now(),
+          status: ITEM_STATUS.ACTIVE,
+          isArchived: false,
+          requiredMinutes: timeItem.requiredMinutes,
+          completedMinutes: 0,
+          currentSessionStart: null,
+          periodStart: toISOStringLocal(weekStart),
+          periodEnd: toISOStringLocal(weekEnd),
+          createdAt: now,
+          updatedAt: now,
+          recurrence: {
+            ...recurrence,
+            nextDue: newNextDue,
+          },
+        };
+        newItems.push(newTimeItem);
+      }
+    }
+    
+    // Dispatch updates for old items (mark as missed)
+    if (updates.length > 0) {
+      dispatch({ type: 'UPDATE_ITEMS', payload: updates });
+    }
+    
+    // Dispatch new items
+    if (newItems.length > 0) {
+      dispatch({ type: 'ADD_ITEMS', payload: newItems });
+    }
+  }, [state.items, isHydrated]);
+
   return (
     <AppStateContext.Provider value={{ state, dispatch, isHydrated }}>
       {children}
@@ -341,7 +486,7 @@ export function useAppState() {
       periodKey,
       categoryId: form.categoryId,
       sortKey: Date.now(),
-      status: 'active',
+      status: ITEM_STATUS.ACTIVE,
       isArchived: false,
       isDone: false,
       createdAt: now,
@@ -385,7 +530,7 @@ export function useAppState() {
       periodKey,
       categoryId: form.categoryId,
       sortKey: Date.now(),
-      status: 'active',
+      status: ITEM_STATUS.ACTIVE,
       isArchived: false,
       requiredMinutes: form.requiredHours * 60 + form.requiredMinutes,
       completedMinutes: 0,
