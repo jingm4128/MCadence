@@ -144,6 +144,19 @@ export function resetUserSettings(): void {
 // ============================================================================
 
 /**
+ * Check if the current settings can use the default API key.
+ * Default key only works with the default provider AND default model.
+ */
+export function canUseDefaultKey(provider: AIProvider, model: string): boolean {
+  const envProvider = getEnvDefaultProvider();
+  const defaultModel = getDefaultModel(envProvider);
+  const hasDefaultKey = hasEnvDefaultKey();
+  
+  // Default key only works with default provider + default model
+  return hasDefaultKey && provider === envProvider && model === defaultModel;
+}
+
+/**
  * Get the effective AI settings considering user overrides and env defaults.
  */
 export function getEffectiveSettings(): EffectiveAISettings {
@@ -154,10 +167,17 @@ export function getEffectiveSettings(): EffectiveAISettings {
   // Determine effective provider
   const provider = userSettings.provider || envProvider;
   
+  // Get model preference
+  const model = userSettings.models[provider] || getDefaultModel(provider);
+  
   // Determine if using default key
-  const hasValidUserKey = userSettings.apiKey.length > 0 && 
+  // Default key only works with default provider + default model
+  const hasValidUserKey = userSettings.apiKey.length > 0 &&
     validateAPIKeyForProvider(userSettings.apiKey, provider);
-  const usingDefaultKey = !hasValidUserKey && hasDefaultKey;
+  
+  // Check if user can use the default key
+  const canUseDefault = canUseDefaultKey(provider, model);
+  const usingDefaultKey = !hasValidUserKey && canUseDefault;
   
   // Determine source
   let source: 'user' | 'env' | 'none' = 'none';
@@ -167,10 +187,7 @@ export function getEffectiveSettings(): EffectiveAISettings {
     source = 'env';
   }
   
-  // Get model preference
-  const model = userSettings.models[provider] || getDefaultModel(provider);
-  
-  // AI is enabled if we have either user key or default key
+  // AI is enabled if we have either user key or can use default key
   const enabled = hasValidUserKey || usingDefaultKey;
   
   return {
