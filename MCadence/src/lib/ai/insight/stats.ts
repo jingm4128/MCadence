@@ -22,7 +22,7 @@ import {
 import { ConfidenceLevel } from '../types';
 
 import { AppState, ActionLog, Item, TimeItem, ChecklistItem, isTimeItem, isChecklistItem } from '@/lib/types';
-import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { DEFAULT_CATEGORIES, ITEM_STATUS } from '@/lib/constants';
 import {
   isInPeriod,
   getDayOfWeekNY,
@@ -329,9 +329,9 @@ function buildChecklistTabStats(
   
   // Stale items: unfinished, not archived, created > 14 days ago
   const staleItems = checklistItems
-    .filter(item => 
+    .filter(item =>
       !item.isDone &&
-      item.status !== 'archived' &&
+      !item.isArchived &&
       isOlderThanDaysNY(item.createdAt, STALE_DAYS_THRESHOLD)
     )
     .slice(0, MAX_STALE_ITEMS)
@@ -339,7 +339,7 @@ function buildChecklistTabStats(
   
   // Active unfinished (current state, not period-specific)
   const totalActiveUnfinished = checklistItems.filter(
-    item => !item.isDone && item.status === 'active'
+    item => !item.isDone && item.status === ITEM_STATUS.ACTIVE
   ).length;
   
   const createdCount = createdInPeriod.length;

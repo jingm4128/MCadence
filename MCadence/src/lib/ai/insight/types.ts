@@ -1,12 +1,12 @@
 /**
  * AI Insight Types (v1)
- * 
+ *
  * These types define the structure for AI-generated insights based on
  * locally computed deterministic stats. The AI only interprets pre-aggregated
  * statistics - it never sees raw action logs.
  */
 
-import { ConfidenceLevel } from '../types';
+import { ConfidenceLevel } from '@/lib/types';
 
 // ============================================================================
 // Period Types

@@ -10,6 +10,11 @@ A personal time & energy management tool built with Next.js, TypeScript, and Tai
 2. **Hit My Goal** - Checklist for small challenges / high-satisfaction tasks  
 3. **Spend My Time** - Time tracking of recurring projects (main feature)
 
+### AI Features (manual, opt-in)
+- **AI Insight**: On-demand, read-only summaries of your activity (time tracking + tasks) over a chosen period with highlights, patterns, friction points, and a short encouragement. Never modifies data.
+- **Quick Add with AI**: Turns free-form text or pasted conversations into editable task/project proposals (intent, duration, recurrence, category inferred). You pick the tab, adjust, and approve; nothing is added automatically.
+- **Suggested Removal (AI Clean-up)**: Proposes archive/delete for idle or low-progress items based on your usage and selected time range, with clear reasons. Changes apply only after explicit approval.
+
 ### Core Functionality
 
 - ✅ Local storage persistence (no backend required)

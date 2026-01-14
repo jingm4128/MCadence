@@ -2,12 +2,17 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import weekday from 'dayjs/plugin/weekday';
-import { TIMEZONE } from '@/lib/constants';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import { TIMEZONE, URGENCY_RED_THRESHOLD_HOURS, URGENCY_YELLOW_THRESHOLD_HOURS } from '@/lib/constants';
+import { Frequency, RecurrenceSettings } from '@/lib/types';
 
 // Initialize dayjs plugins
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(weekday);
+dayjs.extend(weekOfYear);
+dayjs.extend(isoWeek);
 
 // ============================================================================
 // Core Time Functions
@@ -233,4 +238,373 @@ export function formatDateTime(date: string | Date): string {
 // Get ISO string in local timezone
 export function toISOStringLocal(date: Date = getNowInTimezone()): string {
   return date.toISOString();
+}
+
+// ============================================================================
+// Urgency Helpers for Recurring Items
+// ============================================================================
+
+export type UrgencyStatus = 'overdue' | 'urgent' | 'warning' | 'normal' | 'complete';
+
+/**
+ * Calculate hours remaining until next due date.
+ * Returns negative number if overdue.
+ */
+export function getHoursUntilDue(nextDueISO: string | undefined): number | null {
+  if (!nextDueISO) return null;
+  
+  const now = getNowNY();
+  const due = dayjs(nextDueISO).tz(TIMEZONE);
+  
+  if (!due.isValid()) return null;
+  
+  return due.diff(now, 'hour', true); // Use true for decimal precision
+}
+
+/**
+ * Get urgency status based on hours remaining.
+ * - overdue: past due date
+ * - urgent (red): less than 12 hours remaining
+ * - warning (yellow): less than 24 hours remaining
+ * - normal: more than 24 hours remaining
+ */
+export function getUrgencyStatus(
+  nextDueISO: string | undefined,
+  isComplete: boolean = false
+): UrgencyStatus {
+  if (isComplete) return 'complete';
+  if (!nextDueISO) return 'normal';
+  
+  const hoursRemaining = getHoursUntilDue(nextDueISO);
+  if (hoursRemaining === null) return 'normal';
+  
+  if (hoursRemaining < 0) return 'overdue';
+  if (hoursRemaining <= URGENCY_RED_THRESHOLD_HOURS) return 'urgent';
+  if (hoursRemaining <= URGENCY_YELLOW_THRESHOLD_HOURS) return 'warning';
+  return 'normal';
+}
+
+/**
+ * Format time remaining until due date for display.
+ * e.g., "2h 30m", "Due in 1d", "Overdue"
+ */
+export function formatTimeUntilDue(nextDueISO: string | undefined): string {
+  if (!nextDueISO) return '';
+  
+  const hoursRemaining = getHoursUntilDue(nextDueISO);
+  if (hoursRemaining === null) return '';
+  
+  if (hoursRemaining < 0) {
+    // Overdue
+    const overdueHours = Math.abs(hoursRemaining);
+    if (overdueHours < 1) {
+      return `Overdue ${Math.round(overdueHours * 60)}m`;
+    } else if (overdueHours < 24) {
+      return `Overdue ${Math.round(overdueHours)}h`;
+    } else {
+      return `Overdue ${Math.round(overdueHours / 24)}d`;
+    }
+  }
+  
+  // Future
+  if (hoursRemaining < 1) {
+    return `${Math.round(hoursRemaining * 60)}m left`;
+  } else if (hoursRemaining < 24) {
+    const hours = Math.floor(hoursRemaining);
+    const mins = Math.round((hoursRemaining - hours) * 60);
+    return mins > 0 ? `${hours}h ${mins}m left` : `${hours}h left`;
+  } else {
+    return `${Math.round(hoursRemaining / 24)}d left`;
+  }
+}
+
+/**
+ * Get CSS classes for urgency status.
+ */
+export function getUrgencyClasses(status: UrgencyStatus): {
+  text: string;
+  bg: string;
+  border: string;
+  badge: string;
+} {
+  switch (status) {
+    case 'overdue':
+      return {
+        text: 'text-red-600 font-semibold',
+        bg: 'bg-red-50',
+        border: 'border-red-300',
+        badge: 'bg-red-100 text-red-700',
+      };
+    case 'urgent':
+      return {
+        text: 'text-red-600',
+        bg: 'bg-red-50',
+        border: 'border-red-200',
+        badge: 'bg-red-100 text-red-700 animate-pulse',
+      };
+    case 'warning':
+      return {
+        text: 'text-yellow-600',
+        bg: 'bg-yellow-50',
+        border: 'border-yellow-200',
+        badge: 'bg-yellow-100 text-yellow-700',
+      };
+    case 'complete':
+      return {
+        text: 'text-green-600',
+        bg: 'bg-green-50',
+        border: 'border-green-200',
+        badge: 'bg-green-100 text-green-700',
+      };
+    default:
+      return {
+        text: 'text-gray-600',
+        bg: '',
+        border: '',
+        badge: 'bg-gray-100 text-gray-600',
+      };
+  }
+}
+
+// ============================================================================
+// Recurrence Calculation Helpers
+// ============================================================================
+
+/**
+ * Calculate the next due date based on frequency using calendar boundaries.
+ * Due dates are at midnight EST of the next calendar period:
+ * - Daily: midnight of next day
+ * - Weekly: midnight of next Monday
+ * - Monthly: midnight of 1st of next month
+ * - Annually: midnight of January 1st of next year
+ *
+ * @param currentDue The current due date (ISO string) - used to determine current period
+ * @param frequency The recurrence frequency
+ * @param tz The timezone to use for calculation
+ * @returns ISO string for the next due date
+ */
+export function calculateNextDue(
+  currentDue: string,
+  frequency: Frequency,
+  tz: string = TIMEZONE
+): string {
+  const now = getNowNY();
+  
+  switch (frequency) {
+    case 'daily':
+      // Next day at midnight EST
+      return now.add(1, 'day').startOf('day').toISOString();
+    case 'weekly':
+      // Next Monday at midnight EST
+      // weekday(1) gives Monday of current week, add 7 days for next Monday
+      const currentMonday = now.weekday(1).startOf('day');
+      const nextMonday = now.isAfter(currentMonday) || now.isSame(currentMonday)
+        ? currentMonday.add(7, 'day')
+        : currentMonday;
+      return nextMonday.toISOString();
+    case 'monthly':
+      // 1st of next month at midnight EST
+      return now.add(1, 'month').startOf('month').toISOString();
+    case 'annually':
+      // January 1st of next year at midnight EST
+      return now.add(1, 'year').startOf('year').toISOString();
+    default:
+      // Default to weekly
+      const defaultMonday = now.weekday(1).startOf('day');
+      return now.isAfter(defaultMonday) || now.isSame(defaultMonday)
+        ? defaultMonday.add(7, 'day').toISOString()
+        : defaultMonday.toISOString();
+  }
+}
+
+/**
+ * Get the initial due date for a new recurring item.
+ * This is the end of the current period:
+ * - Daily: midnight tonight (end of today)
+ * - Weekly: next Monday at midnight (end of this week)
+ * - Monthly: 1st of next month at midnight (end of this month)
+ * - Annually: January 1st of next year at midnight (end of this year)
+ */
+export function getInitialDueDate(
+  frequency: Frequency,
+  tz: string = TIMEZONE
+): string {
+  const now = getNowNY();
+  
+  switch (frequency) {
+    case 'daily':
+      // End of today = midnight tomorrow
+      return now.add(1, 'day').startOf('day').toISOString();
+    case 'weekly':
+      // End of this week = next Monday at midnight
+      const currentMonday = now.weekday(1).startOf('day');
+      const nextMonday = currentMonday.add(7, 'day');
+      return nextMonday.toISOString();
+    case 'monthly':
+      // End of this month = 1st of next month
+      return now.add(1, 'month').startOf('month').toISOString();
+    case 'annually':
+      // End of this year = January 1st of next year
+      return now.add(1, 'year').startOf('year').toISOString();
+    default:
+      // Default to weekly
+      const defaultMonday = now.weekday(1).startOf('day').add(7, 'day');
+      return defaultMonday.toISOString();
+  }
+}
+
+/**
+ * Get the updated recurrence settings after completing an occurrence.
+ * Returns null if the recurrence should be archived (limit reached).
+ * @param recurrence The current recurrence settings
+ * @returns Updated recurrence settings or null if limit reached
+ */
+export function advanceRecurrence(
+  recurrence: RecurrenceSettings
+): RecurrenceSettings | null {
+  const newCompletedOccurrences = recurrence.completedOccurrences + 1;
+  
+  // Check if occurrence limit reached
+  if (recurrence.totalOccurrences !== null && newCompletedOccurrences >= recurrence.totalOccurrences) {
+    return null; // Signal to archive the item
+  }
+  
+  const nextDue = calculateNextDue(
+    recurrence.nextDue || new Date().toISOString(),
+    recurrence.frequency,
+    recurrence.timezone
+  );
+  
+  return {
+    ...recurrence,
+    completedOccurrences: newCompletedOccurrences,
+    nextDue,
+  };
+}
+
+/**
+ * Check if a recurring item should be auto-reset (not completed yet in current period).
+ * Used for determining if item needs attention.
+ */
+export function isRecurrenceOverdue(nextDue: string | undefined): boolean {
+  if (!nextDue) return false;
+  
+  const now = getNowNY();
+  const due = dayjs(nextDue).tz(TIMEZONE);
+  
+  return now.isAfter(due);
+}
+
+// ============================================================================
+// Period Key Helpers - For date-tagged recurring items
+// Period key is always the DUE DATE (end of period) in YYYYMMDD format
+// ============================================================================
+
+/**
+ * Generate a period key for the current period based on frequency.
+ * The period key is the DUE DATE (last day of the period) in YYYYMMDD format:
+ * - Daily: "20260113" (today's date - due at end of today)
+ * - Weekly: "20260119" (Sunday's date - due at end of week)
+ * - Monthly: "20260131" (last day of month)
+ * - Annually: "20261231" (December 31st)
+ *
+ * @param frequency The recurrence frequency
+ * @param date Optional date to use (defaults to now in EST)
+ * @returns Period key string in YYYYMMDD format
+ */
+export function getCurrentPeriodKey(frequency: Frequency, date?: dayjs.Dayjs): string {
+  const d = date || getNowNY();
+  
+  switch (frequency) {
+    case 'daily':
+      // Due at end of today
+      return d.format('YYYYMMDD');
+    case 'weekly':
+      // Due at end of week (Sunday)
+      // Get Sunday of current week
+      const sunday = d.weekday(0).add(7, 'day'); // weekday(0) is previous Sunday, add 7 for this Sunday
+      // Actually, let's use end of week as Saturday or Sunday based on week start
+      // Using ISO week: week ends on Sunday, so get next Sunday
+      const endOfWeek = d.endOf('week'); // Sunday
+      return endOfWeek.format('YYYYMMDD');
+    case 'monthly':
+      // Due at end of month
+      return d.endOf('month').format('YYYYMMDD');
+    case 'annually':
+      // Due at end of year (Dec 31)
+      return d.endOf('year').format('YYYYMMDD');
+    default:
+      return d.format('YYYYMMDD');
+  }
+}
+
+/**
+ * Generate the period key for the NEXT period.
+ */
+export function getNextPeriodKey(frequency: Frequency, date?: dayjs.Dayjs): string {
+  const d = date || getNowNY();
+  
+  switch (frequency) {
+    case 'daily':
+      return d.add(1, 'day').format('YYYYMMDD');
+    case 'weekly':
+      return d.add(1, 'week').endOf('week').format('YYYYMMDD');
+    case 'monthly':
+      return d.add(1, 'month').endOf('month').format('YYYYMMDD');
+    case 'annually':
+      return d.add(1, 'year').endOf('year').format('YYYYMMDD');
+    default:
+      return d.add(1, 'day').format('YYYYMMDD');
+  }
+}
+
+/**
+ * Format period key for display in item title.
+ * @param baseTitle The original item title
+ * @param periodKey The period key (YYYYMMDD)
+ * @returns Formatted title like "睡觉-20260113"
+ */
+export function formatTitleWithPeriod(baseTitle: string, periodKey: string): string {
+  return `${baseTitle}-${periodKey}`;
+}
+
+/**
+ * Parse a title to extract base title and period key.
+ * @param title The full title (may include period suffix)
+ * @returns Object with baseTitle and periodKey (periodKey may be undefined)
+ */
+export function parseTitlePeriod(title: string): { baseTitle: string; periodKey?: string } {
+  // Match pattern: "Title-YYYYMMDD" (8 digits at end)
+  const match = title.match(/^(.+)-(\d{8})$/);
+  
+  if (match) {
+    return {
+      baseTitle: match[1],
+      periodKey: match[2],
+    };
+  }
+  
+  return { baseTitle: title };
+}
+
+/**
+ * Check if the current period has passed (need to create new item).
+ * @param periodKey The period key (YYYYMMDD) to check
+ * @param frequency The recurrence frequency (not used since periodKey is always YYYYMMDD)
+ * @returns true if we're now past that date
+ */
+export function isPeriodPassed(periodKey: string, frequency: Frequency): boolean {
+  const now = getNowNY();
+  const dueDate = dayjs.tz(periodKey, 'YYYYMMDD', TIMEZONE).endOf('day');
+  return now.isAfter(dueDate);
+}
+
+/**
+ * Get the due date (ISO string) for a given period key.
+ * The period key IS the due date, so we convert to midnight of the next day.
+ */
+export function getPeriodDueDate(periodKey: string): string {
+  // Period key is YYYYMMDD, due at midnight of next day (00:00:00 of periodKey+1)
+  const dueDate = dayjs.tz(periodKey, 'YYYYMMDD', TIMEZONE).add(1, 'day').startOf('day');
+  return dueDate.toISOString();
 }

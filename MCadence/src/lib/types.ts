@@ -1,8 +1,19 @@
 export type TabId = "dayToDay" | "hitMyGoal" | "spendMyTime";
 
-export type ItemStatus = "active" | "done" | "archived";
+// Item status based on completion vs deadline
+// - active: Within deadline, not yet completed
+// - done: Completed the goal before deadline
+// - missed: Deadline passed without completion
+export type ItemStatus = "active" | "done" | "missed";
 
+// Recurrence frequency for recurring items
 export type Frequency = "daily" | "weekly" | "monthly" | "annually";
+
+// RecurrenceType includes 'one_off' for non-recurring items (used by AI Quick Add)
+export type RecurrenceType = "one_off" | Frequency;
+
+// AI confidence levels
+export type ConfidenceLevel = "low" | "medium" | "high";
 
 // Category System - Hierarchical (L1/L2)
 export interface Category {
@@ -31,14 +42,17 @@ export interface RecurrenceSettings {
 export interface BaseItem {
   id: string; // uuid
   tab: TabId;
-  title: string;
+  title: string; // Display title (may include period suffix like "睡觉-20260113")
+  baseTitle?: string; // Original title without period suffix (for recurring items)
   categoryId: string; // Reference to subcategory
   sortKey: number;   // for ordering within tab
-  status: ItemStatus;
+  status: ItemStatus; // active | done | missed
+  isArchived: boolean; // Whether user has archived this item
   createdAt: string;  // ISO
   updatedAt: string;  // ISO
-  archivedAt?: string | null;
+  archivedAt?: string | null; // When the item was archived
   recurrence?: RecurrenceSettings; // For recurring items
+  periodKey?: string; // Period identifier: "20260113" for due date
 }
 
 export interface ChecklistItem extends BaseItem {

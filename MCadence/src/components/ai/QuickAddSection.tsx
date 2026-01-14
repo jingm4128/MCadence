@@ -13,10 +13,10 @@ import {
   TAB_LABELS,
   TAB_ICONS,
   RECURRENCE_LABELS,
-  computeWeeklyMinutes,
   getDefaultTypeFromTab,
 } from '@/lib/ai/quickadd';
-import { DEFAULT_CATEGORIES } from '@/lib/constants';
+import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE } from '@/lib/constants';
+import { Frequency, RecurrenceFormSettings } from '@/lib/types';
 
 // ============================================================================
 // Proposal Card Component - Full Inline Editing
@@ -42,16 +42,7 @@ function ProposalCard({
   const currentTitle = selection.editedTitle ?? proposal.title;
   const currentCategoryId = selection.editedCategoryId ?? proposal.categoryId;
   const currentRecurrence = selection.editedRecurrence ?? proposal.recurrence;
-  const currentDurationMinutes = selection.editedDurationMinutes ?? proposal.durationMinutes ?? 0;
-  const currentFrequencyPerWeek = selection.editedFrequencyPerWeek ?? proposal.frequencyPerWeek ?? 1;
-  const currentRequiredMinutes = selection.editedRequiredMinutes ?? proposal.requiredMinutes ?? 0;
-  
-  // Compute weekly total for display
-  const computedWeeklyMinutes = computeWeeklyMinutes(
-    currentDurationMinutes,
-    currentRecurrence,
-    currentFrequencyPerWeek
-  );
+  const currentDurationMinutes = selection.editedDurationMinutes ?? proposal.durationMinutes ?? 60;
   
   // Get all subcategories flattened for the dropdown
   const allSubcategories = categories.flatMap(cat =>
@@ -62,39 +53,23 @@ function ProposalCard({
     }))
   );
   
-  // Is this a time project tab?
+  // Tab type checks
   const isTimeProject = currentTab === 'spendMyTime';
+  const isHitMyGoal = currentTab === 'hitMyGoal';
   
-  // Handle tab change - also update type
+  // Handle tab change
   const handleTabChange = (newTab: QuickAddTab) => {
     onUpdate(proposal.id, { editedTab: newTab });
   };
   
-  // Handle duration change and recalculate required minutes
+  // Handle duration change (per-period duration, not weekly total)
   const handleDurationChange = (minutes: number) => {
-    const newRequired = computeWeeklyMinutes(minutes, currentRecurrence, currentFrequencyPerWeek);
-    onUpdate(proposal.id, { 
-      editedDurationMinutes: minutes,
-      editedRequiredMinutes: newRequired,
-    });
+    onUpdate(proposal.id, { editedDurationMinutes: minutes });
   };
   
-  // Handle recurrence change and recalculate required minutes
+  // Handle recurrence change
   const handleRecurrenceChange = (recurrence: RecurrenceType) => {
-    const newRequired = computeWeeklyMinutes(currentDurationMinutes, recurrence, currentFrequencyPerWeek);
-    onUpdate(proposal.id, { 
-      editedRecurrence: recurrence,
-      editedRequiredMinutes: newRequired,
-    });
-  };
-  
-  // Handle frequency change and recalculate required minutes
-  const handleFrequencyChange = (freq: number) => {
-    const newRequired = computeWeeklyMinutes(currentDurationMinutes, currentRecurrence, freq);
-    onUpdate(proposal.id, { 
-      editedFrequencyPerWeek: freq,
-      editedRequiredMinutes: newRequired,
-    });
+    onUpdate(proposal.id, { editedRecurrence: recurrence });
   };
   
   return (
@@ -163,6 +138,47 @@ function ProposalCard({
         </select>
       </div>
       
+      {/* Hit My Goal - Recurrence Selector */}
+      {isHitMyGoal && (
+        <div className="space-y-3 pt-2 border-t border-gray-100">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Recurrence</label>
+            <div className="flex gap-1 flex-wrap">
+              {(['one_off', 'daily', 'weekly', 'monthly'] as RecurrenceType[]).map(rec => (
+                <button
+                  key={rec}
+                  onClick={() => handleRecurrenceChange(rec)}
+                  className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                    currentRecurrence === rec
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {RECURRENCE_LABELS[rec]}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Occurrences limit for recurring goals */}
+          {currentRecurrence !== 'one_off' && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Total occurrences (leave empty for forever)</label>
+              <input
+                type="number"
+                value={selection.editedTotalOccurrences ?? ''}
+                onChange={(e) => onUpdate(proposal.id, {
+                  editedTotalOccurrences: e.target.value ? parseInt(e.target.value) : undefined
+                })}
+                placeholder="Forever"
+                className="w-24 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
+                min={1}
+              />
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Time Project Fields */}
       {isTimeProject && (
         <div className="space-y-3 pt-2 border-t border-gray-100">
@@ -186,10 +202,10 @@ function ProposalCard({
             </div>
           </div>
           
-          {/* Duration per Session */}
+          {/* Duration per period */}
           <div>
             <label className="block text-xs text-gray-500 mb-1">
-              Duration {currentRecurrence !== 'one_off' ? 'per session' : ''}
+              Time goal per {currentRecurrence === 'daily' ? 'day' : currentRecurrence === 'monthly' ? 'month' : currentRecurrence === 'weekly' ? 'week' : 'session'}
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -218,29 +234,6 @@ function ProposalCard({
               />
               <span className="text-sm text-gray-500">m</span>
             </div>
-          </div>
-          
-          {/* Frequency per Week (for weekly recurrence) */}
-          {currentRecurrence === 'weekly' && (
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Times per week</label>
-              <input
-                type="number"
-                value={currentFrequencyPerWeek}
-                onChange={(e) => handleFrequencyChange(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-20 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
-                min={1}
-                max={7}
-              />
-            </div>
-          )}
-          
-          {/* Weekly Total Display */}
-          <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
-            <span>📊</span>
-            <span>
-              Weekly total: <strong>{Math.floor(computedWeeklyMinutes / 60)}h {computedWeeklyMinutes % 60}m</strong>
-            </span>
           </div>
         </div>
       )}
@@ -307,11 +300,20 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
         setError('No actionable items found in the text. Try adding more specific tasks or goals.');
       }
       
-      setProposals(result.proposals);
+      // Post-process proposals: default spendMyTime to 'weekly' if 'one_off'
+      // Time projects are inherently recurring (weekly tracking)
+      const processedProposals = result.proposals.map(p => {
+        if (p.tab === 'spendMyTime' && p.recurrence === 'one_off') {
+          return { ...p, recurrence: 'weekly' as RecurrenceType };
+        }
+        return p;
+      });
+      
+      setProposals(processedProposals);
       
       // Initialize selections (all checked by default)
       const newSelections = new Map<string, ProposalSelection>();
-      result.proposals.forEach(p => {
+      processedProposals.forEach(p => {
         newSelections.set(p.id, { id: p.id, selected: true });
       });
       setSelections(newSelections);
@@ -347,6 +349,29 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
     });
   }, []);
   
+  // Helper to convert RecurrenceType to RecurrenceFormSettings
+  const convertToRecurrenceForm = (
+    recurrence: RecurrenceType,
+    totalOccurrences?: number
+  ): RecurrenceFormSettings | undefined => {
+    if (recurrence === 'one_off') return undefined;
+    
+    // Map RecurrenceType to Frequency
+    const frequencyMap: Record<RecurrenceType, Frequency> = {
+      'one_off': 'weekly', // shouldn't be used
+      'daily': 'daily',
+      'weekly': 'weekly',
+      'monthly': 'monthly',
+    };
+    
+    return {
+      enabled: true,
+      frequency: frequencyMap[recurrence],
+      totalOccurrences: totalOccurrences ?? null,
+      timezone: DEFAULT_TIMEZONE,
+    };
+  };
+  
   // Approve and add items
   const handleApprove = useCallback(() => {
     const selectedProposals = proposals.filter(p => selections.get(p.id)?.selected);
@@ -363,19 +388,29 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
       const title = selection?.editedTitle ?? proposal.title;
       const categoryId = selection?.editedCategoryId ?? proposal.categoryId;
       const tab = selection?.editedTab ?? proposal.tab;
+      const recurrence = selection?.editedRecurrence ?? proposal.recurrence;
+      const totalOccurrences = selection?.editedTotalOccurrences;
       
-      if (tab === 'dayToDay' || tab === 'hitMyGoal') {
-        // Add as checklist item
+      if (tab === 'dayToDay') {
+        // Add as checklist item (no recurrence for day-to-day)
         addChecklistItem(tab, { title, categoryId });
         addedCount++;
+      } else if (tab === 'hitMyGoal') {
+        // Add as checklist item with optional recurrence
+        const recurrenceForm = convertToRecurrenceForm(recurrence, totalOccurrences);
+        addChecklistItem(tab, { title, categoryId, recurrence: recurrenceForm });
+        addedCount++;
       } else if (tab === 'spendMyTime') {
-        // Add as time project
-        const requiredMinutes = selection?.editedRequiredMinutes ?? proposal.requiredMinutes ?? 60;
+        // Add as time project with optional recurrence
+        // Use per-session duration (not weekly total) as the time target per period
+        const durationMinutes = selection?.editedDurationMinutes ?? proposal.durationMinutes ?? 60;
+        const recurrenceForm = convertToRecurrenceForm(recurrence, totalOccurrences);
         addTimeItem({
           title,
           categoryId,
-          requiredHours: Math.floor(requiredMinutes / 60),
-          requiredMinutes: requiredMinutes % 60,
+          requiredHours: Math.floor(durationMinutes / 60),
+          requiredMinutes: durationMinutes % 60,
+          recurrence: recurrenceForm,
         });
         addedCount++;
       }

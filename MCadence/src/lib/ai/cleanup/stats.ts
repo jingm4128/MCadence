@@ -12,6 +12,7 @@ import {
 import { PeriodSpec } from '../insight/types';
 
 import { AppState, Item, isChecklistItem, isTimeItem } from '@/lib/types';
+import { ITEM_STATUS } from '@/lib/constants';
 import {
   getNowNY,
   getDaysDiffFromNow,
@@ -133,7 +134,7 @@ function getStaleChecklistItems(
     .filter(item => 
       isChecklistItem(item) &&
       !item.isDone &&
-      item.status === 'active' &&
+      item.status === ITEM_STATUS.ACTIVE &&
       getDaysDiffFromNow(item.createdAt) > STALE_DAYS_THRESHOLD
     )
     .map(item => buildItemSummary(item, actions, period))
@@ -152,7 +153,7 @@ function getLowProgressProjects(
   return items
     .filter(item => {
       if (!isTimeItem(item)) return false;
-      if (item.status !== 'active') return false;
+      if (item.status !== ITEM_STATUS.ACTIVE) return false;
       if (item.requiredMinutes === 0) return false;
       
       const progress = item.completedMinutes / item.requiredMinutes;
@@ -178,7 +179,7 @@ function getLongDoneItems(
 ): ItemSummary[] {
   return items
     .filter(item => {
-      if (item.status !== 'done') return false;
+      if (item.status !== ITEM_STATUS.DONE) return false;
       
       if (isChecklistItem(item) && item.completedAt) {
         const daysSinceCompleted = getDaysDiffFromNow(item.completedAt);
@@ -205,7 +206,7 @@ function getInactiveItems(
   period: PeriodSpec
 ): ItemSummary[] {
   return items
-    .filter(item => item.status === 'active')
+    .filter(item => item.status === ITEM_STATUS.ACTIVE)
     .map(item => buildItemSummary(item, actions, period))
     .filter(summary => 
       summary.daysSinceLastActivity !== undefined &&
@@ -226,11 +227,11 @@ export function buildCleanupStats(period: PeriodSpec, state: AppState): CleanupS
   const notes: string[] = [];
   
   // Filter out already archived items
-  const relevantItems = state.items.filter(item => item.status !== 'archived');
+  const relevantItems = state.items.filter(item => !item.isArchived);
   
   // Count by status
-  const activeItems = relevantItems.filter(item => item.status === 'active').length;
-  const doneItems = relevantItems.filter(item => item.status === 'done').length;
+  const activeItems = relevantItems.filter(item => item.status === ITEM_STATUS.ACTIVE).length;
+  const doneItems = relevantItems.filter(item => item.status === ITEM_STATUS.DONE).length;
   
   // Build candidate lists
   const staleChecklistItems = getStaleChecklistItems(relevantItems, state.actions, period);
