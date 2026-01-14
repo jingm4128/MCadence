@@ -96,10 +96,12 @@ export function setAPIKey(apiKey: string): void {
 
 /**
  * Check if AI is enabled (has API key configured).
+ * Simply checks if a valid-looking API key is present.
  */
 export function isUserAIEnabled(): boolean {
   const settings = loadAISettings();
-  return settings.enabled && settings.apiKey.length > 0;
+  // Just check if API key exists and looks valid (starts with sk-)
+  return settings.apiKey.length > 0 && settings.apiKey.startsWith('sk-');
 }
 
 /**

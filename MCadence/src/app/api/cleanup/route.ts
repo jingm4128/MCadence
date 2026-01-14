@@ -4,6 +4,7 @@
  * POST /api/cleanup
  * 
  * Takes cleanup stats and returns AI-generated cleanup suggestions.
+ * Supports multiple providers: OpenAI, Gemini, Anthropic.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -13,15 +14,12 @@ import {
   CleanupAPIResponse,
   CleanupAPIError,
 } from '@/lib/ai/cleanup';
+import { makeServerAICall, extractAIConfig, hasValidApiKey } from '@/lib/ai/server-config';
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
-const AI_TEMPERATURE = 0.3;
-const AI_MAX_TOKENS = 2000;
 const MAX_REQUEST_SIZE = 50 * 1024; // 50KB max request size
 
 // ============================================================================
@@ -75,10 +73,6 @@ RULES:
 // Request Validation
 // ============================================================================
 
-function isValidAPIKeyFormat(key: string): boolean {
-  return typeof key === 'string' && key.startsWith('sk-') && key.length >= 20;
-}
-
 function validateStats(stats: unknown): stats is CleanupStats {
   if (!stats || typeof stats !== 'object') return false;
   
@@ -118,94 +112,6 @@ function validateSuggestions(data: unknown): data is { suggestions: CleanupSugge
 }
 
 // ============================================================================
-// AI Call
-// ============================================================================
-
-async function callOpenAI(
-  stats: CleanupStats,
-  options: { apiKey?: string; model?: string } = {}
-): Promise<CleanupSuggestion[]> {
-  const apiKey = options.apiKey || OPENAI_API_KEY;
-  const model = options.model || AI_MODEL;
-  
-  // Debug logging
-  console.log('[Cleanup API] Configuration:', {
-    hasUserKey: !!options.apiKey,
-    hasServerKey: !!OPENAI_API_KEY,
-    usingKey: options.apiKey ? 'user' : 'server',
-    keyPrefix: apiKey ? apiKey.slice(0, 10) + '...' : 'none',
-    model,
-    staleItems: stats.staleChecklistItems.length,
-    lowProgressProjects: stats.lowProgressProjects.length,
-  });
-  
-  if (!apiKey) {
-    throw new Error('No API key available. Please configure your OpenAI API key in settings.');
-  }
-  
-  if (!isValidAPIKeyFormat(apiKey)) {
-    throw new Error('Invalid API key format. OpenAI keys should start with "sk-"');
-  }
-  
-  const userMessage = `Analyze the following cleanup statistics and suggest items to archive or delete:
-
-${JSON.stringify(stats, null, 2)}`;
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage },
-      ],
-      temperature: AI_TEMPERATURE,
-      max_tokens: AI_MAX_TOKENS,
-      response_format: { type: 'json_object' },
-    }),
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.error?.message || `OpenAI API error: ${response.status}`;
-    
-    if (response.status === 401) {
-      throw new Error('Invalid API key. Please check your OpenAI API key in settings.');
-    } else if (response.status === 429) {
-      throw new Error('Rate limit exceeded. Please try again later or check your OpenAI plan.');
-    } else if (response.status === 402) {
-      throw new Error('Billing issue with OpenAI account. Please check your OpenAI billing.');
-    }
-    
-    throw new Error(errorMessage);
-  }
-  
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  
-  if (!content) {
-    throw new Error('Empty response from AI');
-  }
-  
-  const result = extractJSON(content);
-  
-  if (!validateSuggestions(result)) {
-    throw new Error('AI response does not match expected schema');
-  }
-  
-  // Post-process suggestions
-  return result.suggestions.map((s, index) => ({
-    ...s,
-    id: s.id || `sug_${index + 1}`,
-    confidence: typeof s.confidence === 'number' ? Math.min(1, Math.max(0, s.confidence)) : 0.5,
-  }));
-}
-
-// ============================================================================
 // Route Handler
 // ============================================================================
 
@@ -221,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CleanupAP
     }
     
     // Parse request body
-    let body: { stats?: CleanupStats; apiKey?: string; model?: string };
+    let body: { stats?: CleanupStats; provider?: string; apiKey?: string; model?: string; useDefaultKey?: boolean };
     try {
       body = await request.json();
     } catch {
@@ -239,26 +145,49 @@ export async function POST(request: NextRequest): Promise<NextResponse<CleanupAP
       );
     }
     
-    // Check if any API key is available
-    const hasUserKey = body.apiKey && isValidAPIKeyFormat(body.apiKey);
-    const hasServerKey = !!OPENAI_API_KEY;
+    // Extract AI configuration
+    const aiConfig = extractAIConfig(body);
     
-    if (!hasUserKey && !hasServerKey) {
+    // Check if any API key is available
+    if (!hasValidApiKey(aiConfig)) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No API key configured. Please add your OpenAI API key in AI Settings.',
+          error: 'No API key configured. Please add your API key in AI Settings.',
           code: 'API_KEY_REQUIRED'
         },
         { status: 400 }
       );
     }
     
+    // Build user message
+    const userMessage = `Analyze the following cleanup statistics and suggest items to archive or delete:
+
+${JSON.stringify(body.stats, null, 2)}`;
+    
     // Call AI
-    const suggestions = await callOpenAI(body.stats, {
-      apiKey: body.apiKey,
-      model: body.model,
+    const content = await makeServerAICall({
+      ...aiConfig,
+      systemPrompt: SYSTEM_PROMPT,
+      userMessage,
+      temperature: 0.3,
+      maxTokens: 2000,
+      jsonMode: true,
     });
+    
+    // Extract and validate JSON
+    const result = extractJSON(content);
+    
+    if (!validateSuggestions(result)) {
+      throw new Error('AI response does not match expected schema');
+    }
+    
+    // Post-process suggestions
+    const suggestions = result.suggestions.map((s, index) => ({
+      ...s,
+      id: s.id || `sug_${index + 1}`,
+      confidence: typeof s.confidence === 'number' ? Math.min(1, Math.max(0, s.confidence)) : 0.5,
+    }));
     
     return NextResponse.json({
       success: true,
@@ -275,7 +204,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<CleanupAP
       statusCode = 401;
     } else if (errorMessage.includes('Rate limit')) {
       statusCode = 429;
-    } else if (errorMessage.includes('Billing')) {
+    } else if (errorMessage.includes('Billing') || errorMessage.includes('permission')) {
       statusCode = 402;
     }
     

@@ -4,6 +4,7 @@
  * Handles insight generation with:
  * - Real mode: Calls the API route to get AI-generated insights
  * - Caching: 15-minute TTL for generated insights
+ * - Multi-provider support: OpenAI, Gemini, Anthropic
  */
 
 import {
@@ -13,7 +14,12 @@ import {
   PeriodSpec,
   INSIGHT_CACHE_TTL_MS,
 } from './types';
-import { loadAISettings, isUserAIEnabled } from './settings';
+import {
+  getEffectiveSettings,
+  getAIRequestConfig,
+  isAIEnabled as checkAIEnabled,
+  getAISource as checkAISource,
+} from '../settings';
 
 // ============================================================================
 // Cache Helpers
@@ -92,18 +98,11 @@ export function clearCachedInsight(period: PeriodSpec): void {
  * Check if AI is enabled.
  * Priority:
  * 1. User-configured API key in localStorage
- * 2. Environment variable NEXT_PUBLIC_AI_ENABLED
+ * 2. Environment variable (default key)
  */
 export function isAIEnabled(): boolean {
   if (typeof window === 'undefined') return false;
-  
-  // Check user-configured settings first
-  if (isUserAIEnabled()) {
-    return true;
-  }
-  
-  // Fallback to environment variable (for server-side key)
-  return process.env.NEXT_PUBLIC_AI_ENABLED === 'true';
+  return checkAIEnabled();
 }
 
 /**
@@ -111,34 +110,31 @@ export function isAIEnabled(): boolean {
  */
 export function getAISource(): 'user' | 'env' | 'none' {
   if (typeof window === 'undefined') return 'none';
-  
-  if (isUserAIEnabled()) {
-    return 'user';
-  }
-  
-  if (process.env.NEXT_PUBLIC_AI_ENABLED === 'true') {
-    return 'env';
-  }
-  
-  return 'none';
+  return checkAISource();
 }
 
 /**
  * Call the API route to generate AI insight.
  */
 async function fetchAIInsight(stats: InsightStats): Promise<InsightV1> {
-  const settings = loadAISettings();
+  const config = getAIRequestConfig();
   
-  const requestBody: { stats: InsightStats; apiKey?: string; model?: string } = {
+  const requestBody: {
+    stats: InsightStats;
+    provider?: string;
+    apiKey?: string;
+    model?: string;
+    useDefaultKey?: boolean;
+  } = {
     stats,
+    provider: config.provider,
+    model: config.model,
+    useDefaultKey: config.useDefaultKey,
   };
   
   // Include user-provided API key if available
-  if (settings.apiKey && settings.enabled) {
-    requestBody.apiKey = settings.apiKey;
-    if (settings.model) {
-      requestBody.model = settings.model;
-    }
+  if (config.apiKey) {
+    requestBody.apiKey = config.apiKey;
   }
   
   const response = await fetch('/api/insight', {
@@ -193,7 +189,8 @@ export async function generateInsight(
   
   // Check if AI is enabled
   if (!isAIEnabled()) {
-    throw new Error('AI is not enabled. Please configure your OpenAI API key in settings.');
+    const effective = getEffectiveSettings();
+    throw new Error(`AI is not enabled. Please configure your ${effective.provider} API key in settings.`);
   }
   
   // Check cache first
