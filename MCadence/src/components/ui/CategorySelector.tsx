@@ -191,3 +191,21 @@ export function getCategoryDisplayName(categoryId: string, providedCategories?: 
   
   return category ? `${category.name} > ${subcategory.name}` : subcategory.name;
 }
+
+// Helper function to get parent category ID from subcategory ID
+export function getParentCategoryId(subcategoryId: string, providedCategories?: Category[]): string | null {
+  if (!subcategoryId) return null;
+  
+  const categories = providedCategories || cachedCategories || getCategoriesFromStorage();
+  
+  const category = categories.find(cat =>
+    cat.subcategories.some(sub => sub.id === subcategoryId)
+  );
+  
+  return category?.id || null;
+}
+
+// Helper function to get all parent categories
+export function getCategories(providedCategories?: Category[]): Category[] {
+  return providedCategories || cachedCategories || getCategoriesFromStorage();
+}

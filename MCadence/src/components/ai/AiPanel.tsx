@@ -245,8 +245,12 @@ function AISettingsPanel({
     
     onApiKeyChange(apiKey);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
     setError(null);
+    // Collapse settings panel after short delay to show success message
+    setTimeout(() => {
+      setSaved(false);
+      onClose();
+    }, 500);
   };
 
   const handleClearKey = () => {

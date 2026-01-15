@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/state';
 import { ChecklistItem, ChecklistItemForm, isChecklistItem, RecurrenceFormSettings, RecurrenceSettings } from '@/lib/types';
+import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
+import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
 
@@ -39,16 +40,27 @@ export function HitMyGoalTab() {
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
-    categoryId: '',
+    categoryId: DEFAULT_CATEGORY_ID,
     recurrence: undefined,
   });
 
   const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, updateItem, state } = useAppState();
 
-  const items = getItemsByTab('hitMyGoal');
-  const archivedItems = getItemsByTab('hitMyGoal', true).filter(item => item.isArchived);
+  // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
+  const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
+  const allItems = getItemsByTab('hitMyGoal');
+  const allArchivedItems = getItemsByTab('hitMyGoal', true).filter(item => item.isArchived);
+
+  // Filter items by category
+  const items = categoryFilter === 'all'
+    ? allItems
+    : allItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
+  const archivedItems = categoryFilter === 'all'
+    ? allArchivedItems
+    : allArchivedItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
 
   // Custom toggle handler with toast notification
   const handleToggle = (item: ChecklistItem) => {
@@ -81,7 +93,7 @@ export function HitMyGoalTab() {
   const handleAddItem = () => {
     if (formData.title.trim()) {
       addChecklistItem('hitMyGoal', formData);
-      setFormData({ title: '', categoryId: '', recurrence: undefined });
+      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID, recurrence: undefined });
       setShowAddModal(false);
     }
   };
@@ -149,21 +161,34 @@ export function HitMyGoalTab() {
 
   return (
     <div>
-      {/* Header with Add button - Title removed as requested */}
+      {/* Header with Add button and Category Filter */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          {archivedItems.length > 0 && (
+          {allArchivedItems.length > 0 && (
             <Button
               variant="secondary"
               onClick={() => setShowArchive(!showArchive)}
             >
-              {showArchive ? 'Active' : `Archived (${archivedItems.length})`}
+              {showArchive ? 'Active' : `Archived (${allArchivedItems.length})`}
             </Button>
           )}
           <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
             +
           </Button>
         </div>
+        {/* Category Filter */}
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Items List */}
@@ -194,14 +219,9 @@ export function HitMyGoalTab() {
                   </div>
                   <div className="flex-1">
                     <h3 className={`font-medium ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                      {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
                       {item.title}
                     </h3>
-                    {item.categoryId && (
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
-                        <span>{getCategoryIcon(item.categoryId)}</span>
-                        {getCategoryDisplayName(item.categoryId)}
-                      </span>
-                    )}
                     {/* Show recurrence info if available */}
                     {checklistItem?.recurrence && (
                       <span className="text-xs text-gray-400">
@@ -279,6 +299,7 @@ export function HitMyGoalTab() {
                           ? urgencyClasses.text
                           : 'text-gray-900'
                       }`}>
+                        {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
                         {item.title}
                       </h3>
                       {/* Time left badge for recurring items */}
@@ -288,12 +309,6 @@ export function HitMyGoalTab() {
                         </span>
                       )}
                     </div>
-                    {item.categoryId && (
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
-                        <span>{getCategoryIcon(item.categoryId)}</span>
-                        {getCategoryDisplayName(item.categoryId)}
-                      </span>
-                    )}
                   </div>
                   <div className="flex gap-1">
                     <button
@@ -359,12 +374,12 @@ export function HitMyGoalTab() {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+              Category *
             </label>
             <CategorySelector
               value={formData.categoryId}
               onChange={(categoryId) => setFormData({ ...formData, categoryId })}
-              placeholder="Optional category"
+              placeholder="Select category"
             />
           </div>
           

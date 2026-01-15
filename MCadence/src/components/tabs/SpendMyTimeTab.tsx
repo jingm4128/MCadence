@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/state';
 import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings } from '@/lib/types';
+import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
+import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
@@ -33,9 +34,10 @@ export function SpendMyTimeTab() {
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [elapsedMinutes, setElapsedMinutes] = useState(0); // Real-time elapsed minutes for active timer
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formData, setFormData] = useState<TimeItemForm>({
     title: '',
-    categoryId: '',
+    categoryId: DEFAULT_CATEGORY_ID,
     requiredHours: 1,
     requiredMinutes: 0,
     recurrence: undefined,
@@ -50,12 +52,23 @@ export function SpendMyTimeTab() {
     unarchiveItem,
     deleteItem,
     getActiveTimerItem,
-    updateItem
+    updateItem,
+    state
   } = useAppState();
 
-  const items = getItemsByTab('spendMyTime').filter(isTimeProject);
-  const archivedItems = getItemsByTab('spendMyTime', true).filter(item => item.isArchived && isTimeProject(item));
+  // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
+  const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
+  const allItems = getItemsByTab('spendMyTime').filter(isTimeProject);
+  const allArchivedItems = getItemsByTab('spendMyTime', true).filter(item => item.isArchived && isTimeProject(item));
   const activeTimerProject = getActiveTimerItem();
+
+  // Filter items by category
+  const items = categoryFilter === 'all'
+    ? allItems
+    : allItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
+  const archivedItems = categoryFilter === 'all'
+    ? allArchivedItems
+    : allArchivedItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
 
   // Update elapsed time every second when a timer is running
   useEffect(() => {
@@ -93,7 +106,7 @@ export function SpendMyTimeTab() {
       addTimeItem(formData);
       setFormData({
         title: '',
-        categoryId: '',
+        categoryId: DEFAULT_CATEGORY_ID,
         requiredHours: 1,
         requiredMinutes: 0,
         recurrence: undefined
@@ -244,21 +257,34 @@ export function SpendMyTimeTab() {
 
   return (
     <div>
-      {/* Header with Add button - Title removed as requested */}
+      {/* Header with Add button and Category Filter */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          {archivedItems.length > 0 && (
+          {allArchivedItems.length > 0 && (
             <Button
               variant="secondary"
               onClick={() => setShowArchive(!showArchive)}
             >
-              {showArchive ? 'Active' : `Archived (${archivedItems.length})`}
+              {showArchive ? 'Active' : `Archived (${allArchivedItems.length})`}
             </Button>
           )}
           <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
             +
           </Button>
         </div>
+        {/* Category Filter */}
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Projects List - No separate active timer display, integrated into cards */}
@@ -290,14 +316,9 @@ export function SpendMyTimeTab() {
                   </div>
                   <div className="flex-1">
                     <h3 className={`font-medium ${isComplete ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                      {project.categoryId && <span className="mr-1.5">{getCategoryIcon(project.categoryId)}</span>}
                       {project.title}
                     </h3>
-                    {project.categoryId && (
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
-                        <span>{getCategoryIcon(project.categoryId)}</span>
-                        {getCategoryDisplayName(project.categoryId)}
-                      </span>
-                    )}
                     {/* Show time progress */}
                     {timeProject && (
                       <span className="text-xs text-gray-400">
@@ -403,6 +424,7 @@ export function SpendMyTimeTab() {
                           status === 'overdue' || status === 'urgent' ? 'text-red-600' :
                           isActive ? 'text-primary-900' : 'text-gray-900'
                         }`}>
+                          {project.categoryId && <span className="mr-1.5">{getCategoryIcon(project.categoryId)}</span>}
                           {project.title}
                         </h3>
                         {/* Urgency badge for recurring items */}
@@ -412,12 +434,6 @@ export function SpendMyTimeTab() {
                           </span>
                         )}
                       </div>
-                      {project.categoryId && (
-                        <span className="text-sm text-gray-500 flex items-center gap-1">
-                          <span>{getCategoryIcon(project.categoryId)}</span>
-                          {getCategoryDisplayName(project.categoryId)}
-                        </span>
-                      )}
                     </div>
                     <div className="flex gap-1">
                       <button
@@ -528,12 +544,12 @@ export function SpendMyTimeTab() {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+              Category *
             </label>
             <CategorySelector
               value={formData.categoryId}
               onChange={(categoryId) => setFormData({ ...formData, categoryId })}
-              placeholder="Optional category"
+              placeholder="Select category"
             />
           </div>
           

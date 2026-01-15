@@ -3,25 +3,37 @@
 import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/state';
 import { ChecklistItemForm, isChecklistItem } from '@/lib/types';
+import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
+import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 
 export function DayToDayTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
-    categoryId: '',
+    categoryId: DEFAULT_CATEGORY_ID,
   });
 
-  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem } = useAppState();
+  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, state } = useAppState();
 
-  const items = getItemsByTab('dayToDay');
-  const archivedItems = getItemsByTab('dayToDay', true).filter(item => item.isArchived);
+  // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
+  const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
+  const allItems = getItemsByTab('dayToDay');
+  const allArchivedItems = getItemsByTab('dayToDay', true).filter(item => item.isArchived);
+
+  // Filter items by category
+  const items = categoryFilter === 'all'
+    ? allItems
+    : allItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
+  const archivedItems = categoryFilter === 'all'
+    ? allArchivedItems
+    : allArchivedItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
 
   // Auto-hide toast after 3 seconds
   useEffect(() => {
@@ -34,7 +46,7 @@ export function DayToDayTab() {
   const handleAddItem = () => {
     if (formData.title.trim()) {
       addChecklistItem('dayToDay', formData);
-      setFormData({ title: '', categoryId: '' });
+      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID });
       setShowAddModal(false);
     }
   };
@@ -57,21 +69,34 @@ export function DayToDayTab() {
 
   return (
     <div>
-      {/* Header with Add button - Title removed as requested */}
+      {/* Header with Add button and Category Filter */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          {archivedItems.length > 0 && (
+          {allArchivedItems.length > 0 && (
             <Button
               variant="secondary"
               onClick={() => setShowArchive(!showArchive)}
             >
-              {showArchive ? 'Active' : `Archived (${archivedItems.length})`}
+              {showArchive ? 'Active' : `Archived (${allArchivedItems.length})`}
             </Button>
           )}
           <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
             +
           </Button>
         </div>
+        {/* Category Filter */}
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Items List */}
@@ -102,14 +127,9 @@ export function DayToDayTab() {
                   </div>
                   <div className="flex-1">
                     <h3 className={`font-medium ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                      {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
                       {item.title}
                     </h3>
-                    {item.categoryId && (
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
-                        <span>{getCategoryIcon(item.categoryId)}</span>
-                        {getCategoryDisplayName(item.categoryId)}
-                      </span>
-                    )}
                   </div>
                   <div className="flex gap-1">
                     <button
@@ -157,14 +177,9 @@ export function DayToDayTab() {
                   />
                   <div className="flex-1">
                     <h3 className={`font-medium ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                      {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
                       {item.title}
                     </h3>
-                    {item.categoryId && (
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
-                        <span>{getCategoryIcon(item.categoryId)}</span>
-                        {getCategoryDisplayName(item.categoryId)}
-                      </span>
-                    )}
                   </div>
                   <div className="flex gap-1">
                     <button
@@ -221,12 +236,12 @@ export function DayToDayTab() {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+              Category *
             </label>
             <CategorySelector
               value={formData.categoryId}
               onChange={(categoryId) => setFormData({ ...formData, categoryId })}
-              placeholder="Optional category"
+              placeholder="Select category"
             />
           </div>
           

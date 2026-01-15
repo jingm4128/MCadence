@@ -79,8 +79,10 @@ export default function HomePageContent() {
   // Initialize the history guard to prevent accidental exit
   const { markUserNavigation } = useHistoryGuard(true);
   
-  // Modal states using history-integrated hooks
-  const menuModal = useModalWithHistory('menu');
+  // Simple menu state (no history integration to avoid race conditions)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Modal states using history-integrated hooks (only for actual modals, not dropdown menu)
   const exportModal = useModalWithHistory('export');
   const clearModal = useModalWithHistory('clear');
   const importModal = useModalWithHistory('import');
@@ -97,7 +99,7 @@ export default function HomePageContent() {
   }, [markUserNavigation]);
 
   const handleMenuClick = () => {
-    menuModal.open();
+    setIsMenuOpen(true);
   };
 
   const handleExport = () => {
@@ -116,7 +118,7 @@ export default function HomePageContent() {
     } catch (error) {
       console.error('Export failed:', error);
     }
-    menuModal.close();
+    setIsMenuOpen(false);
   };
 
   const handleImport = ({ state: importedState, mode }: { state: any; mode: 'combine' | 'overwrite' }) => {
@@ -184,8 +186,22 @@ export default function HomePageContent() {
   };
 
   const handleClearData = () => {
+    // Clear localStorage first
     clearState();
-    window.location.reload();
+    
+    // Clear React state immediately so UI updates
+    dispatch({
+      type: 'LOAD_STATE',
+      payload: { items: [], actions: [], categories: DEFAULT_CATEGORIES }
+    });
+    
+    // Close the modal and then reload to ensure clean state
+    clearModal.close();
+    
+    // Small delay to ensure state is saved, then reload
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const handleSaveCategories = (categories: Category[]) => {
@@ -226,16 +242,16 @@ export default function HomePageContent() {
     >
       {renderActiveTab()}
 
-      {/* Menu Modal */}
-      {menuModal.isOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => menuModal.close()}>
+      {/* Menu Dropdown */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMenuOpen(false)}>
           <div className="absolute right-4 top-16 w-64 bg-white rounded-lg shadow-lg p-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-semibold text-gray-900 mb-4">Menu</h3>
             <div className="space-y-2">
               <button
                 onClick={() => {
+                  setIsMenuOpen(false);
                   exportModal.open();
-                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -243,8 +259,8 @@ export default function HomePageContent() {
               </button>
               <button
                 onClick={() => {
+                  setIsMenuOpen(false);
                   importModal.open();
-                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -252,8 +268,8 @@ export default function HomePageContent() {
               </button>
               <button
                 onClick={() => {
+                  setIsMenuOpen(false);
                   categoryModal.open();
-                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -264,8 +280,8 @@ export default function HomePageContent() {
               </div>
               <button
                 onClick={() => {
+                  setIsMenuOpen(false);
                   clearModal.open();
-                  menuModal.close();
                 }}
                 className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
