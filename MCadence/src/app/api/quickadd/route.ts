@@ -4,7 +4,7 @@
  * POST /api/quickadd
  * 
  * Takes user text and category palette, returns structured item proposals.
- * Improved for better natural language understanding (multilingual, recurrence, duration).
+ * Supports multiple providers: OpenAI, Gemini, Anthropic.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -16,15 +16,12 @@ import {
   RecurrenceType,
   QuickAddTab,
 } from '@/lib/ai/quickadd';
+import { makeServerAICall, extractAIConfig, hasValidApiKey } from '@/lib/ai/server-config';
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
-const AI_TEMPERATURE = 0.2; // Lower temperature for more consistent parsing
-const AI_MAX_TOKENS = 2000;
 const MAX_REQUEST_SIZE = 50 * 1024; // 50KB max request size
 const MAX_TEXT_LENGTH = 5000; // Max characters of user text
 
@@ -180,17 +177,11 @@ Output:
 // Request Validation
 // ============================================================================
 
-function isValidAPIKeyFormat(key: string): boolean {
-  return typeof key === 'string' && key.startsWith('sk-') && key.length >= 20;
-}
-
 function validateRequest(body: unknown): { 
   valid: boolean; 
   error?: string; 
   text?: string;
   categories?: CategoryPalette[];
-  apiKey?: string;
-  model?: string;
 } {
   if (!body || typeof body !== 'object') {
     return { valid: false, error: 'Invalid request body' };
@@ -214,8 +205,6 @@ function validateRequest(body: unknown): {
     valid: true,
     text: b.text as string,
     categories: b.categories as CategoryPalette[],
-    apiKey: typeof b.apiKey === 'string' ? b.apiKey : undefined,
-    model: typeof b.model === 'string' ? b.model : undefined,
   };
 }
 
@@ -363,105 +352,6 @@ function postProcessProposals(
 }
 
 // ============================================================================
-// AI Call
-// ============================================================================
-
-async function callOpenAI(
-  text: string,
-  categories: CategoryPalette[],
-  options: { apiKey?: string; model?: string } = {}
-): Promise<QuickAddProposal[]> {
-  const apiKey = options.apiKey || OPENAI_API_KEY;
-  const model = options.model || AI_MODEL;
-  
-  if (!apiKey) {
-    throw new Error('No API key available. Please configure your OpenAI API key in settings.');
-  }
-  
-  if (!isValidAPIKeyFormat(apiKey)) {
-    throw new Error('Invalid API key format. OpenAI keys should start with "sk-"');
-  }
-  
-  // Build detailed category list with examples
-  const categoryList = categories.map(cat => {
-    const subcats = cat.subcategories.map(s => 
-      `  - ${s.name} (id: "${s.id}"${s.icon ? `, icon: ${s.icon}` : ''})`
-    ).join('\n');
-    return `${cat.icon || '📁'} ${cat.name}:\n${subcats}`;
-  }).join('\n\n');
-  
-  const userMessage = `Parse the following text into structured productivity items.
-Use the provided categories for classification - prefer existing categories when possible.
-
-## AVAILABLE CATEGORIES
-
-${categoryList}
-
-## USER TEXT
-
-${text}
-
-## INSTRUCTIONS
-
-1. Extract all actionable items from the text
-2. For each item, determine the best tab (dayToDay, hitMyGoal, or spendMyTime)
-3. Detect recurrence patterns (daily, weekly, monthly, or one_off)
-4. Parse duration if mentioned (in minutes)
-5. Match to the most appropriate category from the list above
-6. Return ONLY valid JSON matching the schema`;
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage },
-      ],
-      temperature: AI_TEMPERATURE,
-      max_tokens: AI_MAX_TOKENS,
-      response_format: { type: 'json_object' },
-    }),
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.error?.message || `OpenAI API error: ${response.status}`;
-    
-    if (response.status === 401) {
-      throw new Error('Invalid API key. Please check your OpenAI API key in settings.');
-    } else if (response.status === 429) {
-      throw new Error(errorData.error?.message || 'Rate limit exceeded. Please try again later.');
-    } else if (response.status === 402) {
-      throw new Error('Billing issue with OpenAI account. Please check your OpenAI billing.');
-    }
-    
-    throw new Error(errorMessage);
-  }
-  
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  
-  if (!content) {
-    throw new Error('Empty response from AI');
-  }
-  
-  // Extract and validate JSON
-  const result = extractJSON(content);
-  
-  if (!validateProposals(result)) {
-    throw new Error('AI response does not match expected schema');
-  }
-  
-  // Post-process proposals to ensure they have valid structure
-  return postProcessProposals(result.proposals, categories);
-}
-
-// ============================================================================
 // Route Handler
 // ============================================================================
 
@@ -496,30 +386,68 @@ export async function POST(request: NextRequest): Promise<NextResponse<QuickAddA
       );
     }
     
-    // Check if any API key is available
-    const hasUserKey = validation.apiKey && isValidAPIKeyFormat(validation.apiKey);
-    const hasServerKey = !!OPENAI_API_KEY;
+    // Extract AI configuration
+    const aiConfig = extractAIConfig(body);
     
-    if (!hasUserKey && !hasServerKey) {
+    // Check if any API key is available
+    if (!hasValidApiKey(aiConfig)) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No API key configured. Please add your OpenAI API key in AI Settings.',
+          error: 'No API key configured. Please add your API key in AI Settings.',
           code: 'API_KEY_REQUIRED'
         },
         { status: 400 }
       );
     }
     
+    // Build detailed category list with examples
+    const categoryList = validation.categories!.map(cat => {
+      const subcats = cat.subcategories.map(s => 
+        `  - ${s.name} (id: "${s.id}"${s.icon ? `, icon: ${s.icon}` : ''})`
+      ).join('\n');
+      return `${cat.icon || '📁'} ${cat.name}:\n${subcats}`;
+    }).join('\n\n');
+    
+    const userMessage = `Parse the following text into structured productivity items.
+Use the provided categories for classification - prefer existing categories when possible.
+
+## AVAILABLE CATEGORIES
+
+${categoryList}
+
+## USER TEXT
+
+${validation.text}
+
+## INSTRUCTIONS
+
+1. Extract all actionable items from the text
+2. For each item, determine the best tab (dayToDay, hitMyGoal, or spendMyTime)
+3. Detect recurrence patterns (daily, weekly, monthly, or one_off)
+4. Parse duration if mentioned (in minutes)
+5. Match to the most appropriate category from the list above
+6. Return ONLY valid JSON matching the schema`;
+    
     // Call AI
-    const proposals = await callOpenAI(
-      validation.text!,
-      validation.categories!,
-      {
-        apiKey: validation.apiKey,
-        model: validation.model,
-      }
-    );
+    const content = await makeServerAICall({
+      ...aiConfig,
+      systemPrompt: SYSTEM_PROMPT,
+      userMessage,
+      temperature: 0.2,
+      maxTokens: 2000,
+      jsonMode: true,
+    });
+    
+    // Extract and validate JSON
+    const result = extractJSON(content);
+    
+    if (!validateProposals(result)) {
+      throw new Error('AI response does not match expected schema');
+    }
+    
+    // Post-process proposals to ensure they have valid structure
+    const proposals = postProcessProposals(result.proposals, validation.categories!);
     
     return NextResponse.json({
       success: true,
@@ -536,7 +464,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<QuickAddA
       statusCode = 401;
     } else if (errorMessage.includes('Rate limit')) {
       statusCode = 429;
-    } else if (errorMessage.includes('Billing')) {
+    } else if (errorMessage.includes('Billing') || errorMessage.includes('permission')) {
       statusCode = 402;
     }
     

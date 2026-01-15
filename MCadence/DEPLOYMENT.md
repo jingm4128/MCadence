@@ -97,6 +97,65 @@ In Vercel dashboard:
 
 ---
 
+## AI Feature Setup (Required for AI Insight, Quick Add, Clean-up)
+
+To enable AI features in your Vercel deployment, you need to set environment variables:
+
+### Via Vercel Dashboard (Recommended)
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Select your **mcadence** project
+3. Go to **Settings** → **Environment Variables**
+4. Add the following variables:
+
+| Name | Value | Environment |
+|------|-------|-------------|
+| `NEXT_PUBLIC_AI_ENABLED` | `true` | Production, Preview, Development |
+| `NEXT_PUBLIC_DEFAULT_AI_PROVIDER` | `openai` | Production, Preview, Development |
+| `DEFAULT_AI_PROVIDER` | `openai` | Production, Preview, Development |
+| `DEFAULT_OPENAI_API_KEY` | `sk-...` (your OpenAI API key) | Production, Preview, Development |
+
+5. Click **Save** for each variable
+6. **Redeploy** your project for changes to take effect:
+   - Go to **Deployments** tab
+   - Click the three dots on the latest deployment
+   - Select **Redeploy**
+
+### Via Vercel CLI
+
+```bash
+# Login to Vercel
+npx vercel login
+
+# Set environment variables
+npx vercel env add NEXT_PUBLIC_AI_ENABLED
+# Enter: true
+
+npx vercel env add NEXT_PUBLIC_DEFAULT_AI_PROVIDER
+# Enter: openai
+
+npx vercel env add DEFAULT_AI_PROVIDER
+# Enter: openai
+
+npx vercel env add DEFAULT_OPENAI_API_KEY
+# Enter: sk-... (your OpenAI API key)
+
+# Redeploy
+npx vercel --prod
+```
+
+### Alternative Providers
+
+For **Google Gemini** instead of OpenAI:
+- Set `DEFAULT_AI_PROVIDER` and `NEXT_PUBLIC_DEFAULT_AI_PROVIDER` to `gemini`
+- Add `DEFAULT_GEMINI_API_KEY` with your Gemini API key
+
+For **Anthropic Claude**:
+- Set `DEFAULT_AI_PROVIDER` and `NEXT_PUBLIC_DEFAULT_AI_PROVIDER` to `anthropic`
+- Add `DEFAULT_ANTHROPIC_API_KEY` with your Anthropic API key
+
+---
+
 ## Environment Notes
 
 - **Data Storage**: All data is stored in your browser's localStorage

@@ -2,6 +2,7 @@
  * Quick Add Generator
  *
  * Handles generating item proposals from user text using AI.
+ * Supports multiple providers: OpenAI, Gemini, Anthropic.
  */
 
 import {
@@ -9,7 +10,11 @@ import {
   QuickAddResult,
   CategoryPalette,
 } from './types';
-import { loadAISettings, isUserAIEnabled } from '../insight/settings';
+import {
+  getAIRequestConfig,
+  isAIEnabled,
+  getEffectiveSettings,
+} from '../settings';
 
 // ============================================================================
 // Check if AI is enabled
@@ -17,14 +22,7 @@ import { loadAISettings, isUserAIEnabled } from '../insight/settings';
 
 export function isQuickAddEnabled(): boolean {
   if (typeof window === 'undefined') return false;
-  
-  // Check user-configured settings first
-  if (isUserAIEnabled()) {
-    return true;
-  }
-  
-  // Fallback to environment variable
-  return process.env.NEXT_PUBLIC_AI_ENABLED === 'true';
+  return isAIEnabled();
 }
 
 // ============================================================================
@@ -75,23 +73,26 @@ async function fetchAIProposals(
   requestLock.inProgress = true;
   requestLock.key = requestKey;
   
-  const settings = loadAISettings();
+  const config = getAIRequestConfig();
   
   const requestBody: {
     text: string;
     categories: CategoryPalette[];
+    provider?: string;
     apiKey?: string;
     model?: string;
+    useDefaultKey?: boolean;
   } = {
     text,
     categories,
+    provider: config.provider,
+    model: config.model,
+    useDefaultKey: config.useDefaultKey,
   };
   
-  if (settings.apiKey && settings.enabled) {
-    requestBody.apiKey = settings.apiKey;
-    if (settings.model) {
-      requestBody.model = settings.model;
-    }
+  // Include user-provided API key if available
+  if (config.apiKey) {
+    requestBody.apiKey = config.apiKey;
   }
   
   // Create promise and store it
@@ -142,7 +143,11 @@ export async function generateQuickAddProposals(
   
   // Check if AI is enabled
   if (!isQuickAddEnabled()) {
-    return { proposals: [], error: 'AI is not enabled. Please configure your OpenAI API key in settings.' };
+    const effective = getEffectiveSettings();
+    return { 
+      proposals: [], 
+      error: `AI is not enabled. Please configure your ${effective.provider} API key in settings.`
+    };
   }
   
   // Call AI API

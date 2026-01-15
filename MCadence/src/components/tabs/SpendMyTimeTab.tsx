@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAppState } from '@/lib/state';
 import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings } from '@/lib/types';
+import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
-import { CategorySelector, getCategoryColor, getCategoryIcon, getCategoryDisplayName } from '@/components/ui/CategorySelector';
+import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
@@ -28,14 +29,15 @@ interface EditRecurrenceState {
 export function SpendMyTimeTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
-  const [itemToArchive, setItemToArchive] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [editTimeState, setEditTimeState] = useState<EditTimeState | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [elapsedMinutes, setElapsedMinutes] = useState(0); // Real-time elapsed minutes for active timer
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formData, setFormData] = useState<TimeItemForm>({
     title: '',
-    categoryId: '',
+    categoryId: DEFAULT_CATEGORY_ID,
     requiredHours: 1,
     requiredMinutes: 0,
     recurrence: undefined,
@@ -47,14 +49,26 @@ export function SpendMyTimeTab() {
     startTimer,
     stopTimer,
     archiveItem,
+    unarchiveItem,
     deleteItem,
     getActiveTimerItem,
-    updateItem
+    updateItem,
+    state
   } = useAppState();
 
-  const items = getItemsByTab('spendMyTime').filter(isTimeProject);
-  const archivedItems = getItemsByTab('spendMyTime', true).filter(item => item.isArchived && isTimeProject(item));
+  // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
+  const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
+  const allItems = getItemsByTab('spendMyTime').filter(isTimeProject);
+  const allArchivedItems = getItemsByTab('spendMyTime', true).filter(item => item.isArchived && isTimeProject(item));
   const activeTimerProject = getActiveTimerItem();
+
+  // Filter items by category
+  const items = categoryFilter === 'all'
+    ? allItems
+    : allItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
+  const archivedItems = categoryFilter === 'all'
+    ? allArchivedItems
+    : allArchivedItems.filter(item => getParentCategoryId(item.categoryId) === categoryFilter);
 
   // Update elapsed time every second when a timer is running
   useEffect(() => {
@@ -79,12 +93,20 @@ export function SpendMyTimeTab() {
     return () => clearInterval(interval);
   }, [activeTimerProject?.currentSessionStart]);
 
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   const handleAddProject = () => {
     if (formData.title.trim() && (formData.requiredHours > 0 || formData.requiredMinutes > 0)) {
       addTimeItem(formData);
       setFormData({
         title: '',
-        categoryId: '',
+        categoryId: DEFAULT_CATEGORY_ID,
         requiredHours: 1,
         requiredMinutes: 0,
         recurrence: undefined
@@ -94,14 +116,8 @@ export function SpendMyTimeTab() {
   };
 
   const handleArchive = (id: string) => {
-    setItemToArchive(id);
-  };
-
-  const confirmArchive = () => {
-    if (itemToArchive) {
-      archiveItem(itemToArchive);
-      setItemToArchive(null);
-    }
+    archiveItem(id);
+    setToastMessage('Archived, go to archived to recover');
   };
 
   const handleDelete = (id: string) => {
@@ -241,50 +257,100 @@ export function SpendMyTimeTab() {
 
   return (
     <div>
-      {/* Header with Add button - Title removed as requested */}
+      {/* Header with Add button and Category Filter */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          {archivedItems.length > 0 && (
+          {allArchivedItems.length > 0 && (
             <Button
               variant="secondary"
               onClick={() => setShowArchive(!showArchive)}
             >
-              {showArchive ? 'Active' : `Archived (${archivedItems.length})`}
+              {showArchive ? 'Active' : `Archived (${allArchivedItems.length})`}
             </Button>
           )}
           <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
             +
           </Button>
         </div>
+        {/* Category Filter */}
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Projects List - No separate active timer display, integrated into cards */}
       {showArchive ? (
         <div className="space-y-3">
           <p className="text-sm text-gray-500 mb-4">Archived projects</p>
-          {archivedItems.map((project) => (
-            <div
-              key={project.id}
-              className="bg-white p-4 rounded-lg border border-gray-200 opacity-60"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <h3 className="font-medium text-gray-700 line-through">{project.title}</h3>
-                  {project.categoryId && (
-                    <span className="text-sm text-gray-500">{project.categoryId}</span>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleDelete(project.id)}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Delete
-                  </button>
+          {archivedItems.map((project) => {
+            const timeProject = isTimeProject(project) ? project : null;
+            const progress = timeProject ? Math.min(1, timeProject.completedMinutes / timeProject.requiredMinutes) : 0;
+            const isComplete = progress >= 1;
+            return (
+              <div
+                key={project.id}
+                className="bg-white p-4 rounded-lg border border-gray-200 opacity-70"
+                style={{ borderLeftColor: getCategoryColor(project.categoryId), borderLeftWidth: "4px" }}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Completion status indicator */}
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                    isComplete
+                      ? 'bg-green-100 border-green-500 text-green-600'
+                      : 'bg-gray-100 border-gray-400'
+                  }`}>
+                    {isComplete && (
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className={`font-medium ${isComplete ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                      {project.categoryId && <span className="mr-1.5">{getCategoryIcon(project.categoryId)}</span>}
+                      {project.title}
+                    </h3>
+                    {/* Show time progress */}
+                    {timeProject && (
+                      <span className="text-xs text-gray-400">
+                        {formatMinutes(timeProject.completedMinutes)} / {formatMinutes(timeProject.requiredMinutes)}
+                        {isComplete && ' ✓'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => unarchiveItem(project.id)}
+                      className="text-primary-600 hover:text-primary-800 p-1"
+                      title="Restore"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(project.id)}
+                      className="text-red-400 hover:text-red-600 p-1"
+                      title="Delete"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {archivedItems.length === 0 && (
             <p className="text-center text-gray-500 py-8">No archived projects</p>
           )}
@@ -358,6 +424,7 @@ export function SpendMyTimeTab() {
                           status === 'overdue' || status === 'urgent' ? 'text-red-600' :
                           isActive ? 'text-primary-900' : 'text-gray-900'
                         }`}>
+                          {project.categoryId && <span className="mr-1.5">{getCategoryIcon(project.categoryId)}</span>}
                           {project.title}
                         </h3>
                         {/* Urgency badge for recurring items */}
@@ -367,12 +434,6 @@ export function SpendMyTimeTab() {
                           </span>
                         )}
                       </div>
-                      {project.categoryId && (
-                        <span className="text-sm text-gray-500 flex items-center gap-1">
-                          <span>{getCategoryIcon(project.categoryId)}</span>
-                          {getCategoryDisplayName(project.categoryId)}
-                        </span>
-                      )}
                     </div>
                     <div className="flex gap-1">
                       <button
@@ -483,12 +544,12 @@ export function SpendMyTimeTab() {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+              Category *
             </label>
             <CategorySelector
               value={formData.categoryId}
               onChange={(categoryId) => setFormData({ ...formData, categoryId })}
-              placeholder="Optional category"
+              placeholder="Select category"
             />
           </div>
           
@@ -548,16 +609,6 @@ export function SpendMyTimeTab() {
           </div>
         </div>
       </Modal>
-
-      {/* Archive Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToArchive}
-        onClose={() => setItemToArchive(null)}
-        onConfirm={confirmArchive}
-        title="Archive Project"
-        message="Archive this project? You can restore it from archived view."
-        confirmText="Archive"
-      />
 
       {/* Delete Confirmation */}
       <ConfirmDialog
@@ -670,6 +721,13 @@ export function SpendMyTimeTab() {
           </div>
         )}
       </Modal>
+
+      {/* Toast Message */}
+      {toastMessage && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

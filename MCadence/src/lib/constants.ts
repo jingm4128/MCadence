@@ -15,8 +15,19 @@ export const PRESET_COLORS = [
 
 export const DEFAULT_COLOR = PRESET_COLORS[0]; // Blue
 
+// Default category ID for new items
+export const DEFAULT_CATEGORY_ID = 'sub-default';
+
 // Pre-populated categories with L1/L2 hierarchy
 export const DEFAULT_CATEGORIES = [
+  {
+    id: 'cat-default',
+    name: 'Default',
+    color: '#3b82f6', // Blue
+    subcategories: [
+      { id: 'sub-default', name: 'General', icon: '🔵', parentId: 'cat-default' },
+    ]
+  },
   {
     id: 'cat-daily-essentials',
     name: '必要日常',
@@ -24,13 +35,13 @@ export const DEFAULT_CATEGORIES = [
     subcategories: [
       { id: 'sub-sleep', name: '睡觉/休息', icon: '🛏️', parentId: 'cat-daily-essentials' },
       { id: 'sub-work', name: '工作', icon: '💼', parentId: 'cat-daily-essentials' },
-      { id: 'sub-hygiene', name: '洗漱/臭美', icon: '🚿', parentId: 'cat-daily-essentials' },
+      { id: 'sub-hygiene', name: '洗漱/臭美', icon: '💄', parentId: 'cat-daily-essentials' },
       { id: 'sub-eating', name: '吃饭', icon: '🍽️', parentId: 'cat-daily-essentials' },
       { id: 'sub-chores', name: '家务', icon: '🧹', parentId: 'cat-daily-essentials' },
       { id: 'sub-commute', name: '通勤', icon: '🚗', parentId: 'cat-daily-essentials' },
       { id: 'sub-family', name: '家庭', icon: '👨‍👩‍👧‍👦', parentId: 'cat-daily-essentials' },
-      { id: 'sub-medical', name: '医疗', icon: '🏥', parentId: 'cat-daily-essentials' },
-      { id: 'sub-other', name: '其他', icon: '📌', parentId: 'cat-daily-essentials' },
+      { id: 'sub-medical', name: '医疗', icon: '💊', parentId: 'cat-daily-essentials' },
+      { id: 'sub-other', name: '其他杂事', icon: '🛠️', parentId: 'cat-daily-essentials' },
     ]
   },
   {
@@ -40,8 +51,8 @@ export const DEFAULT_CATEGORIES = [
     subcategories: [
       { id: 'sub-side-prep', name: '副业筹备', icon: '🚀', parentId: 'cat-side-business' },
       { id: 'sub-job-change', name: '换工作', icon: '🔄', parentId: 'cat-side-business' },
-      { id: 'sub-finance', name: '理财', icon: '💰', parentId: 'cat-side-business' },
-      { id: 'sub-volunteer', name: '志愿', icon: '🤝', parentId: 'cat-side-business' },
+      { id: 'sub-finance', name: '理财', icon: '💲', parentId: 'cat-side-business' },
+      { id: 'sub-volunteer', name: '志愿', icon: '❤️', parentId: 'cat-side-business' },
     ]
   },
   {
@@ -50,12 +61,12 @@ export const DEFAULT_CATEGORIES = [
     color: '#10b981', // Green
     subcategories: [
       { id: 'sub-fitness', name: '健身/按摩/拉伸', icon: '💪', parentId: 'cat-growth' },
-      { id: 'sub-social', name: '社交/助人/seminar', icon: '👥', parentId: 'cat-growth' },
+      { id: 'sub-social', name: '社交/助人/seminar', icon: '🔑', parentId: 'cat-growth' },
       { id: 'sub-reading', name: '读书', icon: '📚', parentId: 'cat-growth' },
       { id: 'sub-learning', name: '专项学习', icon: '🎓', parentId: 'cat-growth' },
       { id: 'sub-planning', name: '规划', icon: '📋', parentId: 'cat-growth' },
       { id: 'sub-art', name: '艺术/爱好', icon: '🎨', parentId: 'cat-growth' },
-      { id: 'sub-language', name: '语言学习', icon: '🗣️', parentId: 'cat-growth' },
+      { id: 'sub-language', name: '语言学习', icon: '🌍', parentId: 'cat-growth' },
     ]
   },
   {
@@ -63,9 +74,8 @@ export const DEFAULT_CATEGORIES = [
     name: '休闲放松',
     color: '#ef4444', // Red
     subcategories: [
-      { id: 'sub-entertainment', name: '娱乐', icon: '🎮', parentId: 'cat-leisure' },
-      { id: 'sub-shopping', name: '购物', icon: '🛍️', parentId: 'cat-leisure' },
-      { id: 'sub-gathering', name: '聚会', icon: '🎉', parentId: 'cat-leisure' },
+      { id: 'sub-entertainment', name: '娱乐/购物', icon: '🎤', parentId: 'cat-leisure' },
+      { id: 'sub-gathering', name: '聚会', icon: '🥂', parentId: 'cat-leisure' },
       { id: 'sub-travel', name: '旅行', icon: '✈️', parentId: 'cat-leisure' },
     ]
   },
@@ -75,9 +85,9 @@ export const DEFAULT_CATEGORIES = [
     color: '#f97316', // Orange
     subcategories: [
       { id: 'sub-childcare', name: '带娃', icon: '👶', parentId: 'cat-kids' },
-      { id: 'sub-education', name: '卷娃', icon: '📖', parentId: 'cat-kids' },
-      { id: 'sub-parenting', name: '育儿知识', icon: '🧑‍🏫', parentId: 'cat-kids' },
-      { id: 'sub-pregnancy', name: '孕产相关', icon: '🤱', parentId: 'cat-kids' },
+      { id: 'sub-education', name: '卷娃', icon: '🏆', parentId: 'cat-kids' },
+      { id: 'sub-parenting', name: '育儿知识', icon: '🧩', parentId: 'cat-kids' },
+      { id: 'sub-pregnancy', name: '孕产相关', icon: '🤰', parentId: 'cat-kids' },
     ]
   },
 ];

@@ -10,14 +10,30 @@ import {
   generateInsight,
   getCachedInsight,
   clearCachedInsight,
-  isAIEnabled,
-  getAISource,
-  loadAISettings,
-  saveAISettings,
-  isValidAPIKeyFormat,
-  maskAPIKey,
-  AISettings,
 } from '@/lib/ai/insight';
+import {
+  AIProvider,
+  PROVIDERS,
+  PROVIDER_LIST,
+  getProviderConfig,
+  validateAPIKeyForProvider,
+  maskAPIKey,
+} from '@/lib/ai/providers';
+import {
+  loadUserSettings,
+  saveUserSettings,
+  resetUserSettings,
+  getEffectiveSettings,
+  setUserProvider,
+  setUserApiKey,
+  setUserModel,
+  getEnvDefaultProvider,
+  hasEnvDefaultKey,
+  canUseDefaultKey,
+  UserAISettings,
+  EffectiveAISettings,
+} from '@/lib/ai/settings';
+import { getDefaultModel } from '@/lib/ai/providers';
 import {
   getThisWeekRangeNY,
   getLast7DaysRangeNY,
@@ -168,41 +184,85 @@ function PeriodSelector({
 }
 
 // ============================================================================
-// AI Settings Component
+// AI Settings Component - Multi-Provider Support
 // ============================================================================
 
 interface AISettingsPanelProps {
-  settings: AISettings;
-  onSave: (settings: Partial<AISettings>) => void;
+  userSettings: UserAISettings;
+  effectiveSettings: EffectiveAISettings;
+  onProviderChange: (provider: AIProvider | null) => void;
+  onApiKeyChange: (apiKey: string) => void;
+  onModelChange: (provider: AIProvider, model: string) => void;
+  onReset: () => void;
   onClose: () => void;
 }
 
-function AISettingsPanel({ settings, onSave, onClose }: AISettingsPanelProps) {
-  const [apiKey, setApiKey] = useState(settings.apiKey);
-  const [model, setModel] = useState(settings.model || 'gpt-4o-mini');
+function AISettingsPanel({
+  userSettings,
+  effectiveSettings,
+  onProviderChange,
+  onApiKeyChange,
+  onModelChange,
+  onReset,
+  onClose,
+}: AISettingsPanelProps) {
+  const [apiKey, setApiKey] = useState(userSettings.apiKey);
   const [showKey, setShowKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    if (apiKey && !isValidAPIKeyFormat(apiKey)) {
-      setError('Invalid API key format. OpenAI keys should start with "sk-"');
-      return;
+  const envDefaultProvider = getEnvDefaultProvider();
+  const hasDefaultKey = hasEnvDefaultKey();
+  
+  const currentProvider = effectiveSettings.provider;
+  const providerConfig = getProviderConfig(currentProvider);
+  const currentModel = effectiveSettings.model;
+  
+  // Check if user can use the default API key
+  const canUseDefault = canUseDefaultKey(currentProvider, currentModel);
+
+  const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === 'default') {
+      onProviderChange(null);
+    } else {
+      onProviderChange(value as AIProvider);
     }
-    
-    onSave({
-      apiKey,
-      model,
-      enabled: apiKey.length > 0
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
     setError(null);
   };
 
-  const handleClear = () => {
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onModelChange(currentProvider, e.target.value);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSaveKey = () => {
+    if (apiKey && !validateAPIKeyForProvider(apiKey, currentProvider)) {
+      setError(`Invalid API key format for ${providerConfig.name}. Expected format: ${providerConfig.apiKeyPlaceholder}`);
+      return;
+    }
+    
+    onApiKeyChange(apiKey);
+    setSaved(true);
+    setError(null);
+    // Collapse settings panel after short delay to show success message
+    setTimeout(() => {
+      setSaved(false);
+      onClose();
+    }, 500);
+  };
+
+  const handleClearKey = () => {
     setApiKey('');
-    onSave({ apiKey: '', enabled: false });
+    onApiKeyChange('');
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleReset = () => {
+    setApiKey('');
+    onReset();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -227,15 +287,45 @@ function AISettingsPanel({ settings, onSave, onClose }: AISettingsPanelProps) {
         </button>
       </div>
       
+      {/* Provider Selection */}
+      <div className="mb-3">
+        <label className="block text-sm text-gray-600 mb-1">AI Provider</label>
+        <select
+          value={userSettings.provider || 'default'}
+          onChange={handleProviderChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="default">
+            Default ({PROVIDERS[envDefaultProvider].name})
+            {hasDefaultKey ? ' ✓' : ''}
+          </option>
+          {PROVIDER_LIST.map(provider => (
+            <option key={provider.id} value={provider.id}>
+              {provider.name}
+            </option>
+          ))}
+        </select>
+        {canUseDefault && (
+          <p className="text-xs text-green-600 mt-1">
+            ✓ Using developer-provided API key
+          </p>
+        )}
+      </div>
+      
       {/* API Key Input */}
       <div className="mb-3">
-        <label className="block text-sm text-gray-600 mb-1">OpenAI API Key</label>
+        <label className="block text-sm text-gray-600 mb-1">
+          {providerConfig.name} API Key
+          {canUseDefault && (
+            <span className="text-xs text-gray-400 ml-2">(optional - using default)</span>
+          )}
+        </label>
         <div className="relative">
           <input
             type={showKey ? 'text' : 'password'}
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="sk-..."
+            placeholder={providerConfig.apiKeyPlaceholder}
             className="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           <button
@@ -246,9 +336,9 @@ function AISettingsPanel({ settings, onSave, onClose }: AISettingsPanelProps) {
             {showKey ? 'Hide' : 'Show'}
           </button>
         </div>
-        {settings.apiKey && (
+        {userSettings.apiKey && (
           <p className="text-xs text-gray-500 mt-1">
-            Current: {maskAPIKey(settings.apiKey)}
+            Current: {maskAPIKey(userSettings.apiKey)}
           </p>
         )}
       </div>
@@ -257,14 +347,15 @@ function AISettingsPanel({ settings, onSave, onClose }: AISettingsPanelProps) {
       <div className="mb-3">
         <label className="block text-sm text-gray-600 mb-1">Model</label>
         <select
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
+          value={currentModel}
+          onChange={handleModelChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
-          <option value="gpt-4o-mini">GPT-4o Mini (Recommended)</option>
-          <option value="gpt-4o">GPT-4o</option>
-          <option value="gpt-4-turbo">GPT-4 Turbo</option>
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Faster)</option>
+          {providerConfig.models.map(model => (
+            <option key={model.id} value={model.id}>
+              {model.name} {model.description ? `(${model.description})` : ''}
+            </option>
+          ))}
         </select>
       </div>
       
@@ -280,24 +371,45 @@ function AISettingsPanel({ settings, onSave, onClose }: AISettingsPanelProps) {
       
       {/* Info */}
       <div className="text-xs text-gray-500 mb-3 p-2 bg-gray-100 rounded">
-        <p className="mb-1">💡 Your API key is stored locally in your browser and sent directly to OpenAI. It is never stored on our servers.</p>
-        <p>Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">OpenAI Platform</a>.</p>
+        <p className="mb-1">
+          💡 Your API key is stored locally and sent directly to the AI provider. It is never stored on our servers.
+        </p>
+        <p>
+          Get your API key from{' '}
+          <a
+            href={providerConfig.apiKeyHelpUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary-600 hover:underline"
+          >
+            {providerConfig.name}
+          </a>.
+        </p>
       </div>
       
       {/* Actions */}
       <div className="flex gap-2">
         <button
-          onClick={handleSave}
+          onClick={handleSaveKey}
           className="flex-1 px-3 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors"
         >
-          Save Settings
+          Save API Key
         </button>
-        {settings.apiKey && (
+        {userSettings.apiKey && (
           <button
-            onClick={handleClear}
-            className="px-3 py-2 text-red-600 text-sm border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+            onClick={handleClearKey}
+            className="px-3 py-2 text-gray-600 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Clear Key
+          </button>
+        )}
+        {userSettings.hasUserOverride && (
+          <button
+            onClick={handleReset}
+            className="px-3 py-2 text-amber-600 text-sm border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
+            title="Reset to default provider and clear API key"
+          >
+            Reset
           </button>
         )}
       </div>
@@ -384,9 +496,10 @@ function EmptyState({ onGenerate, isLoading, aiEnabled }: EmptyStateProps) {
 
 interface InsightTabProps {
   aiEnabled: boolean;
+  effectiveSettings: EffectiveAISettings;
 }
 
-function InsightTab({ aiEnabled }: InsightTabProps) {
+function InsightTab({ aiEnabled, effectiveSettings }: InsightTabProps) {
   const { state } = useAppState();
   
   // Period selection state
@@ -523,19 +636,36 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
   
   // Settings state
   const [showSettings, setShowSettings] = useState(false);
-  const [aiSettings, setAiSettings] = useState<AISettings>(() => loadAISettings());
-  const [aiEnabled, setAiEnabled] = useState(() => isAIEnabled());
+  const [userSettings, setUserSettings] = useState<UserAISettings>(() => loadUserSettings());
+  const [effectiveSettings, setEffectiveSettings] = useState<EffectiveAISettings>(() => getEffectiveSettings());
   
-  // Refresh AI enabled status when settings change
+  // Refresh effective settings when user settings change
   useEffect(() => {
-    setAiEnabled(isAIEnabled());
-  }, [aiSettings]);
+    setEffectiveSettings(getEffectiveSettings());
+  }, [userSettings]);
   
-  // Handle settings save
-  const handleSaveSettings = useCallback((newSettings: Partial<AISettings>) => {
-    const updated = saveAISettings(newSettings);
-    setAiSettings(updated);
-    setAiEnabled(isAIEnabled());
+  // Handle provider change
+  const handleProviderChange = useCallback((provider: AIProvider | null) => {
+    const updated = setUserProvider(provider);
+    setUserSettings(updated);
+  }, []);
+  
+  // Handle API key change
+  const handleApiKeyChange = useCallback((apiKey: string) => {
+    const updated = setUserApiKey(apiKey);
+    setUserSettings(updated);
+  }, []);
+  
+  // Handle model change
+  const handleModelChange = useCallback((provider: AIProvider, model: string) => {
+    const updated = setUserModel(provider, model);
+    setUserSettings(updated);
+  }, []);
+  
+  // Handle reset to defaults
+  const handleReset = useCallback(() => {
+    resetUserSettings();
+    setUserSettings(loadUserSettings());
   }, []);
   
   // Reset state when closing
@@ -544,11 +674,16 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
     onClose();
   }, [onClose]);
   
-  // Get AI status info
-  const aiSource = getAISource();
+  // Get status text
   const getStatusText = () => {
-    if (aiSource === 'user') return 'AI enabled (your key)';
-    if (aiSource === 'env') return 'AI enabled (server)';
+    const { source, provider } = effectiveSettings;
+    const providerName = PROVIDERS[provider].name;
+    
+    if (source === 'user') {
+      return `${providerName} (your key)`;
+    } else if (source === 'env') {
+      return `${providerName} (default)`;
+    }
     return 'AI disabled (configure API key)';
   };
   
@@ -570,7 +705,7 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
         {/* AI Status Bar */}
         <div className="flex items-center justify-between mb-4 p-2 bg-gray-50 rounded-lg">
           <div className="flex items-center gap-2 text-sm">
-            <span className={`w-2 h-2 rounded-full ${aiEnabled ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+            <span className={`w-2 h-2 rounded-full ${effectiveSettings.enabled ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
             <span className="text-gray-600">{getStatusText()}</span>
           </div>
           <button
@@ -592,8 +727,12 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
         {/* Settings Panel */}
         {showSettings && (
           <AISettingsPanel
-            settings={aiSettings}
-            onSave={handleSaveSettings}
+            userSettings={userSettings}
+            effectiveSettings={effectiveSettings}
+            onProviderChange={handleProviderChange}
+            onApiKeyChange={handleApiKeyChange}
+            onModelChange={handleModelChange}
+            onReset={handleReset}
             onClose={() => setShowSettings(false)}
           />
         )}
@@ -602,9 +741,11 @@ export function AiPanel({ isOpen, onClose }: AiPanelProps) {
         <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
         
         {/* Tab Content */}
-        {activeTab === 'insight' && <InsightTab aiEnabled={aiEnabled} />}
-        {activeTab === 'quickadd' && <QuickAddSection aiEnabled={aiEnabled} />}
-        {activeTab === 'cleanup' && <CleanupSection aiEnabled={aiEnabled} />}
+        {activeTab === 'insight' && (
+          <InsightTab aiEnabled={effectiveSettings.enabled} effectiveSettings={effectiveSettings} />
+        )}
+        {activeTab === 'quickadd' && <QuickAddSection aiEnabled={effectiveSettings.enabled} />}
+        {activeTab === 'cleanup' && <CleanupSection aiEnabled={effectiveSettings.enabled} />}
       </div>
     </Modal>
   );

@@ -30,6 +30,7 @@ type AppStateAction =
   | { type: 'DELETE_ITEM'; payload: string }
   | { type: 'TOGGLE_CHECKLIST_ITEM'; payload: string }
   | { type: 'ARCHIVE_ITEM'; payload: string }
+  | { type: 'UNARCHIVE_ITEM'; payload: string }
   | { type: 'START_TIMER'; payload: string }
   | { type: 'STOP_TIMER'; payload: string }
   | { type: 'RESET_WEEKLY_PERIODS'; }
@@ -179,6 +180,16 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
         ),
       };
 
+    case 'UNARCHIVE_ITEM':
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.id === action.payload
+            ? { ...item, isArchived: false, archivedAt: undefined, updatedAt: toISOStringLocal() }
+            : item
+        ),
+      };
+
     case 'START_TIMER':
       // Stop any existing timer first
       const itemsWithStoppedTimer = state.items.map((item: Item): Item => {
@@ -295,10 +306,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     if (!isHydrated) return;
     
     // Find all recurring items with periodKey
+    // Note: We include archived items because we still want to create new period items
+    // for recurring tasks even if the previous period's item was archived
     const recurringItems = state.items.filter(item =>
       item.periodKey &&
-      item.recurrence &&
-      !item.isArchived
+      item.recurrence
     );
     
     if (recurringItems.length === 0) return;
@@ -588,6 +600,18 @@ export function useAppState() {
     }
   };
 
+  const unarchiveItem = (id: string) => {
+    const item = state.items.find(i => i.id === id);
+    if (item) {
+      dispatch({ type: 'UNARCHIVE_ITEM', payload: id });
+      logAction({
+        itemId: id,
+        tab: item.tab,
+        type: 'unarchive',
+      });
+    }
+  };
+
   const toggleChecklistItem = (id: string) => {
     const item = state.items.find(i => i.id === id);
     if (item && 'isDone' in item) {
@@ -692,6 +716,7 @@ export function useAppState() {
     updateItem,
     deleteItem,
     archiveItem,
+    unarchiveItem,
     toggleChecklistItem,
     startTimer,
     stopTimer,

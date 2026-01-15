@@ -24,13 +24,22 @@ export {
 
 // Settings
 export {
-  loadAISettings,
-  saveAISettings,
-  clearAISettings,
-  getAPIKey,
-  setAPIKey,
-  isUserAIEnabled,
-  isValidAPIKeyFormat,
+  getEffectiveSettings,
+  getAIRequestConfig,
+  type EffectiveAISettings,
+  type UserAISettings,
+  type AIRequestConfig,
+} from '../settings';
+
+// Provider utilities
+export {
   maskAPIKey,
-  type AISettings,
-} from './settings';
+  validateAPIKeyForProvider,
+  PROVIDERS,
+  PROVIDER_LIST,
+  getProviderConfig,
+  getDefaultModel,
+  type AIProvider,
+  type ProviderConfig,
+  type ProviderModel,
+} from '../providers';

@@ -76,6 +76,7 @@ export type ActionType =
   | "create"
   | "update"
   | "archive"
+  | "unarchive"
   | "delete"
   | "complete"
   | "timer_start"

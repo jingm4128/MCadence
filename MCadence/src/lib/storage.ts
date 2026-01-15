@@ -57,10 +57,12 @@ export function saveStateImmediate(state: AppState): void {
   }
 }
 
-// Clear all data from localStorage
+// Clear all data from localStorage (state, categories, and active tab)
 export function clearState(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(CATEGORIES_STORAGE_KEY);
+    localStorage.removeItem('mcadence_active_tab'); // Also clear active tab preference
   } catch (error) {
     console.error('Error clearing state from localStorage:', error);
   }

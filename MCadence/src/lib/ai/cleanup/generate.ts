@@ -2,6 +2,7 @@
  * Cleanup Generator
  * 
  * Handles generating cleanup suggestions from stats.
+ * Supports multiple providers: OpenAI, Gemini, Anthropic.
  */
 
 import {
@@ -9,7 +10,11 @@ import {
   CleanupSuggestion,
   CleanupResult,
 } from './types';
-import { loadAISettings, isUserAIEnabled } from '../insight/settings';
+import {
+  getAIRequestConfig,
+  isAIEnabled,
+  getEffectiveSettings,
+} from '../settings';
 
 // ============================================================================
 // Check if AI is enabled
@@ -17,14 +22,7 @@ import { loadAISettings, isUserAIEnabled } from '../insight/settings';
 
 export function isCleanupEnabled(): boolean {
   if (typeof window === 'undefined') return false;
-  
-  // Check user-configured settings first
-  if (isUserAIEnabled()) {
-    return true;
-  }
-  
-  // Fallback to environment variable
-  return process.env.NEXT_PUBLIC_AI_ENABLED === 'true';
+  return isAIEnabled();
 }
 
 // ============================================================================
@@ -32,32 +30,34 @@ export function isCleanupEnabled(): boolean {
 // ============================================================================
 
 async function fetchAISuggestions(stats: CleanupStats): Promise<CleanupSuggestion[]> {
-  const settings = loadAISettings();
+  const config = getAIRequestConfig();
   
   // Debug logging in development
   if (process.env.NODE_ENV === 'development') {
-    console.log('[Cleanup] Settings loaded:', {
-      hasApiKey: !!settings.apiKey,
-      apiKeyPrefix: settings.apiKey ? settings.apiKey.slice(0, 10) + '...' : 'none',
-      enabled: settings.enabled,
-      model: settings.model,
+    console.log('[Cleanup] AI Config:', {
+      provider: config.provider,
+      model: config.model,
+      hasUserKey: !!config.apiKey,
+      useDefaultKey: config.useDefaultKey,
     });
   }
   
   const requestBody: {
     stats: CleanupStats;
+    provider?: string;
     apiKey?: string;
     model?: string;
+    useDefaultKey?: boolean;
   } = {
     stats,
+    provider: config.provider,
+    model: config.model,
+    useDefaultKey: config.useDefaultKey,
   };
   
   // Include user-provided API key if available
-  if (settings.apiKey && settings.enabled) {
-    requestBody.apiKey = settings.apiKey;
-    if (settings.model) {
-      requestBody.model = settings.model;
-    }
+  if (config.apiKey) {
+    requestBody.apiKey = config.apiKey;
   }
   
   const response = await fetch('/api/cleanup', {
@@ -105,9 +105,10 @@ export async function generateCleanupSuggestions(
   
   // AI is required for cleanup suggestions - no deterministic fallback
   if (!isCleanupEnabled()) {
+    const effective = getEffectiveSettings();
     return {
       suggestions: [],
-      error: 'AI is not enabled. Please configure your API key to use cleanup suggestions.',
+      error: `AI is not enabled. Please configure your ${effective.provider} API key to use cleanup suggestions.`,
     };
   }
   

@@ -90,6 +90,34 @@ export interface ProjectHealthStats {
   under20ProgressProjects: ProjectSummary[]; // max 3, progress < 0.2
   nearlyDoneProjects: ProjectSummary[]; // max 3, 0.8 <= progress < 1
   projectProgressIsWeekly: boolean; // flag for rolling window caveat
+  archived: ArchivedProjectStats; // stats about archived projects (pattern indicator)
+}
+
+// ============================================================================
+// Archived Items Analysis Stats
+// ============================================================================
+
+/**
+ * Stats for archived checklist items in a tab.
+ * Used to identify patterns of task instability or goal shifts.
+ */
+export interface ArchivedChecklistStats {
+  totalArchived: number;           // total number of archived items
+  archivedDone: number;            // archived items that were completed
+  archivedNotDone: number;         // archived items that were NOT completed
+  unfinishedRatio: number | null;  // archivedNotDone / totalArchived (null if no archived items)
+}
+
+/**
+ * Stats for archived time projects.
+ * Used to identify patterns of missing goals or project abandonment.
+ */
+export interface ArchivedProjectStats {
+  totalArchived: number;           // total number of archived projects
+  archivedComplete: number;        // projects that reached 100% before archiving
+  archivedIncomplete: number;      // projects archived without reaching goal
+  incompleteRatio: number | null;  // archivedIncomplete / totalArchived
+  avgProgressAtArchive: number | null; // average progress % when archived (0-1)
 }
 
 // ============================================================================
@@ -102,6 +130,7 @@ export interface ChecklistTabStats {
   completionRate: number | null; // completed/created if created > 0
   staleItems: string[]; // max 5 titles (truncated), unfinished + created > 14 days ago
   totalActiveUnfinished: number; // current count, not period-specific
+  archived: ArchivedChecklistStats; // stats about archived items (pattern indicator)
 }
 
 export interface ChecklistStats {
