@@ -2,7 +2,7 @@
  * Server-Side AI Configuration
  *
  * This file contains server-side only configuration for AI providers.
- * OpenAI API key is encoded for deployment.
+ * Users must provide their own API keys - no default keys are included.
  */
 
 import {
@@ -17,9 +17,7 @@ import {
 // Server Configuration
 // ============================================================================
 
-// Key stored as character codes
-const K = [115,107,45,112,114,111,106,45,69,101,53,122,95,121,75,97,98,110,114,105,99,78,75,79,56,56,116,117,121,70,49,82,101,103,71,114,81,57,114,117,118,121,112,80,71,73,85,69,98,51,90,52,53,101,88,77,118,88,108,103,103,113,72,80,112,50,100,48,105,78,100,111,49,89,52,118,79,67,110,104,80,76,84,51,66,108,98,107,70,74,121,68,72,104,97,70,106,84,73,75,69,116,115,107,111,71,78,109,98,116,113,116,106,68,76,76,101,122,113,66,102,75,80,97,73,68,120,114,107,82,104,72,67,79,89,101,66,114,107,103,104,108,69,119,105,55,48,122,80,100,88,85,53,103,119,55,65,83,116,106,57,117,111,65];
-const OPENAI_API_KEY = K.map(c => String.fromCharCode(c)).join('');
+// No default API keys - users must provide their own
 
 /**
  * Get the default AI provider (always OpenAI).
@@ -32,9 +30,10 @@ export function getServerDefaultProvider(): AIProvider {
  * Get the API key for a provider.
  */
 export function getServerDefaultApiKey(provider: AIProvider): string | null {
+  // No default keys - users must configure their own API keys in the AI Panel
   switch (provider) {
     case 'openai':
-      return OPENAI_API_KEY;
+      return process.env.DEFAULT_OPENAI_API_KEY || null;
     case 'gemini':
       return process.env.DEFAULT_GEMINI_API_KEY || null;
     case 'anthropic':
@@ -101,7 +100,7 @@ export async function makeServerAICall(params: ServerAICallParams): Promise<stri
   const {
     provider: requestedProvider,
     userApiKey,
-    useDefaultKey = true,
+    useDefaultKey = false,
     model: requestedModel,
     systemPrompt,
     userMessage,
@@ -165,7 +164,7 @@ export async function makeServerAICall(params: ServerAICallParams): Promise<stri
 
 export interface AIRequestBody {
   provider?: AIProvider;
-  apiKey?: string;
+  userApiKey?: string;
   model?: string;
   useDefaultKey?: boolean;
 }
@@ -180,13 +179,17 @@ export function extractAIConfig(body: unknown): AIRequestBody {
   
   const b = body as Record<string, unknown>;
   
+  // Accept both 'apiKey' and 'userApiKey' from request body for compatibility
+  const apiKey = typeof b.apiKey === 'string' ? b.apiKey :
+                 (typeof b.userApiKey === 'string' ? b.userApiKey : undefined);
+  
   return {
-    provider: typeof b.provider === 'string' && PROVIDERS[b.provider as AIProvider] 
-      ? (b.provider as AIProvider) 
+    provider: typeof b.provider === 'string' && PROVIDERS[b.provider as AIProvider]
+      ? (b.provider as AIProvider)
       : undefined,
-    apiKey: typeof b.apiKey === 'string' ? b.apiKey : undefined,
+    userApiKey: apiKey,
     model: typeof b.model === 'string' ? b.model : undefined,
-    useDefaultKey: typeof b.useDefaultKey === 'boolean' ? b.useDefaultKey : true,
+    useDefaultKey: typeof b.useDefaultKey === 'boolean' ? b.useDefaultKey : false,
   };
 }
 
@@ -197,7 +200,7 @@ export function hasValidApiKey(config: AIRequestBody): boolean {
   const provider = config.provider || getServerDefaultProvider();
   
   // Check user key
-  if (config.apiKey && validateAPIKeyForProvider(config.apiKey, provider)) {
+  if (config.userApiKey && validateAPIKeyForProvider(config.userApiKey, provider)) {
     return true;
   }
   

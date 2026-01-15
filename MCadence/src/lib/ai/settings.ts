@@ -2,8 +2,7 @@
  * AI Settings Management
  *
  * Manages user-configurable AI settings.
- * Default provider is OpenAI with hardcoded API key.
- * Users can override with their own API key if desired.
+ * Users must provide their own API key - no default keys are included.
  */
 
 import { AIProvider, PROVIDERS, getDefaultModel, validateAPIKeyForProvider } from './providers';
@@ -63,10 +62,11 @@ export function getEnvDefaultProvider(): AIProvider {
 }
 
 /**
- * Check if default API key is available (always true - hardcoded).
+ * Check if default API key is available.
+ * Returns false - users must provide their own keys.
  */
 export function hasEnvDefaultKey(): boolean {
-  return true;
+  return false;
 }
 
 // ============================================================================
