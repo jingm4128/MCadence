@@ -218,11 +218,14 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
             const now = new Date();
             const sessionStart = new Date(item.currentSessionStart);
             const elapsedMinutes = Math.floor((now.getTime() - sessionStart.getTime()) / (1000 * 60));
+            const newCompletedMinutes = item.completedMinutes + elapsedMinutes;
+            const isComplete = newCompletedMinutes >= item.requiredMinutes;
             
             return {
               ...item,
               currentSessionStart: null,
-              completedMinutes: item.completedMinutes + elapsedMinutes,
+              completedMinutes: newCompletedMinutes,
+              status: isComplete ? ITEM_STATUS.DONE : item.status,
               updatedAt: toISOStringLocal(),
             } as TimeItem;
           }
@@ -682,15 +685,53 @@ export function useAppState() {
       const now = new Date();
       const sessionStart = new Date(item.currentSessionStart);
       const elapsedMinutes = Math.floor((now.getTime() - sessionStart.getTime()) / (1000 * 60));
+      const newCompletedMinutes = item.completedMinutes + elapsedMinutes;
+      const wasNotComplete = item.completedMinutes < item.requiredMinutes;
+      const isNowComplete = newCompletedMinutes >= item.requiredMinutes;
       
       dispatch({ type: 'STOP_TIMER', payload: id });
+      
+      // Log timer stop
       logAction({
         itemId: id,
         tab: 'spendMyTime',
         type: 'timer_stop',
         payload: { durationMinutes: elapsedMinutes },
       });
+      
+      // Log completion when item reaches its goal
+      if (wasNotComplete && isNowComplete) {
+        logAction({
+          itemId: id,
+          tab: 'spendMyTime',
+          type: 'complete',
+          payload: {
+            completedMinutes: newCompletedMinutes,
+            requiredMinutes: item.requiredMinutes,
+            recurrence: item.recurrence ? {
+              completedOccurrence: item.recurrence.completedOccurrences + 1,
+              totalOccurrences: item.recurrence.totalOccurrences,
+            } : undefined,
+          },
+        });
+      }
     }
+  };
+
+  // Helper to check if an item is completed
+  const isItemCompleted = (item: Item): boolean => {
+    // Check for checklist items (isDone)
+    if ('isDone' in item && item.isDone) return true;
+    
+    // Check for time items (completedMinutes >= requiredMinutes)
+    if ('completedMinutes' in item && 'requiredMinutes' in item) {
+      return item.completedMinutes >= item.requiredMinutes;
+    }
+    
+    // Check status
+    if (item.status === ITEM_STATUS.DONE) return true;
+    
+    return false;
   };
 
   const getItemsByTab = (tab: TabId, includeArchived = false) => {
@@ -698,8 +739,8 @@ export function useAppState() {
       item.tab === tab && (includeArchived || !item.isArchived)
     ).sort((a, b) => {
       // 1. Sort by status: finished/done items go to bottom
-      const aIsDone = ('isDone' in a && a.isDone) || a.status === ITEM_STATUS.DONE;
-      const bIsDone = ('isDone' in b && b.isDone) || b.status === ITEM_STATUS.DONE;
+      const aIsDone = isItemCompleted(a);
+      const bIsDone = isItemCompleted(b);
       if (aIsDone !== bIsDone) {
         return aIsDone ? 1 : -1; // Done items at bottom
       }

@@ -42,8 +42,9 @@ src/
 │   │   ├── CategorySelector.tsx     # Category dropdown
 │   │   ├── ImportExportModal.tsx    # Data import/export
 │   │   ├── ProgressBar.tsx          # Progress visualization
-│   │   ├── RecurrenceSelector.tsx   # Recurrence settings
-│   │   └── TabBar.tsx               # Tab navigation
+│   │   ├── RecurrenceSelector.tsx   # Recurrence settings (with interval support)
+│   │   ├── TabBar.tsx               # Tab navigation
+│   │   └── TabHeader.tsx            # Shared tab header with archive button
 │   └── ai/                 # AI Feature components
 │       ├── AiPanel.tsx         # AI settings panel
 │       ├── InsightCard.tsx     # Insight display
@@ -101,6 +102,15 @@ type TabId = "dayToDay" | "hitMyGoal" | "spendMyTime";
 interface ChecklistItem extends BaseItem { ... }  // For dayToDay, hitMyGoal
 interface TimeItem extends BaseItem { ... }       // For spendMyTime
 
+// Recurrence settings (supports arbitrary intervals)
+interface RecurrenceSettings {
+  frequency: 'daily' | 'weekly' | 'monthly';
+  interval: number;           // e.g., 2 = every 2 days/weeks/months
+  totalOccurrences: number;
+  completedOccurrences: number;
+  nextDue?: string;
+}
+
 // Type guards
 isChecklistItem(item)  // Check if dayToDay or hitMyGoal
 isTimeItem(item)       // Check if spendMyTime
@@ -112,6 +122,10 @@ React Context providing global app state:
 
 ```typescript
 const { state, addChecklistItem, addTimeItem, updateItem, ... } = useAppState();
+
+// Archive features
+archiveAllCompletedInTab(tabId)  // Batch archive all completed items in a tab
+isItemCompleted(item)            // Helper to check completion status
 ```
 
 ### 3. Constants (`src/lib/constants.ts`)
@@ -230,14 +244,19 @@ getLast7DaysRangeNY()
 getCustomRangeNY(start, end)
 
 // Recurrence helpers
-calculateNextDue(currentDue, frequency)
+calculateNextDue(currentDue, frequency, interval)  // Supports arbitrary intervals
 getInitialDueDate(frequency)
-advanceRecurrence(settings)
+advanceRecurrence(settings)                        // Honors interval from settings
 
 // Period keys for recurring items
 getCurrentPeriodKey(frequency)
 formatTitleWithPeriod(title, periodKey)
 isPeriodPassed(periodKey, frequency)
+
+// Urgency status (for deadline alerts)
+getUrgencyStatus(nextDue, isComplete)              // Basic time-based urgency
+getUrgencyStatusWithWork(nextDue, remainingMin, isComplete)  // Work-based urgency
+// Alert when: time left < 3X of remaining work time
 ```
 
 ---
