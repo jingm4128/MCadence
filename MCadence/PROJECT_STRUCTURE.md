@@ -6,10 +6,13 @@ This document provides a comprehensive overview of the MCadence codebase to assi
 
 MCadence is a productivity tracking application built with Next.js 14 (App Router), React, and TypeScript. It features:
 - Three-tab task management (Day to Day, Hit My Goal, Spend My Time)
-- Time tracking with timer functionality
+- Time tracking with timer functionality (supports concurrent timers)
 - AI-powered features (Quick Add, Insights, Cleanup suggestions)
 - Multi-provider AI support (OpenAI, Gemini, Anthropic)
 - Local storage persistence
+- Settings panel with customizable preferences
+- Automatic backups with configurable frequency
+- Configurable swipe gestures per tab
 
 ---
 
@@ -43,7 +46,8 @@ src/
 │   │   ├── ImportExportModal.tsx    # Data import/export
 │   │   ├── ProgressBar.tsx          # Progress visualization
 │   │   ├── RecurrenceSelector.tsx   # Recurrence settings (with interval support)
-│   │   ├── SwipeableItem.tsx        # Swipe gestures for delete/archive actions
+│   │   ├── SettingsModal.tsx        # App settings (backup, timers, swipe config)
+│   │   ├── SwipeableItem.tsx        # Swipe gestures (configurable actions)
 │   │   ├── TabBar.tsx               # Tab navigation
 │   │   └── TabHeader.tsx            # Shared tab header with archive button
 │   └── ai/                 # AI Feature components
@@ -144,6 +148,38 @@ LocalStorage persistence functions:
 - `loadState()` / `saveState()` - App state
 - `loadCategories()` / `saveCategories()` - Categories
 - `exportState()` / `importState()` - Import/export
+- `loadSettings()` / `saveSettings()` - App settings
+
+### 5. App Settings (`src/lib/types.ts` + `src/lib/storage.ts`)
+
+Configurable app settings with persistence:
+
+```typescript
+interface AppSettings {
+  // Backup settings
+  backupFrequency: 'never' | 'daily' | 'weekly' | 'monthly';
+  lastBackupDate?: string;
+  
+  // Timer concurrency
+  allowConcurrentTimers: boolean;  // Allow multiple timers in Spend My Time
+  
+  // Swipe action configuration per tab
+  swipeConfig: {
+    dayToDay: { left: SwipeAction; right: SwipeAction };
+    hitMyGoal: { left: SwipeAction; right: SwipeAction };
+    spendMyTime: { left: SwipeAction; right: SwipeAction };
+  };
+}
+
+type SwipeAction = 'delete' | 'archive';
+```
+
+Backup functions:
+```typescript
+isBackupDue(settings)       // Check if backup should run
+performAutoBackup()         // Create and download backup
+getTimeUntilNextBackup()    // Human-readable time until next
+```
 
 ---
 
@@ -275,13 +311,17 @@ Each tab follows a similar pattern:
 ### SwipeableItem Component (`src/components/ui/SwipeableItem.tsx`)
 
 A reusable wrapper that enables swipe gestures on list items:
-- **Swipe left** → Delete action (red background)
-- **Swipe right** → Archive action (blue background)
+- **Swipe left** → Configurable action (delete or archive)
+- **Swipe right** → Configurable action (delete or archive)
 
 ```typescript
 <SwipeableItem
-  onSwipeLeft={() => handleDelete(item.id)}
-  onSwipeRight={() => handleArchive(item.id)}
+  onSwipeLeft={swipeHandlers.onSwipeLeft}
+  onSwipeRight={swipeHandlers.onSwipeRight}
+  leftLabel={swipeHandlers.leftLabel}      // "Delete" or "Archive"
+  rightLabel={swipeHandlers.rightLabel}    // "Delete" or "Archive"
+  leftColor={swipeHandlers.leftColor}      // bg-red-500 or bg-blue-500
+  rightColor={swipeHandlers.rightColor}    // bg-red-500 or bg-blue-500
   disabled={isActive}  // Optional: disable swipe during active timer
 >
   {/* Item content */}
@@ -289,6 +329,15 @@ A reusable wrapper that enables swipe gestures on list items:
 ```
 
 Supports both touch (mobile) and mouse (desktop) interactions.
+Swipe actions are configurable per-tab in Settings.
+
+### SettingsModal Component (`src/components/ui/SettingsModal.tsx`)
+
+Central settings panel accessible from the menu:
+- **Category Management** - Edit categories (moved from direct menu item)
+- **Backup Settings** - Configure auto-backup frequency (never/daily/weekly/monthly)
+- **Timer Settings** - Enable/disable concurrent timers for Spend My Time
+- **Swipe Configuration** - Customize swipe left/right actions per tab
 
 ### AI Components
 
@@ -328,5 +377,8 @@ export async function POST(request: NextRequest) {
 | Modify categories | `constants.ts`, `CategoryEditorModal.tsx` |
 | Change storage | `storage.ts` |
 | Add new provider | `ai/providers.ts`, `ai/server-config.ts` |
+| Modify settings | `types.ts` (AppSettings), `storage.ts`, `SettingsModal.tsx` |
+| Change swipe behavior | `storage.ts` (DEFAULT_SETTINGS), tab components |
+| Add backup feature | `storage.ts`, `SettingsModal.tsx` |
 
 

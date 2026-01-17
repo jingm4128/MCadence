@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppState } from '@/lib/state';
-import { ChecklistItemForm, isChecklistItem } from '@/lib/types';
+import { ChecklistItemForm, isChecklistItem, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
+import { loadSettings } from '@/lib/storage';
 
 export function DayToDayTab() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -61,6 +62,29 @@ export function DayToDayTab() {
   const handleDelete = (id: string) => {
     setItemToDelete(id);
   };
+
+  // Get swipe handlers based on settings
+  const getSwipeHandlers = useCallback((id: string) => {
+    const settings = loadSettings();
+    const swipeConfig = settings.swipeConfig.dayToDay;
+    
+    const executeAction = (action: SwipeAction) => {
+      if (action === 'delete') {
+        handleDelete(id);
+      } else {
+        handleArchive(id);
+      }
+    };
+    
+    return {
+      onSwipeLeft: () => executeAction(swipeConfig.left),
+      onSwipeRight: () => executeAction(swipeConfig.right),
+      leftLabel: swipeConfig.left === 'delete' ? 'Delete' : 'Archive',
+      rightLabel: swipeConfig.right === 'delete' ? 'Delete' : 'Archive',
+      leftColor: swipeConfig.left === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+      rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+    };
+  }, []);
 
   const confirmDelete = () => {
     if (itemToDelete) {
@@ -157,12 +181,18 @@ export function DayToDayTab() {
         </div>
       ) : (
         <div className="space-y-1.5">
-          {items.map((item) => (
-            isChecklistItem(item) && (
+          {items.map((item) => {
+            if (!isChecklistItem(item)) return null;
+            const swipeHandlers = getSwipeHandlers(item.id);
+            return (
               <SwipeableItem
                 key={item.id}
-                onSwipeLeft={() => handleDelete(item.id)}
-                onSwipeRight={() => handleArchive(item.id)}
+                onSwipeLeft={swipeHandlers.onSwipeLeft}
+                onSwipeRight={swipeHandlers.onSwipeRight}
+                leftLabel={swipeHandlers.leftLabel}
+                rightLabel={swipeHandlers.rightLabel}
+                leftColor={swipeHandlers.leftColor}
+                rightColor={swipeHandlers.rightColor}
               >
                 <div
                   className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm category-transition hover-lift"
@@ -184,8 +214,8 @@ export function DayToDayTab() {
                   </div>
                 </div>
               </SwipeableItem>
-            )
-          ))}
+            );
+          })}
           {items.length === 0 && (
             <div className="text-center py-12 empty-state">
               <div className="empty-state-icon">📝</div>

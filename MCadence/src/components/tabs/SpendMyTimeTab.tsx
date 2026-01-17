@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppState } from '@/lib/state';
-import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings } from '@/lib/types';
-import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
+import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings, SwipeAction } from '@/lib/types';
+import { DEFAULT_CATEGORY_ID, WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
@@ -11,7 +11,7 @@ import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryI
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
-import { WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
+import { loadSettings } from '@/lib/storage';
 import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyStatusWithWork, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
 
 // Edit time form state
@@ -126,6 +126,30 @@ export function SpendMyTimeTab() {
   const handleDelete = (id: string) => {
     setItemToDelete(id);
   };
+
+  // Get swipe handlers based on settings
+  const getSwipeHandlers = useCallback((id: string, isActive: boolean) => {
+    const settings = loadSettings();
+    const swipeConfig = settings.swipeConfig.spendMyTime;
+    
+    const executeAction = (action: SwipeAction) => {
+      if (action === 'delete') {
+        handleDelete(id);
+      } else {
+        handleArchive(id);
+      }
+    };
+    
+    return {
+      onSwipeLeft: () => executeAction(swipeConfig.left),
+      onSwipeRight: () => executeAction(swipeConfig.right),
+      leftLabel: swipeConfig.left === 'delete' ? 'Delete' : 'Archive',
+      rightLabel: swipeConfig.right === 'delete' ? 'Delete' : 'Archive',
+      leftColor: swipeConfig.left === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+      rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+      disabled: isActive,
+    };
+  }, []);
 
   const confirmDelete = () => {
     if (itemToDelete) {
@@ -381,12 +405,17 @@ export function SpendMyTimeTab() {
             const activeProgressPercent = isActive ? Math.min(100, (elapsedMinutes / project.requiredMinutes) * 100) : 0;
             const categoryColor = getCategoryColor(project.categoryId);
             
+            const swipeHandlers = getSwipeHandlers(project.id, isActive);
             return (
               <SwipeableItem
                 key={project.id}
-                onSwipeLeft={() => handleDelete(project.id)}
-                onSwipeRight={() => handleArchive(project.id)}
-                disabled={isActive}
+                onSwipeLeft={swipeHandlers.onSwipeLeft}
+                onSwipeRight={swipeHandlers.onSwipeRight}
+                leftLabel={swipeHandlers.leftLabel}
+                rightLabel={swipeHandlers.rightLabel}
+                leftColor={swipeHandlers.leftColor}
+                rightColor={swipeHandlers.rightColor}
+                disabled={swipeHandlers.disabled}
               >
                 <div
                   className={`relative overflow-hidden rounded-lg border shadow-sm cursor-pointer transition-all category-transition hover-lift bg-white ${

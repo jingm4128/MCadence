@@ -138,3 +138,32 @@ export interface TimeItemForm {
 export interface ImportOptions {
   mode: 'combine' | 'overwrite';
 }
+
+// Swipe action type - what happens on swipe
+export type SwipeAction = 'delete' | 'archive';
+
+// Swipe configuration for each tab
+export interface SwipeConfig {
+  left: SwipeAction;  // What left swipe does
+  right: SwipeAction; // What right swipe does
+}
+
+// Backup frequency options
+export type BackupFrequency = 'never' | 'daily' | 'weekly' | 'monthly';
+
+// App Settings interface
+export interface AppSettings {
+  // Backup settings
+  backupFrequency: BackupFrequency;
+  lastBackupDate?: string; // ISO timestamp
+  
+  // Concurrency settings - allow multiple timers
+  allowConcurrentTimers: boolean;
+  
+  // Swipe motion configuration per tab
+  swipeConfig: {
+    dayToDay: SwipeConfig;
+    hitMyGoal: SwipeConfig;
+    spendMyTime: SwipeConfig;
+  };
+}

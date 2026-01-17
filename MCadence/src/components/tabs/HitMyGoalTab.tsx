@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppState } from '@/lib/state';
-import { ChecklistItem, ChecklistItemForm, isChecklistItem, RecurrenceFormSettings, RecurrenceSettings } from '@/lib/types';
+import { ChecklistItem, ChecklistItemForm, isChecklistItem, RecurrenceFormSettings, RecurrenceSettings, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -12,6 +12,7 @@ import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplay
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
+import { loadSettings } from '@/lib/storage';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'success' | 'info'; onClose: () => void }) {
@@ -108,6 +109,29 @@ export function HitMyGoalTab() {
   const handleDelete = (id: string) => {
     setItemToDelete(id);
   };
+
+  // Get swipe handlers based on settings
+  const getSwipeHandlers = useCallback((id: string) => {
+    const settings = loadSettings();
+    const swipeConfig = settings.swipeConfig.hitMyGoal;
+    
+    const executeAction = (action: SwipeAction) => {
+      if (action === 'delete') {
+        handleDelete(id);
+      } else {
+        handleArchive(id);
+      }
+    };
+    
+    return {
+      onSwipeLeft: () => executeAction(swipeConfig.left),
+      onSwipeRight: () => executeAction(swipeConfig.right),
+      leftLabel: swipeConfig.left === 'delete' ? 'Delete' : 'Archive',
+      rightLabel: swipeConfig.right === 'delete' ? 'Delete' : 'Archive',
+      leftColor: swipeConfig.left === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+      rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+    };
+  }, []);
 
   const confirmDelete = () => {
     if (itemToDelete) {
@@ -269,11 +293,16 @@ export function HitMyGoalTab() {
             const urgencyClasses = getUrgencyClasses(urgencyStatus);
             const timeUntilDue = hasRecurrence ? formatTimeUntilDue(item.recurrence?.nextDue) : '';
             
+            const swipeHandlers = getSwipeHandlers(item.id);
             return (
               <SwipeableItem
                 key={item.id}
-                onSwipeLeft={() => handleDelete(item.id)}
-                onSwipeRight={() => handleArchive(item.id)}
+                onSwipeLeft={swipeHandlers.onSwipeLeft}
+                onSwipeRight={swipeHandlers.onSwipeRight}
+                leftLabel={swipeHandlers.leftLabel}
+                rightLabel={swipeHandlers.rightLabel}
+                leftColor={swipeHandlers.leftColor}
+                rightColor={swipeHandlers.rightColor}
               >
                 <div
                   className={`bg-white px-3 py-1.5 rounded-lg border shadow-sm category-transition hover-lift ${

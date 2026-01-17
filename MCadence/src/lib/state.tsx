@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE, ITEM_STATUS } from './constants';
-import { saveState, loadState } from './storage';
+import { saveState, loadState, loadSettings } from './storage';
 import { generateId } from '@/utils/uuid';
 import {
   toISOStringLocal,
@@ -31,7 +31,7 @@ type AppStateAction =
   | { type: 'TOGGLE_CHECKLIST_ITEM'; payload: string }
   | { type: 'ARCHIVE_ITEM'; payload: string }
   | { type: 'UNARCHIVE_ITEM'; payload: string }
-  | { type: 'START_TIMER'; payload: string }
+  | { type: 'START_TIMER'; payload: { id: string; allowConcurrent: boolean } }
   | { type: 'STOP_TIMER'; payload: string }
   | { type: 'RESET_WEEKLY_PERIODS'; }
   | { type: 'LOG_ACTION'; payload: ActionLog };
@@ -191,19 +191,24 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
       };
 
     case 'START_TIMER':
-      // Stop any existing timer first
-      const itemsWithStoppedTimer = state.items.map((item: Item): Item => {
-        if ('currentSessionStart' in item && item.currentSessionStart) {
-          return { ...item, currentSessionStart: null, updatedAt: toISOStringLocal() };
-        }
-        return item;
-      });
+      const { id: timerId, allowConcurrent } = action.payload;
+      
+      // If not allowing concurrent timers, stop any existing timer first
+      let itemsForTimerStart = state.items;
+      if (!allowConcurrent) {
+        itemsForTimerStart = state.items.map((item: Item): Item => {
+          if ('currentSessionStart' in item && item.currentSessionStart) {
+            return { ...item, currentSessionStart: null, updatedAt: toISOStringLocal() };
+          }
+          return item;
+        });
+      }
 
       // Start new timer
       return {
         ...state,
-        items: itemsWithStoppedTimer.map((item: Item): Item => {
-          if (item.id === action.payload && 'currentSessionStart' in item) {
+        items: itemsForTimerStart.map((item: Item): Item => {
+          if (item.id === timerId && 'currentSessionStart' in item) {
             return { ...item, currentSessionStart: toISOStringLocal(), updatedAt: toISOStringLocal() };
           }
           return item;
@@ -670,7 +675,11 @@ export function useAppState() {
   const startTimer = (id: string) => {
     const item = state.items.find(i => i.id === id);
     if (item && 'currentSessionStart' in item) {
-      dispatch({ type: 'START_TIMER', payload: id });
+      // Check settings for concurrent timer support
+      const settings = loadSettings();
+      const allowConcurrent = settings.allowConcurrentTimers;
+      
+      dispatch({ type: 'START_TIMER', payload: { id, allowConcurrent } });
       logAction({
         itemId: id,
         tab: 'spendMyTime',
@@ -799,10 +808,18 @@ export function useAppState() {
     return completedItems.length;
   };
 
+  // Returns first active timer item (for backward compatibility)
   const getActiveTimerItem = () => {
-    return state.items.find(item => 
+    return state.items.find(item =>
       'currentSessionStart' in item && item.currentSessionStart !== null
     ) as TimeItem | undefined;
+  };
+
+  // Returns all active timer items (when concurrent timers are enabled)
+  const getActiveTimerItems = () => {
+    return state.items.filter(item =>
+      'currentSessionStart' in item && item.currentSessionStart !== null
+    ) as TimeItem[];
   };
 
   return {
@@ -821,6 +838,7 @@ export function useAppState() {
     stopTimer,
     getItemsByTab,
     getActiveTimerItem,
+    getActiveTimerItems,
     archiveAllCompletedInTab,
     logAction,
   };
