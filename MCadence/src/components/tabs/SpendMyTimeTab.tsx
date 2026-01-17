@@ -14,9 +14,10 @@ import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import { loadSettings } from '@/lib/storage';
 import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyStatusWithWork, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
 
-// Edit time form state
-interface EditTimeState {
+// Edit item form state (for long press editing)
+interface EditItemState {
   projectId: string;
+  title: string;
   hours: number;
   minutes: number;
 }
@@ -32,7 +33,7 @@ export function SpendMyTimeTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [editTimeState, setEditTimeState] = useState<EditTimeState | null>(null);
+  const [editItemState, setEditItemState] = useState<EditItemState | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [elapsedMinutes, setElapsedMinutes] = useState(0); // Real-time elapsed minutes for active timer
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -158,20 +159,24 @@ export function SpendMyTimeTab() {
     }
   };
 
-  // Edit time functions
-  const handleEditTime = (project: TimeItem) => {
-    setEditTimeState({
+  // Edit item functions (long press)
+  const handleEditItem = (project: TimeItem) => {
+    setEditItemState({
       projectId: project.id,
+      title: project.title,
       hours: Math.floor(project.completedMinutes / 60),
       minutes: project.completedMinutes % 60,
     });
   };
 
-  const confirmEditTime = () => {
-    if (editTimeState) {
-      const newCompletedMinutes = editTimeState.hours * 60 + editTimeState.minutes;
-      updateItem(editTimeState.projectId, { completedMinutes: newCompletedMinutes });
-      setEditTimeState(null);
+  const confirmEditItem = () => {
+    if (editItemState) {
+      const newCompletedMinutes = editItemState.hours * 60 + editItemState.minutes;
+      updateItem(editItemState.projectId, {
+        title: editItemState.title.trim(),
+        completedMinutes: newCompletedMinutes
+      });
+      setEditItemState(null);
     }
   };
 
@@ -411,6 +416,7 @@ export function SpendMyTimeTab() {
                 key={project.id}
                 onSwipeLeft={swipeHandlers.onSwipeLeft}
                 onSwipeRight={swipeHandlers.onSwipeRight}
+                onLongPress={() => handleEditItem(project)}
                 leftLabel={swipeHandlers.leftLabel}
                 rightLabel={swipeHandlers.rightLabel}
                 leftColor={swipeHandlers.leftColor}
@@ -508,18 +514,6 @@ export function SpendMyTimeTab() {
                         >
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditTime(project);
-                          }}
-                          className="text-gray-400 hover:text-gray-600 p-0.5"
-                          title="Edit Time"
-                        >
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
                       </div>
@@ -637,17 +631,34 @@ export function SpendMyTimeTab() {
         danger={true}
       />
 
-      {/* Edit Time Modal */}
+      {/* Edit Item Modal (Long Press) */}
       <Modal
-        isOpen={!!editTimeState}
-        onClose={() => setEditTimeState(null)}
-        title="Edit Completed Time"
+        isOpen={!!editItemState}
+        onClose={() => setEditItemState(null)}
+        title="Edit Project"
       >
-        {editTimeState && (
+        {editItemState && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Adjust the completed time for this project. This lets you manually correct the timer if needed.
+              Edit the project name and adjust the completed time.
             </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Project Title
+              </label>
+              <input
+                type="text"
+                value={editItemState.title}
+                onChange={(e) => setEditItemState({
+                  ...editItemState,
+                  title: e.target.value
+                })}
+                onFocus={(e) => e.target.select()}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Enter project title"
+                autoFocus
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Completed Time
@@ -657,9 +668,9 @@ export function SpendMyTimeTab() {
                   <input
                     type="number"
                     min="0"
-                    value={editTimeState.hours}
-                    onChange={(e) => setEditTimeState({
-                      ...editTimeState,
+                    value={editItemState.hours}
+                    onChange={(e) => setEditItemState({
+                      ...editItemState,
                       hours: Math.max(0, parseInt(e.target.value) || 0)
                     })}
                     onFocus={(e) => e.target.select()}
@@ -675,9 +686,9 @@ export function SpendMyTimeTab() {
                     type="number"
                     min="0"
                     max="59"
-                    value={editTimeState.minutes}
-                    onChange={(e) => setEditTimeState({
-                      ...editTimeState,
+                    value={editItemState.minutes}
+                    onChange={(e) => setEditItemState({
+                      ...editItemState,
                       minutes: Math.max(0, Math.min(59, parseInt(e.target.value) || 0))
                     })}
                     onFocus={(e) => e.target.select()}
@@ -693,11 +704,11 @@ export function SpendMyTimeTab() {
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="secondary"
-                onClick={() => setEditTimeState(null)}
+                onClick={() => setEditItemState(null)}
               >
                 Cancel
               </Button>
-              <Button onClick={confirmEditTime}>
+              <Button onClick={confirmEditItem}>
                 Save
               </Button>
             </div>

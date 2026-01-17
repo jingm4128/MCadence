@@ -13,6 +13,7 @@ MCadence is a productivity tracking application built with Next.js 14 (App Route
 - Settings panel with customizable preferences
 - Automatic backups with configurable frequency
 - Configurable swipe gestures per tab
+- Long press to edit items (SpendMyTime: name and time spent)
 
 ---
 
@@ -310,18 +311,21 @@ Each tab follows a similar pattern:
 
 ### SwipeableItem Component (`src/components/ui/SwipeableItem.tsx`)
 
-A reusable wrapper that enables swipe gestures on list items:
+A reusable wrapper that enables swipe and long press gestures on list items:
 - **Swipe left** → Configurable action (delete or archive)
 - **Swipe right** → Configurable action (delete or archive)
+- **Long press** → Opens edit modal (for SpendMyTime items: edit name and time spent)
 
 ```typescript
 <SwipeableItem
   onSwipeLeft={swipeHandlers.onSwipeLeft}
   onSwipeRight={swipeHandlers.onSwipeRight}
-  leftLabel={swipeHandlers.leftLabel}      // "Delete" or "Archive"
-  rightLabel={swipeHandlers.rightLabel}    // "Delete" or "Archive"
-  leftColor={swipeHandlers.leftColor}      // bg-red-500 or bg-blue-500
-  rightColor={swipeHandlers.rightColor}    // bg-red-500 or bg-blue-500
+  onLongPress={() => handleEditItem(item)}  // Optional: long press callback
+  leftLabel={swipeHandlers.leftLabel}       // "Delete" or "Archive"
+  rightLabel={swipeHandlers.rightLabel}     // "Delete" or "Archive"
+  leftColor={swipeHandlers.leftColor}       // bg-red-500 or bg-blue-500
+  rightColor={swipeHandlers.rightColor}     // bg-red-500 or bg-blue-500
+  longPressDelay={500}                      // Optional: delay in ms (default: 500)
   disabled={isActive}  // Optional: disable swipe during active timer
 >
   {/* Item content */}
@@ -330,6 +334,8 @@ A reusable wrapper that enables swipe gestures on list items:
 
 Supports both touch (mobile) and mouse (desktop) interactions.
 Swipe actions are configurable per-tab in Settings.
+Long press on SpendMyTime items opens an edit modal for name and completed time.
+Recurrence editing remains accessible via the small recurrence icon on items.
 
 ### SettingsModal Component (`src/components/ui/SettingsModal.tsx`)
 
@@ -380,5 +386,6 @@ export async function POST(request: NextRequest) {
 | Modify settings | `types.ts` (AppSettings), `storage.ts`, `SettingsModal.tsx` |
 | Change swipe behavior | `storage.ts` (DEFAULT_SETTINGS), tab components |
 | Add backup feature | `storage.ts`, `SettingsModal.tsx` |
+| Add long press editing | `SwipeableItem.tsx`, tab component (add onLongPress handler) |
 
 

@@ -6,11 +6,13 @@ interface SwipeableItemProps {
   children: ReactNode;
   onSwipeLeft?: () => void;  // Delete action
   onSwipeRight?: () => void; // Archive action
+  onLongPress?: () => void;  // Long press action (for editing)
   leftLabel?: string;
   rightLabel?: string;
   leftColor?: string;  // Tailwind bg class for left swipe (delete)
   rightColor?: string; // Tailwind bg class for right swipe (archive)
   threshold?: number;  // Minimum swipe distance to trigger action (in pixels)
+  longPressDelay?: number; // Delay for long press in ms
   disabled?: boolean;
 }
 
@@ -18,11 +20,13 @@ export function SwipeableItem({
   children,
   onSwipeLeft,
   onSwipeRight,
+  onLongPress,
   leftLabel = 'Delete',
   rightLabel = 'Archive',
   leftColor = 'bg-red-500',
   rightColor = 'bg-blue-500',
   threshold = 80,
+  longPressDelay = 500,
   disabled = false,
 }: SwipeableItemProps) {
   const [translateX, setTranslateX] = useState(0);
@@ -30,13 +34,35 @@ export function SwipeableItem({
   const startXRef = useRef<number | null>(null);
   const currentXRef = useRef<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressRef = useRef(false);
+  const hasMoved = useRef(false);
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled) return;
     startXRef.current = e.touches[0].clientX;
     currentXRef.current = translateX;
     setIsTransitioning(false);
-  }, [disabled, translateX]);
+    isLongPressRef.current = false;
+    hasMoved.current = false;
+    
+    // Start long press timer
+    if (onLongPress) {
+      longPressTimerRef.current = setTimeout(() => {
+        if (!hasMoved.current) {
+          isLongPressRef.current = true;
+          onLongPress();
+        }
+      }, longPressDelay);
+    }
+  }, [disabled, translateX, onLongPress, longPressDelay]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (disabled || startXRef.current === null) return;
@@ -44,15 +70,30 @@ export function SwipeableItem({
     const currentX = e.touches[0].clientX;
     const diff = currentX - startXRef.current;
     
+    // If user moves more than 10px, cancel long press and mark as moved
+    if (Math.abs(diff) > 10) {
+      hasMoved.current = true;
+      clearLongPressTimer();
+    }
+    
     // Limit the swipe distance
     const maxSwipe = 120;
     const newTranslate = Math.max(-maxSwipe, Math.min(maxSwipe, diff));
     
     setTranslateX(newTranslate);
-  }, [disabled]);
+  }, [disabled, clearLongPressTimer]);
 
   const handleTouchEnd = useCallback(() => {
+    clearLongPressTimer();
+    
     if (disabled || startXRef.current === null) return;
+    
+    // If long press was triggered, don't do swipe action
+    if (isLongPressRef.current) {
+      setTranslateX(0);
+      startXRef.current = null;
+      return;
+    }
     
     setIsTransitioning(true);
     
@@ -76,7 +117,7 @@ export function SwipeableItem({
     }
     
     startXRef.current = null;
-  }, [disabled, translateX, threshold, onSwipeLeft, onSwipeRight]);
+  }, [disabled, translateX, threshold, onSwipeLeft, onSwipeRight, clearLongPressTimer]);
 
   // Mouse events for desktop testing
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -84,11 +125,30 @@ export function SwipeableItem({
     startXRef.current = e.clientX;
     currentXRef.current = translateX;
     setIsTransitioning(false);
+    isLongPressRef.current = false;
+    hasMoved.current = false;
+    
+    // Start long press timer for mouse
+    if (onLongPress) {
+      longPressTimerRef.current = setTimeout(() => {
+        if (!hasMoved.current) {
+          isLongPressRef.current = true;
+          onLongPress();
+        }
+      }, longPressDelay);
+    }
     
     const handleMouseMove = (e: MouseEvent) => {
       if (startXRef.current === null) return;
       
       const diff = e.clientX - startXRef.current;
+      
+      // If user moves more than 10px, cancel long press
+      if (Math.abs(diff) > 10) {
+        hasMoved.current = true;
+        clearLongPressTimer();
+      }
+      
       const maxSwipe = 120;
       const newTranslate = Math.max(-maxSwipe, Math.min(maxSwipe, diff));
       
@@ -96,7 +156,17 @@ export function SwipeableItem({
     };
     
     const handleMouseUp = () => {
+      clearLongPressTimer();
       setIsTransitioning(true);
+      
+      // If long press was triggered, don't do swipe action
+      if (isLongPressRef.current) {
+        setTranslateX(0);
+        startXRef.current = null;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        return;
+      }
       
       if (translateX < -threshold && onSwipeLeft) {
         setTranslateX(-150);
@@ -121,7 +191,7 @@ export function SwipeableItem({
     
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  }, [disabled, translateX, threshold, onSwipeLeft, onSwipeRight]);
+  }, [disabled, translateX, threshold, onSwipeLeft, onSwipeRight, onLongPress, longPressDelay, clearLongPressTimer]);
 
   const showLeftAction = translateX < -20;
   const showRightAction = translateX > 20;
