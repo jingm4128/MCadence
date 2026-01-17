@@ -9,8 +9,9 @@ import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
+import { TabHeader } from '@/components/ui/TabHeader';
 import { WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
-import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
+import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyStatusWithWork, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
 
 // Edit time form state
 interface EditTimeState {
@@ -53,6 +54,7 @@ export function SpendMyTimeTab() {
     deleteItem,
     getActiveTimerItem,
     updateItem,
+    archiveAllCompletedInTab,
     state
   } = useAppState();
 
@@ -156,6 +158,7 @@ export function SpendMyTimeTab() {
       recurrence: existingRecurrence ? {
         enabled: true,
         frequency: existingRecurrence.frequency,
+        interval: existingRecurrence.interval || 1,
         totalOccurrences: existingRecurrence.totalOccurrences,
         timezone: existingRecurrence.timezone,
       } : undefined,
@@ -177,6 +180,7 @@ export function SpendMyTimeTab() {
         
         const newRecurrence: RecurrenceSettings = {
           frequency: recurrence.frequency,
+          interval: recurrence.interval || 1,
           totalOccurrences: recurrence.totalOccurrences,
           completedOccurrences: existingRecurrence?.completedOccurrences || 0,
           timezone: recurrence.timezone,
@@ -209,6 +213,7 @@ export function SpendMyTimeTab() {
     const periodStart = new Date(project.periodStart);
     const periodEnd = new Date(project.periodEnd);
     const projectProgress = project.completedMinutes / project.requiredMinutes;
+    const remainingMinutes = Math.max(0, project.requiredMinutes - project.completedMinutes);
     
     // Check if week has rolled over
     if (needsWeekReset(project.periodEnd)) {
@@ -220,9 +225,13 @@ export function SpendMyTimeTab() {
       return 'overdue';
     }
     
-    // For recurring items, also check recurrence urgency
+    // For recurring items, use work-based urgency (time left < 3X of work remaining)
     if (project.recurrence?.nextDue) {
-      const recurrenceUrgency = getUrgencyStatus(project.recurrence.nextDue, projectProgress >= 1);
+      const recurrenceUrgency = getUrgencyStatusWithWork(
+        project.recurrence.nextDue,
+        remainingMinutes,
+        projectProgress >= 1
+      );
       if (recurrenceUrgency === 'overdue' || recurrenceUrgency === 'urgent') {
         return recurrenceUrgency;
       }
@@ -255,42 +264,37 @@ export function SpendMyTimeTab() {
     return formatMinutes(elapsedMinutes);
   };
 
+  // Check if there are completed items to archive (progress >= 1)
+  const completedCount = allItems.filter(project => {
+    const progress = project.completedMinutes / project.requiredMinutes;
+    return progress >= 1;
+  }).length;
+
+  const handleArchiveAllCompleted = () => {
+    const count = archiveAllCompletedInTab('spendMyTime');
+    if (count > 0) {
+      setToastMessage(`Archived ${count} completed project${count > 1 ? 's' : ''}`);
+    }
+  };
+
   return (
     <div>
-      {/* Header with Add button and Category Filter */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex gap-2">
-          {allArchivedItems.length > 0 && (
-            <Button
-              variant="secondary"
-              onClick={() => setShowArchive(!showArchive)}
-            >
-              {showArchive ? 'Active' : `Archived (${allArchivedItems.length})`}
-            </Button>
-          )}
-          <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
-            +
-          </Button>
-        </div>
-        {/* Category Filter */}
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="all">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <TabHeader
+        archivedCount={allArchivedItems.length}
+        showArchive={showArchive}
+        onToggleArchive={() => setShowArchive(!showArchive)}
+        completedCount={completedCount}
+        onArchiveAllCompleted={handleArchiveAllCompleted}
+        onAdd={() => setShowAddModal(true)}
+        categories={categories}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+      />
 
       {/* Projects List - No separate active timer display, integrated into cards */}
       {showArchive ? (
-        <div className="space-y-3">
-          <p className="text-sm text-gray-500 mb-4">Archived projects</p>
+        <div className="space-y-1.5">
+          <p className="text-xs text-gray-500 mb-2">Archived projects</p>
           {archivedItems.map((project) => {
             const timeProject = isTimeProject(project) ? project : null;
             const progress = timeProject ? Math.min(1, timeProject.completedMinutes / timeProject.requiredMinutes) : 0;
@@ -298,25 +302,25 @@ export function SpendMyTimeTab() {
             return (
               <div
                 key={project.id}
-                className="bg-white p-4 rounded-lg border border-gray-200 opacity-70"
+                className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 opacity-70"
                 style={{ borderLeftColor: getCategoryColor(project.categoryId), borderLeftWidth: "4px" }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {/* Completion status indicator */}
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                     isComplete
                       ? 'bg-green-100 border-green-500 text-green-600'
                       : 'bg-gray-100 border-gray-400'
                   }`}>
                     {isComplete && (
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className={`font-medium ${isComplete ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
-                      {project.categoryId && <span className="mr-1.5">{getCategoryIcon(project.categoryId)}</span>}
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-sm font-medium truncate ${isComplete ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                      {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
                       {project.title}
                     </h3>
                     {/* Show time progress */}
@@ -327,22 +331,22 @@ export function SpendMyTimeTab() {
                       </span>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-0.5">
                     <button
                       onClick={() => unarchiveItem(project.id)}
-                      className="text-primary-600 hover:text-primary-800 p-1"
+                      className="text-primary-600 hover:text-primary-800 p-0.5"
                       title="Restore"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                       </svg>
                     </button>
                     <button
                       onClick={() => handleDelete(project.id)}
-                      className="text-red-400 hover:text-red-600 p-1"
+                      className="text-red-400 hover:text-red-600 p-0.5"
                       title="Delete"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
@@ -356,16 +360,17 @@ export function SpendMyTimeTab() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {items.map((project) => {
             const status = getProjectStatus(project);
             const isActive = activeTimerProject?.id === project.id;
             const progress = Math.min(1, project.completedMinutes / project.requiredMinutes);
             
-            // Check recurrence urgency for additional visual indicators
+            // Check recurrence urgency for additional visual indicators using work-based calculation
             const hasRecurrence = !!project.recurrence;
+            const remainingMinutes = Math.max(0, project.requiredMinutes - project.completedMinutes);
             const recurrenceUrgency: UrgencyStatus = hasRecurrence
-              ? getUrgencyStatus(project.recurrence?.nextDue, progress >= 1)
+              ? getUrgencyStatusWithWork(project.recurrence?.nextDue, remainingMinutes, progress >= 1)
               : 'normal';
             const urgencyClasses = getUrgencyClasses(recurrenceUrgency);
             const timeUntilDue = hasRecurrence ? formatTimeUntilDue(project.recurrence?.nextDue) : '';
@@ -416,35 +421,57 @@ export function SpendMyTimeTab() {
                 </div>
                 
                 {/* Content overlay */}
-                <div className="relative p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className={`font-medium ${
+                <div className="relative px-3 py-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <h3 className={`text-sm font-medium truncate ${
                           status === 'overdue' || status === 'urgent' ? 'text-red-600' :
                           isActive ? 'text-primary-900' : 'text-gray-900'
                         }`}>
-                          {project.categoryId && <span className="mr-1.5">{getCategoryIcon(project.categoryId)}</span>}
+                          {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
                           {project.title}
                         </h3>
                         {/* Urgency badge for recurring items */}
                         {hasRecurrence && timeUntilDue && progress < 1 && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${urgencyClasses.badge}`}>
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
                             {timeUntilDue}
                           </span>
                         )}
                       </div>
+                      {/* Time display - inline */}
+                      <div className="flex items-center gap-2 text-xs mt-0.5">
+                        <span className={`font-medium ${
+                          progress >= 1 ? 'text-green-600' :
+                          status === 'overdue' || status === 'urgent' ? 'text-red-600' : 'text-gray-600'
+                        }`}>
+                          {formatMinutes(project.completedMinutes + (isActive ? elapsedMinutes : 0))}
+                          {' / '}{formatMinutes(project.requiredMinutes)}
+                          {progress >= 1 && ' ✓'}
+                        </span>
+                        {isActive && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              stopTimer(project.id);
+                            }}
+                            className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium"
+                          >
+                            ⏹ Stop
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-0.5">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditRecurrence(project);
                         }}
-                        className="text-gray-400 hover:text-gray-600 p-1"
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
                         title="Edit Recurrence"
                       >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </button>
@@ -453,10 +480,10 @@ export function SpendMyTimeTab() {
                           e.stopPropagation();
                           handleEditTime(project);
                         }}
-                        className="text-gray-400 hover:text-gray-600 p-1"
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
                         title="Edit Time"
                       >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
@@ -465,10 +492,10 @@ export function SpendMyTimeTab() {
                           e.stopPropagation();
                           handleArchive(project.id);
                         }}
-                        className="text-gray-400 hover:text-gray-600 p-1"
+                        className="text-gray-400 hover:text-gray-600 p-0.5"
                         title="Archive"
                       >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                         </svg>
                       </button>
@@ -477,37 +504,14 @@ export function SpendMyTimeTab() {
                           e.stopPropagation();
                           handleDelete(project.id);
                         }}
-                        className="text-red-400 hover:text-red-600 p-1"
+                        className="text-red-400 hover:text-red-600 p-0.5"
                         title="Delete"
                       >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
                     </div>
-                  </div>
-                  
-                  {/* Time display - simplified */}
-                  <div className="flex justify-between items-center text-sm">
-                    <span className={`font-medium ${
-                      progress >= 1 ? 'text-green-600' :
-                      status === 'overdue' || status === 'urgent' ? 'text-red-600' : 'text-gray-700'
-                    }`}>
-                      {formatMinutes(project.completedMinutes + (isActive ? elapsedMinutes : 0))}
-                      {' / '}{formatMinutes(project.requiredMinutes)}
-                      {progress >= 1 && ' ✓'}
-                    </span>
-                    {isActive && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          stopTimer(project.id);
-                        }}
-                        className="px-2 py-1 text-xs bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-medium"
-                      >
-                        ⏹ Stop
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

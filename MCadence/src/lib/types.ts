@@ -32,6 +32,7 @@ export interface Subcategory {
 
 export interface RecurrenceSettings {
   frequency: Frequency;
+  interval: number; // Repeat every N days/weeks/months (e.g., interval=2 with frequency=weekly means every 2 weeks)
   totalOccurrences: number | null; // null = forever, number = stop after X times
   completedOccurrences: number; // How many times the item has been completed
   timezone: string; // IANA timezone string (e.g., 'America/New_York')
@@ -115,6 +116,7 @@ export function isTimeProject(item: Item): item is TimeItem {
 export interface RecurrenceFormSettings {
   enabled: boolean;
   frequency: Frequency;
+  interval: number; // Repeat every N periods (default 1)
   totalOccurrences: number | null; // null = forever
   timezone: string;
 }

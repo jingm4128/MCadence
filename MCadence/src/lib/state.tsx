@@ -459,13 +459,15 @@ export function useAppState() {
     
     const now = toISOStringLocal();
     const tz = formRecurrence.timezone || DEFAULT_TIMEZONE;
+    const interval = formRecurrence.interval || 1;
     // Use periodKey to determine nextDue, or calculate based on current period
     const nextDue = periodKey
       ? getPeriodDueDate(periodKey)
-      : calculateNextDue(now, formRecurrence.frequency, tz);
+      : calculateNextDue(now, formRecurrence.frequency, tz, interval);
     
     return {
       frequency: formRecurrence.frequency,
+      interval,
       totalOccurrences: formRecurrence.totalOccurrences,
       completedOccurrences: 0,
       timezone: tz,
@@ -695,9 +697,65 @@ export function useAppState() {
     return state.items.filter(item =>
       item.tab === tab && (includeArchived || !item.isArchived)
     ).sort((a, b) => {
-      // Sort by title (name)
+      // 1. Sort by status: finished/done items go to bottom
+      const aIsDone = ('isDone' in a && a.isDone) || a.status === ITEM_STATUS.DONE;
+      const bIsDone = ('isDone' in b && b.isDone) || b.status === ITEM_STATUS.DONE;
+      if (aIsDone !== bIsDone) {
+        return aIsDone ? 1 : -1; // Done items at bottom
+      }
+      
+      // 2. Sort by due date (earlier due dates come first)
+      const aDue = a.recurrence?.nextDue;
+      const bDue = b.recurrence?.nextDue;
+      if (aDue && bDue) {
+        const dateDiff = new Date(aDue).getTime() - new Date(bDue).getTime();
+        if (dateDiff !== 0) return dateDiff;
+      } else if (aDue && !bDue) {
+        return -1; // Items with due dates come first
+      } else if (!aDue && bDue) {
+        return 1;
+      }
+      
+      // 3. Sort by category and subcategory
+      const aCategory = a.categoryId || '';
+      const bCategory = b.categoryId || '';
+      const categoryDiff = aCategory.localeCompare(bCategory);
+      if (categoryDiff !== 0) return categoryDiff;
+      
+      // 4. Finally sort by title
       return a.title.localeCompare(b.title);
     });
+  };
+
+  const archiveAllCompletedInTab = (tab: TabId) => {
+    const completedItems = state.items.filter(item => {
+      if (item.tab !== tab || item.isArchived) return false;
+      
+      // Check for checklist items (isDone)
+      if ('isDone' in item && item.isDone) return true;
+      
+      // Check for time items (completedMinutes >= requiredMinutes)
+      if ('completedMinutes' in item && 'requiredMinutes' in item) {
+        return item.completedMinutes >= item.requiredMinutes;
+      }
+      
+      // Check status
+      if (item.status === ITEM_STATUS.DONE) return true;
+      
+      return false;
+    });
+    
+    completedItems.forEach(item => {
+      dispatch({ type: 'ARCHIVE_ITEM', payload: item.id });
+      logAction({
+        itemId: item.id,
+        tab: item.tab,
+        type: 'archive',
+        payload: { reason: 'batch_archive_completed' },
+      });
+    });
+    
+    return completedItems.length;
   };
 
   const getActiveTimerItem = () => {
@@ -722,6 +780,7 @@ export function useAppState() {
     stopTimer,
     getItemsByTab,
     getActiveTimerItem,
+    archiveAllCompletedInTab,
     logAction,
   };
 }

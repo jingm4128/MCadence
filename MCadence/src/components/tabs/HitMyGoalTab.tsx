@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
+import { TabHeader } from '@/components/ui/TabHeader';
 import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
 
 // Toast notification component
@@ -47,7 +48,7 @@ export function HitMyGoalTab() {
     recurrence: undefined,
   });
 
-  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, updateItem, state } = useAppState();
+  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, updateItem, archiveAllCompletedInTab, state } = useAppState();
 
   // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
   const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
@@ -122,6 +123,7 @@ export function HitMyGoalTab() {
       recurrence: existingRecurrence ? {
         enabled: true,
         frequency: existingRecurrence.frequency,
+        interval: existingRecurrence.interval || 1,
         totalOccurrences: existingRecurrence.totalOccurrences,
         timezone: existingRecurrence.timezone,
       } : undefined,
@@ -145,6 +147,7 @@ export function HitMyGoalTab() {
         // Update recurrence - preserve existing completedOccurrences
         const newRecurrence: RecurrenceSettings = {
           frequency: recurrence.frequency,
+          interval: recurrence.interval || 1,
           totalOccurrences: recurrence.totalOccurrences,
           completedOccurrences: existingRecurrence?.completedOccurrences || 0,
           timezone: recurrence.timezone,
@@ -159,67 +162,61 @@ export function HitMyGoalTab() {
     }
   };
 
+  // Check if there are completed items to archive
+  const completedCount = allItems.filter(item =>
+    isChecklistItem(item) && item.isDone
+  ).length;
+
+  const handleArchiveAllCompleted = () => {
+    const count = archiveAllCompletedInTab('hitMyGoal');
+    if (count > 0) {
+      setToast({ message: `Archived ${count} completed goal${count > 1 ? 's' : ''}`, type: 'info' });
+    }
+  };
+
   return (
     <div>
-      {/* Header with Add button and Category Filter */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex gap-2">
-          {allArchivedItems.length > 0 && (
-            <Button
-              variant="secondary"
-              onClick={() => setShowArchive(!showArchive)}
-            >
-              {showArchive ? 'Active' : `Archived (${allArchivedItems.length})`}
-            </Button>
-          )}
-          <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
-            +
-          </Button>
-        </div>
-        {/* Category Filter */}
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="all">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <TabHeader
+        archivedCount={allArchivedItems.length}
+        showArchive={showArchive}
+        onToggleArchive={() => setShowArchive(!showArchive)}
+        completedCount={completedCount}
+        onArchiveAllCompleted={handleArchiveAllCompleted}
+        onAdd={() => setShowAddModal(true)}
+        categories={categories}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+      />
 
       {/* Items List */}
       {showArchive ? (
-        <div className="space-y-3">
-          <p className="text-sm text-gray-500 mb-4">Archived goals</p>
+        <div className="space-y-1.5">
+          <p className="text-xs text-gray-500 mb-2">Archived goals</p>
           {archivedItems.map((item) => {
             const checklistItem = isChecklistItem(item) ? item : null;
             const isDone = checklistItem?.isDone ?? false;
             return (
               <div
                 key={item.id}
-                className="bg-white p-4 rounded-lg border border-gray-200 opacity-70"
+                className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 opacity-70"
                 style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {/* Done/Open status indicator */}
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                     isDone
                       ? 'bg-green-100 border-green-500 text-green-600'
                       : 'bg-gray-100 border-gray-400'
                   }`}>
                     {isDone && (
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className={`font-medium ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
-                      {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-sm font-medium truncate ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                      {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                       {item.title}
                     </h3>
                     {/* Show recurrence info if available */}
@@ -259,7 +256,7 @@ export function HitMyGoalTab() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {items.map((item) => {
             if (!isChecklistItem(item)) return null;
             
@@ -274,7 +271,7 @@ export function HitMyGoalTab() {
             return (
               <div
                 key={item.id}
-                className={`bg-white p-4 rounded-lg border shadow-sm swipe-hint category-transition hover-lift ${
+                className={`bg-white px-3 py-1.5 rounded-lg border shadow-sm swipe-hint category-transition hover-lift ${
                   urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
                     ? `${urgencyClasses.border} ${urgencyClasses.bg}`
                     : urgencyStatus === 'warning'
@@ -283,58 +280,58 @@ export function HitMyGoalTab() {
                 }`}
                 style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: '4px' }}
               >
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={item.isDone}
                     onChange={() => handleToggle(item)}
-                    className="h-5 w-5 text-primary-600 rounded focus:ring-primary-500"
+                    className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                   />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className={`font-medium ${
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className={`text-sm font-medium truncate ${
                         item.isDone
                           ? 'text-gray-500 line-through'
                           : urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
                           ? urgencyClasses.text
                           : 'text-gray-900'
                       }`}>
-                        {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
+                        {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                         {item.title}
                       </h3>
                       {/* Time left badge for recurring items */}
                       {hasRecurrence && timeUntilDue && !item.isDone && (
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${urgencyClasses.badge}`}>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
                           {timeUntilDue}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-0.5">
                     <button
                       onClick={() => handleEditRecurrence(item)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-gray-400 hover:text-gray-600 p-0.5"
                       title="Edit Recurrence"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     </button>
                     <button
                       onClick={() => handleArchive(item.id)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-gray-400 hover:text-gray-600 p-0.5"
                       title="Archive"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                       </svg>
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-400 hover:text-red-600 p-1"
+                      className="text-red-400 hover:text-red-600 p-0.5"
                       title="Delete"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>

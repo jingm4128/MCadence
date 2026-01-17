@@ -180,10 +180,10 @@ export const TIMEZONE_OPTIONS = [
 
 // Frequency options for recurrence
 export const FREQUENCY_OPTIONS = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'annually', label: 'Annually' },
+  { value: 'daily', label: 'Day', labelPlural: 'Days' },
+  { value: 'weekly', label: 'Week', labelPlural: 'Weeks' },
+  { value: 'monthly', label: 'Month', labelPlural: 'Months' },
+  { value: 'annually', label: 'Year', labelPlural: 'Years' },
 ];
 
 // Occurrence limit options
