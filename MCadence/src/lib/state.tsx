@@ -326,6 +326,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const newItems: Item[] = [];
     const updates: { id: string; updates: Partial<Item> }[] = [];
     
+    // Track which baseTitle + currentPeriodKey combinations we've already processed
+    // This prevents creating duplicate items when multiple old period items exist
+    const processedRecurrences = new Set<string>();
+    
     for (const item of recurringItems) {
       const { periodKey, recurrence, baseTitle } = item;
       if (!periodKey || !recurrence || !baseTitle) continue;
@@ -336,6 +340,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       // Get the current period key
       const currentPeriodKey = getCurrentPeriodKey(recurrence.frequency);
       
+      // Create a tracking key for this baseTitle + current period combination
+      const trackingKey = `${baseTitle}::${currentPeriodKey}`;
+      
+      // Skip if we've already processed this recurring task for the current period
+      if (processedRecurrences.has(trackingKey)) continue;
+      
       // Check if we already have an item for the current period (by baseTitle + currentPeriodKey)
       const existingCurrentPeriodItem = state.items.find(i =>
         i.baseTitle === baseTitle &&
@@ -343,7 +353,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         !i.isArchived
       );
       
-      if (existingCurrentPeriodItem) continue; // Already have current period item
+      if (existingCurrentPeriodItem) {
+        // Mark as processed so we don't check again for other old period items
+        processedRecurrences.add(trackingKey);
+        continue;
+      }
+      
+      // Mark as processed before creating new item to prevent duplicates
+      processedRecurrences.add(trackingKey);
       
       // Check recurrence limit
       if (recurrence.totalOccurrences !== null &&

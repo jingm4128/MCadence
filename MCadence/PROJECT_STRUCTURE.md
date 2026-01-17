@@ -134,6 +134,14 @@ archiveAllCompletedInTab(tabId)  // Batch archive all completed items in a tab
 isItemCompleted(item)            // Helper to check completion status
 ```
 
+**Recurring Item Auto-Creation:**
+
+The state provider includes a useEffect that automatically creates new period items when periods pass for date-tagged recurring items:
+- Recurring items use `periodKey` (YYYYMMDD format) to track which period they belong to
+- When a period passes (e.g., yesterday's daily item), a new item is created for the current period
+- Old items are marked as "missed" if not completed
+- **Deduplication**: A `processedRecurrences` Set prevents duplicate items when multiple old period items exist for the same recurring task
+
 ### 3. Constants (`src/lib/constants.ts`)
 
 Application constants including:
