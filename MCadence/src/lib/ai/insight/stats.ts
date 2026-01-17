@@ -1,6 +1,6 @@
 /**
  * Insight Stats Builder (v1)
- * 
+ *
  * Computes deterministic, aggregated statistics from app state.
  * This data is what gets sent to the AI - never raw action logs.
  */
@@ -22,6 +22,7 @@ import {
   ArchivedProjectStats,
 } from './types';
 import { ConfidenceLevel } from '../types';
+import { truncateTitle, clamp } from '../utils';
 
 import { AppState, ActionLog, Item, TimeItem, ChecklistItem, isTimeItem, isChecklistItem } from '@/lib/types';
 import { DEFAULT_CATEGORIES, ITEM_STATUS } from '@/lib/constants';
@@ -41,21 +42,8 @@ import {
 const MAX_TOP_CATEGORIES = 3;
 const MAX_PROJECT_LIST = 3;
 const MAX_STALE_ITEMS = 5;
-const MAX_TITLE_LENGTH = 60;
 const STALE_DAYS_THRESHOLD = 14;
 const SHORT_SESSION_MINUTES = 15;
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Truncate a string to max length with ellipsis.
- */
-function truncateTitle(title: string, maxLen: number = MAX_TITLE_LENGTH): string {
-  if (title.length <= maxLen) return title;
-  return title.slice(0, maxLen - 3) + '...';
-}
 
 /**
  * Get category name from subcategory ID.
@@ -93,13 +81,6 @@ function dayNumberToKey(day: number): keyof DayOfWeekHistogram {
     6: 'Sat',
   };
   return map[day] || 'Mon';
-}
-
-/**
- * Clamp a value between min and max.
- */
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
 }
 
 // ============================================================================
