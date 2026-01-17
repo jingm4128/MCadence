@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppState } from '@/lib/state';
 import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
@@ -10,6 +10,7 @@ import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { TabHeader } from '@/components/ui/TabHeader';
+import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import { WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyStatusWithWork, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
 
@@ -381,140 +382,122 @@ export function SpendMyTimeTab() {
             const categoryColor = getCategoryColor(project.categoryId);
             
             return (
-              <div
+              <SwipeableItem
                 key={project.id}
-                className={`relative overflow-hidden rounded-lg border shadow-sm swipe-hint cursor-pointer transition-all category-transition hover-lift bg-white ${
-                  isActive ? 'ring-2 ring-primary-500 border-primary-500' : 'hover:shadow-md'
-                } ${
-                  status === 'overdue' || status === 'urgent'
-                    ? 'border-red-200'
-                    : status === 'warning'
-                    ? 'border-yellow-200'
-                    : 'border-gray-200'
-                }`}
-                style={{ borderLeftColor: categoryColor, borderLeftWidth: '4px' }}
-                onClick={() => handleProjectClick(project.id)}
+                onSwipeLeft={() => handleDelete(project.id)}
+                onSwipeRight={() => handleArchive(project.id)}
+                disabled={isActive}
               >
-                {/* Progress bar as full background using category color */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {/* Completed progress background - category color with transparency */}
-                  <div
-                    className="absolute inset-y-0 left-0 transition-all duration-300"
-                    style={{
-                      width: `${progressPercent}%`,
-                      backgroundColor: categoryColor,
-                      opacity: 0.15
-                    }}
-                  />
-                  {/* Active session progress (pulsing) - slightly more opaque */}
-                  {isActive && activeProgressPercent > 0 && (
+                <div
+                  className={`relative overflow-hidden rounded-lg border shadow-sm cursor-pointer transition-all category-transition hover-lift bg-white ${
+                    isActive ? 'ring-2 ring-primary-500 border-primary-500' : 'hover:shadow-md'
+                  } ${
+                    status === 'overdue' || status === 'urgent'
+                      ? 'border-red-200'
+                      : status === 'warning'
+                      ? 'border-yellow-200'
+                      : 'border-gray-200'
+                  }`}
+                  style={{ borderLeftColor: categoryColor, borderLeftWidth: '4px' }}
+                  onClick={() => handleProjectClick(project.id)}
+                >
+                  {/* Progress bar as full background using category color */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {/* Completed progress background - category color with transparency */}
                     <div
-                      className="absolute inset-y-0 animate-pulse"
+                      className="absolute inset-y-0 left-0 transition-all duration-300"
                       style={{
-                        left: `${progressPercent}%`,
-                        width: `${activeProgressPercent}%`,
+                        width: `${progressPercent}%`,
                         backgroundColor: categoryColor,
-                        opacity: 0.25
+                        opacity: 0.15
                       }}
                     />
-                  )}
-                </div>
-                
-                {/* Content overlay */}
-                <div className="relative px-3 py-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <h3 className={`text-sm font-medium truncate ${
-                          status === 'overdue' || status === 'urgent' ? 'text-red-600' :
-                          isActive ? 'text-primary-900' : 'text-gray-900'
-                        }`}>
-                          {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
-                          {project.title}
-                        </h3>
-                        {/* Urgency badge for recurring items */}
-                        {hasRecurrence && timeUntilDue && progress < 1 && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
-                            {timeUntilDue}
+                    {/* Active session progress (pulsing) - slightly more opaque */}
+                    {isActive && activeProgressPercent > 0 && (
+                      <div
+                        className="absolute inset-y-0 animate-pulse"
+                        style={{
+                          left: `${progressPercent}%`,
+                          width: `${activeProgressPercent}%`,
+                          backgroundColor: categoryColor,
+                          opacity: 0.25
+                        }}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Content overlay */}
+                  <div className="relative px-3 py-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h3 className={`text-sm font-medium truncate ${
+                            status === 'overdue' || status === 'urgent' ? 'text-red-600' :
+                            isActive ? 'text-primary-900' : 'text-gray-900'
+                          }`}>
+                            {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
+                            {project.title}
+                          </h3>
+                          {/* Urgency badge for recurring items */}
+                          {hasRecurrence && timeUntilDue && progress < 1 && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
+                              {timeUntilDue}
+                            </span>
+                          )}
+                        </div>
+                        {/* Time display - inline */}
+                        <div className="flex items-center gap-2 text-xs mt-0.5">
+                          <span className={`font-medium ${
+                            progress >= 1 ? 'text-green-600' :
+                            status === 'overdue' || status === 'urgent' ? 'text-red-600' : 'text-gray-600'
+                          }`}>
+                            {formatMinutes(project.completedMinutes + (isActive ? elapsedMinutes : 0))}
+                            {' / '}{formatMinutes(project.requiredMinutes)}
+                            {progress >= 1 && ' ✓'}
                           </span>
-                        )}
+                          {isActive && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                stopTimer(project.id);
+                              }}
+                              className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium"
+                            >
+                              ⏹ Stop
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      {/* Time display - inline */}
-                      <div className="flex items-center gap-2 text-xs mt-0.5">
-                        <span className={`font-medium ${
-                          progress >= 1 ? 'text-green-600' :
-                          status === 'overdue' || status === 'urgent' ? 'text-red-600' : 'text-gray-600'
-                        }`}>
-                          {formatMinutes(project.completedMinutes + (isActive ? elapsedMinutes : 0))}
-                          {' / '}{formatMinutes(project.requiredMinutes)}
-                          {progress >= 1 && ' ✓'}
-                        </span>
-                        {isActive && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              stopTimer(project.id);
-                            }}
-                            className="px-1.5 py-0.5 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-medium"
-                          >
-                            ⏹ Stop
-                          </button>
-                        )}
+                      <div className="flex gap-0.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditRecurrence(project);
+                          }}
+                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          title="Edit Recurrence"
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditTime(project);
+                          }}
+                          className="text-gray-400 hover:text-gray-600 p-0.5"
+                          title="Edit Time"
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
                       </div>
-                    </div>
-                    <div className="flex gap-0.5">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditRecurrence(project);
-                        }}
-                        className="text-gray-400 hover:text-gray-600 p-0.5"
-                        title="Edit Recurrence"
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditTime(project);
-                        }}
-                        className="text-gray-400 hover:text-gray-600 p-0.5"
-                        title="Edit Time"
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleArchive(project.id);
-                        }}
-                        className="text-gray-400 hover:text-gray-600 p-0.5"
-                        title="Archive"
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(project.id);
-                        }}
-                        className="text-red-400 hover:text-red-600 p-0.5"
-                        title="Delete"
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
+              </SwipeableItem>
             );
           })}
           {items.length === 0 && (
@@ -650,6 +633,7 @@ export function SpendMyTimeTab() {
                       ...editTimeState,
                       hours: Math.max(0, parseInt(e.target.value) || 0)
                     })}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Hours"
                   />
@@ -667,6 +651,7 @@ export function SpendMyTimeTab() {
                       ...editTimeState,
                       minutes: Math.max(0, Math.min(59, parseInt(e.target.value) || 0))
                     })}
+                    onFocus={(e) => e.target.select()}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     placeholder="Minutes"
                   />

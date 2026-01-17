@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { TabHeader } from '@/components/ui/TabHeader';
+import { SwipeableItem } from '@/components/ui/SwipeableItem';
 
 export function DayToDayTab() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -158,46 +159,31 @@ export function DayToDayTab() {
         <div className="space-y-1.5">
           {items.map((item) => (
             isChecklistItem(item) && (
-              <div
+              <SwipeableItem
                 key={item.id}
-                className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm swipe-hint category-transition hover-lift"
-                style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
+                onSwipeLeft={() => handleDelete(item.id)}
+                onSwipeRight={() => handleArchive(item.id)}
               >
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={item.isDone}
-                    onChange={() => toggleChecklistItem(item.id)}
-                    className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-sm font-medium truncate ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                      {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
-                      {item.title}
-                    </h3>
-                  </div>
-                  <div className="flex gap-0.5">
-                    <button
-                      onClick={() => handleArchive(item.id)}
-                      className="text-gray-400 hover:text-gray-600 p-0.5"
-                      title="Archive"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-400 hover:text-red-600 p-0.5"
-                      title="Delete"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                <div
+                  className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm category-transition hover-lift"
+                  style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={item.isDone}
+                      onChange={() => toggleChecklistItem(item.id)}
+                      className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`text-sm font-medium truncate ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                        {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
+                        {item.title}
+                      </h3>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </SwipeableItem>
             )
           ))}
           {items.length === 0 && (

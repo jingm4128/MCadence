@@ -43,6 +43,7 @@ src/
 │   │   ├── ImportExportModal.tsx    # Data import/export
 │   │   ├── ProgressBar.tsx          # Progress visualization
 │   │   ├── RecurrenceSelector.tsx   # Recurrence settings (with interval support)
+│   │   ├── SwipeableItem.tsx        # Swipe gestures for delete/archive actions
 │   │   ├── TabBar.tsx               # Tab navigation
 │   │   └── TabHeader.tsx            # Shared tab header with archive button
 │   └── ai/                 # AI Feature components
@@ -268,8 +269,26 @@ getUrgencyStatusWithWork(nextDue, remainingMin, isComplete)  // Work-based urgen
 Each tab follows a similar pattern:
 1. Filter items by tab
 2. Separate active vs done/archived
-3. Render item list with actions
+3. Render item list with SwipeableItem wrapper for swipe gestures
 4. Handle add/edit/delete/complete
+
+### SwipeableItem Component (`src/components/ui/SwipeableItem.tsx`)
+
+A reusable wrapper that enables swipe gestures on list items:
+- **Swipe left** → Delete action (red background)
+- **Swipe right** → Archive action (blue background)
+
+```typescript
+<SwipeableItem
+  onSwipeLeft={() => handleDelete(item.id)}
+  onSwipeRight={() => handleArchive(item.id)}
+  disabled={isActive}  // Optional: disable swipe during active timer
+>
+  {/* Item content */}
+</SwipeableItem>
+```
+
+Supports both touch (mobile) and mouse (desktop) interactions.
 
 ### AI Components
 
