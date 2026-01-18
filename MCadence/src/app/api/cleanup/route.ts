@@ -15,12 +15,7 @@ import {
   CleanupAPIError,
 } from '@/lib/ai/cleanup';
 import { makeServerAICall, extractAIConfig, hasValidApiKey } from '@/lib/ai/server-config';
-
-// ============================================================================
-// Configuration
-// ============================================================================
-
-const MAX_REQUEST_SIZE = 50 * 1024; // 50KB max request size
+import { MAX_REQUEST_SIZE, extractJSONFromText, getErrorStatusCode } from '@/lib/ai/utils';
 
 // ============================================================================
 // System Prompt
@@ -87,22 +82,6 @@ function validateStats(stats: unknown): stats is CleanupStats {
     Array.isArray(s.longDoneItems) &&
     Array.isArray(s.inactiveItems)
   );
-}
-
-// ============================================================================
-// JSON Extraction
-// ============================================================================
-
-function extractJSON(text: string): { suggestions: CleanupSuggestion[] } {
-  try {
-    return JSON.parse(text);
-  } catch {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-    throw new Error('No valid JSON found in response');
-  }
 }
 
 function validateSuggestions(data: unknown): data is { suggestions: CleanupSuggestion[] } {
@@ -176,7 +155,7 @@ ${JSON.stringify(body.stats, null, 2)}`;
     });
     
     // Extract and validate JSON
-    const result = extractJSON(content);
+    const result = extractJSONFromText<{ suggestions: CleanupSuggestion[] }>(content);
     
     if (!validateSuggestions(result)) {
       throw new Error('AI response does not match expected schema');
@@ -197,16 +176,8 @@ ${JSON.stringify(body.stats, null, 2)}`;
   } catch (error) {
     console.error('Cleanup API error:', error);
     
-    let statusCode = 500;
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    
-    if (errorMessage.includes('Invalid API key') || errorMessage.includes('API key')) {
-      statusCode = 401;
-    } else if (errorMessage.includes('Rate limit')) {
-      statusCode = 429;
-    } else if (errorMessage.includes('Billing') || errorMessage.includes('permission')) {
-      statusCode = 402;
-    }
+    const statusCode = getErrorStatusCode(errorMessage);
     
     return NextResponse.json(
       {

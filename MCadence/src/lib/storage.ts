@@ -1,8 +1,14 @@
-import { AppState, Category } from './types';
+import { AppState, Category, AppSettings, BackupFrequency } from './types';
 import { STORAGE_KEY, DEBOUNCE_MS, DEFAULT_CATEGORIES } from './constants';
 
 // Separate storage key for categories (for independent export/import)
 export const CATEGORIES_STORAGE_KEY = 'mcadence_categories_v1';
+
+// Storage key for app settings
+export const SETTINGS_STORAGE_KEY = 'mcadence_settings_v1';
+
+// Storage key for backup folder path
+export const BACKUP_FOLDER_KEY = 'mcadence_backup_folder';
 
 // Read state from localStorage
 export function loadState(): AppState {
@@ -68,10 +74,19 @@ export function clearState(): void {
   }
 }
 
-// Export state as JSON string (for CSV export)
+// Export state as JSON string (includes categories from separate storage)
 export function exportState(): string {
   const state = loadState();
-  return JSON.stringify(state, null, 2);
+  const categories = loadCategories();
+  
+  // Ensure categories are included in the export (use loadCategories() which checks separate storage)
+  const exportData = {
+    items: state.items,
+    actions: state.actions,
+    categories: categories // Use loadCategories() to get the actual categories
+  };
+  
+  return JSON.stringify(exportData, null, 2);
 }
 
 // Import state from JSON string (for CSV import)
@@ -242,5 +257,181 @@ export function getStorageInfo(): { used: number; available: number; percentage:
   } catch (error) {
     console.error('Error getting storage info:', error);
     return { used: 0, available: 0, percentage: 0 };
+  }
+}
+
+// === App Settings storage functions ===
+
+// Default settings
+export const DEFAULT_SETTINGS: AppSettings = {
+  backupFrequency: 'weekly',
+  lastBackupDate: undefined,
+  allowConcurrentTimers: false,
+  swipeConfig: {
+    dayToDay: { left: 'delete', right: 'archive' },
+    hitMyGoal: { left: 'delete', right: 'archive' },
+    spendMyTime: { left: 'delete', right: 'archive' },
+  },
+};
+
+// Load app settings from storage
+export function loadSettings(): AppSettings {
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!stored) {
+      return DEFAULT_SETTINGS;
+    }
+    
+    const parsed = JSON.parse(stored);
+    // Merge with defaults to handle any missing fields from older versions
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      swipeConfig: {
+        ...DEFAULT_SETTINGS.swipeConfig,
+        ...(parsed.swipeConfig || {}),
+      },
+    };
+  } catch (error) {
+    console.error('Error loading settings from localStorage:', error);
+    return DEFAULT_SETTINGS;
+  }
+}
+
+// Save app settings to storage
+export function saveSettings(settings: AppSettings): void {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Error saving settings to localStorage:', error);
+  }
+}
+
+// === Backup functions ===
+
+// Get backup interval in milliseconds based on frequency
+function getBackupIntervalMs(frequency: BackupFrequency): number {
+  switch (frequency) {
+    case 'daily':
+      return 24 * 60 * 60 * 1000; // 24 hours
+    case 'weekly':
+      return 7 * 24 * 60 * 60 * 1000; // 7 days
+    case 'monthly':
+      return 30 * 24 * 60 * 60 * 1000; // 30 days (approximate)
+    case 'never':
+    default:
+      return Infinity;
+  }
+}
+
+// Check if backup is due based on frequency and last backup date
+export function isBackupDue(settings: AppSettings): boolean {
+  if (settings.backupFrequency === 'never') {
+    return false;
+  }
+  
+  if (!settings.lastBackupDate) {
+    return true; // Never backed up
+  }
+  
+  const lastBackup = new Date(settings.lastBackupDate).getTime();
+  const now = Date.now();
+  const interval = getBackupIntervalMs(settings.backupFrequency);
+  
+  return (now - lastBackup) >= interval;
+}
+
+// Generate backup filename with timestamp
+export function generateBackupFilename(): string {
+  const date = new Date();
+  const dateStr = date.toISOString().split('T')[0];
+  const timeStr = date.toTimeString().split(' ')[0].replace(/:/g, '-');
+  return `mcadence-backup-${dateStr}_${timeStr}.json`;
+}
+
+// Create backup data (combines state and categories)
+export function createBackupData(): string {
+  const state = loadState();
+  const categories = loadCategories();
+  const settings = loadSettings();
+  
+  const backupData = {
+    version: '1.0',
+    timestamp: new Date().toISOString(),
+    state,
+    categories,
+    settings,
+  };
+  
+  return JSON.stringify(backupData, null, 2);
+}
+
+// Perform automatic backup and return success status
+export function performAutoBackup(): { success: boolean; filename?: string; error?: string } {
+  try {
+    const settings = loadSettings();
+    
+    if (!isBackupDue(settings)) {
+      return { success: true, filename: undefined }; // Not due, no backup needed
+    }
+    
+    const backupData = createBackupData();
+    const filename = generateBackupFilename();
+    
+    // Create and download the backup file
+    const blob = new Blob([backupData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    // Update last backup date
+    const updatedSettings: AppSettings = {
+      ...settings,
+      lastBackupDate: new Date().toISOString(),
+    };
+    saveSettings(updatedSettings);
+    
+    return { success: true, filename };
+  } catch (error) {
+    console.error('Error performing auto backup:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+// Get time until next backup (human-readable)
+export function getTimeUntilNextBackup(settings: AppSettings): string {
+  if (settings.backupFrequency === 'never') {
+    return 'Backups disabled';
+  }
+  
+  if (!settings.lastBackupDate) {
+    return 'Backup pending';
+  }
+  
+  const lastBackup = new Date(settings.lastBackupDate).getTime();
+  const now = Date.now();
+  const interval = getBackupIntervalMs(settings.backupFrequency);
+  const nextBackup = lastBackup + interval;
+  const remaining = nextBackup - now;
+  
+  if (remaining <= 0) {
+    return 'Backup pending';
+  }
+  
+  const hours = Math.floor(remaining / (60 * 60 * 1000));
+  const days = Math.floor(hours / 24);
+  
+  if (days > 0) {
+    return `${days} day${days > 1 ? 's' : ''} until next backup`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''} until next backup`;
+  } else {
+    const minutes = Math.floor(remaining / (60 * 1000));
+    return `${minutes} minute${minutes > 1 ? 's' : ''} until next backup`;
   }
 }

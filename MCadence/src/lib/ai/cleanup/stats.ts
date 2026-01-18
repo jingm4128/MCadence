@@ -1,6 +1,6 @@
 /**
  * Cleanup Stats Builder
- * 
+ *
  * Builds compact item summaries for AI cleanup analysis.
  * Reuses date utilities from insight module.
  */
@@ -10,6 +10,7 @@ import {
   ItemSummary,
 } from './types';
 import { PeriodSpec } from '../insight/types';
+import { truncateTitle } from '../utils';
 
 import { AppState, Item, isChecklistItem, isTimeItem } from '@/lib/types';
 import { ITEM_STATUS } from '@/lib/constants';
@@ -23,21 +24,11 @@ import {
 // Constants
 // ============================================================================
 
-const MAX_TITLE_LENGTH = 60;
 const MAX_ITEMS_PER_CATEGORY = 20;
 const STALE_DAYS_THRESHOLD = 14;
 const LOW_PROGRESS_THRESHOLD = 0.1; // 10% or less
 const DONE_DAYS_THRESHOLD = 30; // Done items older than 30 days
 const INACTIVE_DAYS_THRESHOLD = 21; // No activity in 21 days
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-function truncateTitle(title: string, maxLen: number = MAX_TITLE_LENGTH): string {
-  if (title.length <= maxLen) return title;
-  return title.slice(0, maxLen - 3) + '...';
-}
 
 function getLastActivityDate(item: Item, actions: AppState['actions']): Date | null {
   // Get most recent action for this item

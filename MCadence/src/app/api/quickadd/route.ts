@@ -17,12 +17,12 @@ import {
   QuickAddTab,
 } from '@/lib/ai/quickadd';
 import { makeServerAICall, extractAIConfig, hasValidApiKey } from '@/lib/ai/server-config';
+import { MAX_REQUEST_SIZE, extractJSONFromText, getErrorStatusCode } from '@/lib/ai/utils';
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-const MAX_REQUEST_SIZE = 50 * 1024; // 50KB max request size
 const MAX_TEXT_LENGTH = 5000; // Max characters of user text
 
 // ============================================================================
@@ -209,7 +209,7 @@ function validateRequest(body: unknown): {
 }
 
 // ============================================================================
-// JSON Extraction
+// Types & Validation
 // ============================================================================
 
 interface RawProposal {
@@ -225,20 +225,6 @@ interface RawProposal {
   durationMinutes?: number | null;
   frequencyPerWeek?: number | null;
   requiredMinutes?: number | null;
-}
-
-function extractJSON(text: string): { proposals: RawProposal[] } {
-  // First, try direct parse
-  try {
-    return JSON.parse(text);
-  } catch {
-    // Try to find JSON object in the text
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-    throw new Error('No valid JSON found in response');
-  }
 }
 
 function validateProposals(data: unknown): data is { proposals: RawProposal[] } {
@@ -440,7 +426,7 @@ ${validation.text}
     });
     
     // Extract and validate JSON
-    const result = extractJSON(content);
+    const result = extractJSONFromText<{ proposals: RawProposal[] }>(content);
     
     if (!validateProposals(result)) {
       throw new Error('AI response does not match expected schema');
@@ -457,16 +443,8 @@ ${validation.text}
   } catch (error) {
     console.error('Quick Add API error:', error);
     
-    let statusCode = 500;
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    
-    if (errorMessage.includes('Invalid API key') || errorMessage.includes('API key')) {
-      statusCode = 401;
-    } else if (errorMessage.includes('Rate limit')) {
-      statusCode = 429;
-    } else if (errorMessage.includes('Billing') || errorMessage.includes('permission')) {
-      statusCode = 402;
-    }
+    const statusCode = getErrorStatusCode(errorMessage);
     
     return NextResponse.json(
       {

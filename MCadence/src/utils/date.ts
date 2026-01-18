@@ -285,6 +285,45 @@ export function getUrgencyStatus(
 }
 
 /**
+ * Get urgency status based on time remaining vs work remaining.
+ * Alert when: time left till due < 3X of the time remaining to finish
+ *
+ * - overdue: past due date
+ * - urgent (red): time left < 1.5X of remaining work
+ * - warning (yellow): time left < 3X of remaining work
+ * - normal: plenty of time
+ * - complete: task is finished
+ *
+ * @param nextDueISO The deadline (ISO string)
+ * @param remainingMinutes Minutes of work remaining to complete the task
+ * @param isComplete Whether the task is already complete
+ */
+export function getUrgencyStatusWithWork(
+  nextDueISO: string | undefined,
+  remainingMinutes: number,
+  isComplete: boolean = false
+): UrgencyStatus {
+  if (isComplete || remainingMinutes <= 0) return 'complete';
+  if (!nextDueISO) return 'normal';
+  
+  const hoursRemaining = getHoursUntilDue(nextDueISO);
+  if (hoursRemaining === null) return 'normal';
+  
+  if (hoursRemaining < 0) return 'overdue';
+  
+  // Convert remaining work to hours for comparison
+  const workRemainingHours = remainingMinutes / 60;
+  
+  // Alert thresholds based on work remaining:
+  // - urgent: less than 1.5X work time remaining
+  // - warning: less than 3X work time remaining
+  if (hoursRemaining < workRemainingHours * 1.5) return 'urgent';
+  if (hoursRemaining < workRemainingHours * 3) return 'warning';
+  
+  return 'normal';
+}
+
+/**
  * Format time remaining until due date for display.
  * e.g., "2h 30m", "Due in 1d", "Overdue"
  */
@@ -371,49 +410,52 @@ export function getUrgencyClasses(status: UrgencyStatus): {
 // ============================================================================
 
 /**
- * Calculate the next due date based on frequency using calendar boundaries.
+ * Calculate the next due date based on frequency and interval using calendar boundaries.
  * Due dates are at midnight EST of the next calendar period:
- * - Daily: midnight of next day
- * - Weekly: midnight of next Monday
- * - Monthly: midnight of 1st of next month
- * - Annually: midnight of January 1st of next year
+ * - Daily: midnight of next N days
+ * - Weekly: midnight of next N weeks (Monday)
+ * - Monthly: midnight of 1st of month after N months
+ * - Annually: midnight of January 1st after N years
  *
  * @param currentDue The current due date (ISO string) - used to determine current period
  * @param frequency The recurrence frequency
  * @param tz The timezone to use for calculation
+ * @param interval How many periods to skip (default 1)
  * @returns ISO string for the next due date
  */
 export function calculateNextDue(
   currentDue: string,
   frequency: Frequency,
-  tz: string = TIMEZONE
+  tz: string = TIMEZONE,
+  interval: number = 1
 ): string {
   const now = getNowNY();
+  const n = Math.max(1, interval); // Ensure at least 1
   
   switch (frequency) {
     case 'daily':
-      // Next day at midnight EST
-      return now.add(1, 'day').startOf('day').toISOString();
+      // Next N days at midnight EST
+      return now.add(n, 'day').startOf('day').toISOString();
     case 'weekly':
-      // Next Monday at midnight EST
-      // weekday(1) gives Monday of current week, add 7 days for next Monday
+      // Next N weeks - Monday at midnight EST
+      // weekday(1) gives Monday of current week, add N*7 days for next Monday
       const currentMonday = now.weekday(1).startOf('day');
       const nextMonday = now.isAfter(currentMonday) || now.isSame(currentMonday)
-        ? currentMonday.add(7, 'day')
-        : currentMonday;
+        ? currentMonday.add(n * 7, 'day')
+        : currentMonday.add((n - 1) * 7, 'day');
       return nextMonday.toISOString();
     case 'monthly':
-      // 1st of next month at midnight EST
-      return now.add(1, 'month').startOf('month').toISOString();
+      // 1st of month after N months at midnight EST
+      return now.add(n, 'month').startOf('month').toISOString();
     case 'annually':
-      // January 1st of next year at midnight EST
-      return now.add(1, 'year').startOf('year').toISOString();
+      // January 1st after N years at midnight EST
+      return now.add(n, 'year').startOf('year').toISOString();
     default:
-      // Default to weekly
+      // Default to weekly with interval
       const defaultMonday = now.weekday(1).startOf('day');
       return now.isAfter(defaultMonday) || now.isSame(defaultMonday)
-        ? defaultMonday.add(7, 'day').toISOString()
-        : defaultMonday.toISOString();
+        ? defaultMonday.add(n * 7, 'day').toISOString()
+        : defaultMonday.add((n - 1) * 7, 'day').toISOString();
   }
 }
 
@@ -472,7 +514,8 @@ export function advanceRecurrence(
   const nextDue = calculateNextDue(
     recurrence.nextDue || new Date().toISOString(),
     recurrence.frequency,
-    recurrence.timezone
+    recurrence.timezone,
+    recurrence.interval || 1
   );
   
   return {

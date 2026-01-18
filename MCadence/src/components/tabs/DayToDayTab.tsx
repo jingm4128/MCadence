@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppState } from '@/lib/state';
-import { ChecklistItemForm, isChecklistItem } from '@/lib/types';
+import { ChecklistItemForm, isChecklistItem, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
+import { TabHeader } from '@/components/ui/TabHeader';
+import { SwipeableItem } from '@/components/ui/SwipeableItem';
+import { loadSettings } from '@/lib/storage';
 
 export function DayToDayTab() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -20,7 +23,7 @@ export function DayToDayTab() {
     categoryId: DEFAULT_CATEGORY_ID,
   });
 
-  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, state } = useAppState();
+  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, archiveAllCompletedInTab, state } = useAppState();
 
   // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
   const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
@@ -60,6 +63,29 @@ export function DayToDayTab() {
     setItemToDelete(id);
   };
 
+  // Get swipe handlers based on settings
+  const getSwipeHandlers = useCallback((id: string) => {
+    const settings = loadSettings();
+    const swipeConfig = settings.swipeConfig.dayToDay;
+    
+    const executeAction = (action: SwipeAction) => {
+      if (action === 'delete') {
+        handleDelete(id);
+      } else {
+        handleArchive(id);
+      }
+    };
+    
+    return {
+      onSwipeLeft: () => executeAction(swipeConfig.left),
+      onSwipeRight: () => executeAction(swipeConfig.right),
+      leftLabel: swipeConfig.left === 'delete' ? 'Delete' : 'Archive',
+      rightLabel: swipeConfig.right === 'delete' ? 'Delete' : 'Archive',
+      leftColor: swipeConfig.left === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+      rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
+    };
+  }, []);
+
   const confirmDelete = () => {
     if (itemToDelete) {
       deleteItem(itemToDelete);
@@ -67,67 +93,61 @@ export function DayToDayTab() {
     }
   };
 
+  // Check if there are completed items to archive
+  const completedCount = allItems.filter(item =>
+    isChecklistItem(item) && item.isDone
+  ).length;
+
+  const handleArchiveAllCompleted = () => {
+    const count = archiveAllCompletedInTab('dayToDay');
+    if (count > 0) {
+      setToastMessage(`Archived ${count} completed item${count > 1 ? 's' : ''}`);
+    }
+  };
+
   return (
     <div>
-      {/* Header with Add button and Category Filter */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex gap-2">
-          {allArchivedItems.length > 0 && (
-            <Button
-              variant="secondary"
-              onClick={() => setShowArchive(!showArchive)}
-            >
-              {showArchive ? 'Active' : `Archived (${allArchivedItems.length})`}
-            </Button>
-          )}
-          <Button onClick={() => setShowAddModal(true)} className="font-bold text-lg">
-            +
-          </Button>
-        </div>
-        {/* Category Filter */}
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="all">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <TabHeader
+        archivedCount={allArchivedItems.length}
+        showArchive={showArchive}
+        onToggleArchive={() => setShowArchive(!showArchive)}
+        completedCount={completedCount}
+        onArchiveAllCompleted={handleArchiveAllCompleted}
+        onAdd={() => setShowAddModal(true)}
+        categories={categories}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={setCategoryFilter}
+      />
 
       {/* Items List */}
       {showArchive ? (
-        <div className="space-y-3">
-          <p className="text-sm text-gray-500 mb-4">Archived tasks</p>
+        <div className="space-y-1.5">
+          <p className="text-xs text-gray-500 mb-2">Archived tasks</p>
           {archivedItems.map((item) => {
             const checklistItem = isChecklistItem(item) ? item : null;
             const isDone = checklistItem?.isDone ?? false;
             return (
               <div
                 key={item.id}
-                className="bg-white p-4 rounded-lg border border-gray-200 opacity-70"
+                className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 opacity-70"
                 style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {/* Done/Open status indicator */}
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                     isDone
                       ? 'bg-green-100 border-green-500 text-green-600'
                       : 'bg-gray-100 border-gray-400'
                   }`}>
                     {isDone && (
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className={`font-medium ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
-                      {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-sm font-medium truncate ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                      {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                       {item.title}
                     </h3>
                   </div>
@@ -160,51 +180,42 @@ export function DayToDayTab() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {items.map((item) => (
-            isChecklistItem(item) && (
-              <div
+        <div className="space-y-1.5">
+          {items.map((item) => {
+            if (!isChecklistItem(item)) return null;
+            const swipeHandlers = getSwipeHandlers(item.id);
+            return (
+              <SwipeableItem
                 key={item.id}
-                className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm swipe-hint category-transition hover-lift"
-                style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
+                onSwipeLeft={swipeHandlers.onSwipeLeft}
+                onSwipeRight={swipeHandlers.onSwipeRight}
+                leftLabel={swipeHandlers.leftLabel}
+                rightLabel={swipeHandlers.rightLabel}
+                leftColor={swipeHandlers.leftColor}
+                rightColor={swipeHandlers.rightColor}
               >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={item.isDone}
-                    onChange={() => toggleChecklistItem(item.id)}
-                    className="h-5 w-5 text-primary-600 rounded focus:ring-primary-500"
-                  />
-                  <div className="flex-1">
-                    <h3 className={`font-medium ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                      {item.categoryId && <span className="mr-1.5">{getCategoryIcon(item.categoryId)}</span>}
-                      {item.title}
-                    </h3>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleArchive(item.id)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
-                      title="Archive"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-400 hover:text-red-600 p-1"
-                      title="Delete"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                <div
+                  className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm category-transition hover-lift"
+                  style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={item.isDone}
+                      onChange={() => toggleChecklistItem(item.id)}
+                      className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`text-sm font-medium truncate ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                        {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
+                        {item.title}
+                      </h3>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          ))}
+              </SwipeableItem>
+            );
+          })}
           {items.length === 0 && (
             <div className="text-center py-12 empty-state">
               <div className="empty-state-icon">📝</div>

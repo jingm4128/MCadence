@@ -367,6 +367,7 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
     return {
       enabled: true,
       frequency: frequencyMap[recurrence],
+      interval: 1, // Default interval of 1
       totalOccurrences: totalOccurrences ?? null,
       timezone: DEFAULT_TIMEZONE,
     };

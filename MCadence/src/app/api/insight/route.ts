@@ -10,12 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { InsightStats, InsightV1, InsightAPIResponse, InsightAPIError } from '@/lib/ai/insight';
 import { makeServerAICall, extractAIConfig, hasValidApiKey } from '@/lib/ai/server-config';
-
-// ============================================================================
-// Configuration
-// ============================================================================
-
-const MAX_REQUEST_SIZE = 50 * 1024; // 50KB max request size
+import { MAX_REQUEST_SIZE, extractJSONFromText, getErrorStatusCode } from '@/lib/ai/utils';
 
 // ============================================================================
 // System Prompt
@@ -91,27 +86,6 @@ function validateStats(stats: unknown): stats is InsightStats {
     typeof s.projectHealth === 'object' &&
     typeof s.checklists === 'object'
   );
-}
-
-// ============================================================================
-// JSON Extraction
-// ============================================================================
-
-/**
- * Try to extract JSON from AI response, handling potential extra text.
- */
-function extractJSON(text: string): InsightV1 {
-  // First, try direct parse
-  try {
-    return JSON.parse(text);
-  } catch {
-    // Try to find JSON object in the text
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-    throw new Error('No valid JSON found in response');
-  }
 }
 
 /**
@@ -195,7 +169,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<InsightAP
     });
     
     // Extract and validate JSON
-    const insight = extractJSON(content);
+    const insight = extractJSONFromText<InsightV1>(content);
     
     if (!validateInsight(insight)) {
       throw new Error('AI response does not match expected schema');
@@ -209,17 +183,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<InsightAP
   } catch (error) {
     console.error('Insight API error:', error);
     
-    // Determine appropriate status code based on error
-    let statusCode = 500;
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    
-    if (errorMessage.includes('Invalid API key') || errorMessage.includes('API key')) {
-      statusCode = 401;
-    } else if (errorMessage.includes('Rate limit')) {
-      statusCode = 429;
-    } else if (errorMessage.includes('Billing') || errorMessage.includes('permission')) {
-      statusCode = 402;
-    }
+    const statusCode = getErrorStatusCode(errorMessage);
     
     return NextResponse.json(
       {

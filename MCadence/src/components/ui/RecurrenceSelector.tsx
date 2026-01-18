@@ -19,6 +19,7 @@ export function RecurrenceSelector({ value, onChange, className = '' }: Recurren
       onChange({
         enabled: true,
         frequency: value?.frequency || 'weekly',
+        interval: value?.interval || 1,
         totalOccurrences: value?.totalOccurrences ?? null,
         timezone: value?.timezone || DEFAULT_TIMEZONE,
       });
@@ -30,6 +31,12 @@ export function RecurrenceSelector({ value, onChange, className = '' }: Recurren
   const handleFrequencyChange = (frequency: Frequency) => {
     if (value) {
       onChange({ ...value, frequency });
+    }
+  };
+
+  const handleIntervalChange = (interval: number) => {
+    if (value) {
+      onChange({ ...value, interval: Math.max(1, interval) });
     }
   };
 
@@ -65,22 +72,32 @@ export function RecurrenceSelector({ value, onChange, className = '' }: Recurren
       {/* Recurrence Options - only show when enabled */}
       {isEnabled && value && (
         <div className="pl-6 space-y-3 border-l-2 border-blue-200">
-          {/* Frequency Dropdown */}
+          {/* Frequency and Interval */}
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
-              Repeat
+              Repeat Every
             </label>
-            <select
-              value={value.frequency}
-              onChange={(e) => handleFrequencyChange(e.target.value as Frequency)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            >
-              {FREQUENCY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                min="1"
+                max="365"
+                value={value.interval || 1}
+                onChange={(e) => handleIntervalChange(parseInt(e.target.value) || 1)}
+                className="w-16 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+              <select
+                value={value.frequency}
+                onChange={(e) => handleFrequencyChange(e.target.value as Frequency)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                {FREQUENCY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {(value.interval || 1) > 1 ? option.labelPlural || option.label : option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Occurrences Limit */}
@@ -147,24 +164,32 @@ export function RecurrenceSelector({ value, onChange, className = '' }: Recurren
 export function getRecurrenceDisplayText(settings: RecurrenceFormSettings | undefined): string {
   if (!settings || !settings.enabled) return '';
   
-  const frequency = FREQUENCY_OPTIONS.find(f => f.value === settings.frequency)?.label || settings.frequency;
+  const interval = settings.interval || 1;
+  const freqOption = FREQUENCY_OPTIONS.find(f => f.value === settings.frequency);
+  const frequency = interval > 1
+    ? `${interval} ${freqOption?.labelPlural || settings.frequency}`
+    : freqOption?.label || settings.frequency;
   const occurrences = settings.totalOccurrences === null
     ? 'forever'
     : `${settings.totalOccurrences} times`;
   
-  return `${frequency}, ${occurrences}`;
+  return `Every ${frequency}, ${occurrences}`;
 }
 
 // Helper function to get display text for saved recurrence settings (stored on items)
 export function getSavedRecurrenceDisplayText(settings: RecurrenceSettings | undefined): string {
   if (!settings) return '';
   
-  const frequency = FREQUENCY_OPTIONS.find(f => f.value === settings.frequency)?.label || settings.frequency;
+  const interval = settings.interval || 1;
+  const freqOption = FREQUENCY_OPTIONS.find(f => f.value === settings.frequency);
+  const frequency = interval > 1
+    ? `${interval} ${freqOption?.labelPlural || settings.frequency}`
+    : freqOption?.label || settings.frequency;
   
   if (settings.totalOccurrences === null) {
-    return `${frequency}`;
+    return `Every ${frequency}`;
   }
   
   const remaining = settings.totalOccurrences - settings.completedOccurrences;
-  return `${frequency} (${remaining} left)`;
+  return `Every ${frequency} (${remaining} left)`;
 }

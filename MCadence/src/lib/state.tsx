@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE, ITEM_STATUS } from './constants';
-import { saveState, loadState } from './storage';
+import { saveState, loadState, loadSettings } from './storage';
 import { generateId } from '@/utils/uuid';
 import {
   toISOStringLocal,
@@ -31,7 +31,7 @@ type AppStateAction =
   | { type: 'TOGGLE_CHECKLIST_ITEM'; payload: string }
   | { type: 'ARCHIVE_ITEM'; payload: string }
   | { type: 'UNARCHIVE_ITEM'; payload: string }
-  | { type: 'START_TIMER'; payload: string }
+  | { type: 'START_TIMER'; payload: { id: string; allowConcurrent: boolean } }
   | { type: 'STOP_TIMER'; payload: string }
   | { type: 'RESET_WEEKLY_PERIODS'; }
   | { type: 'LOG_ACTION'; payload: ActionLog };
@@ -191,19 +191,24 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
       };
 
     case 'START_TIMER':
-      // Stop any existing timer first
-      const itemsWithStoppedTimer = state.items.map((item: Item): Item => {
-        if ('currentSessionStart' in item && item.currentSessionStart) {
-          return { ...item, currentSessionStart: null, updatedAt: toISOStringLocal() };
-        }
-        return item;
-      });
+      const { id: timerId, allowConcurrent } = action.payload;
+      
+      // If not allowing concurrent timers, stop any existing timer first
+      let itemsForTimerStart = state.items;
+      if (!allowConcurrent) {
+        itemsForTimerStart = state.items.map((item: Item): Item => {
+          if ('currentSessionStart' in item && item.currentSessionStart) {
+            return { ...item, currentSessionStart: null, updatedAt: toISOStringLocal() };
+          }
+          return item;
+        });
+      }
 
       // Start new timer
       return {
         ...state,
-        items: itemsWithStoppedTimer.map((item: Item): Item => {
-          if (item.id === action.payload && 'currentSessionStart' in item) {
+        items: itemsForTimerStart.map((item: Item): Item => {
+          if (item.id === timerId && 'currentSessionStart' in item) {
             return { ...item, currentSessionStart: toISOStringLocal(), updatedAt: toISOStringLocal() };
           }
           return item;
@@ -218,11 +223,14 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
             const now = new Date();
             const sessionStart = new Date(item.currentSessionStart);
             const elapsedMinutes = Math.floor((now.getTime() - sessionStart.getTime()) / (1000 * 60));
+            const newCompletedMinutes = item.completedMinutes + elapsedMinutes;
+            const isComplete = newCompletedMinutes >= item.requiredMinutes;
             
             return {
               ...item,
               currentSessionStart: null,
-              completedMinutes: item.completedMinutes + elapsedMinutes,
+              completedMinutes: newCompletedMinutes,
+              status: isComplete ? ITEM_STATUS.DONE : item.status,
               updatedAt: toISOStringLocal(),
             } as TimeItem;
           }
@@ -318,6 +326,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const newItems: Item[] = [];
     const updates: { id: string; updates: Partial<Item> }[] = [];
     
+    // Track which baseTitle + currentPeriodKey combinations we've already processed
+    // This prevents creating duplicate items when multiple old period items exist
+    const processedRecurrences = new Set<string>();
+    
     for (const item of recurringItems) {
       const { periodKey, recurrence, baseTitle } = item;
       if (!periodKey || !recurrence || !baseTitle) continue;
@@ -328,6 +340,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       // Get the current period key
       const currentPeriodKey = getCurrentPeriodKey(recurrence.frequency);
       
+      // Create a tracking key for this baseTitle + current period combination
+      const trackingKey = `${baseTitle}::${currentPeriodKey}`;
+      
+      // Skip if we've already processed this recurring task for the current period
+      if (processedRecurrences.has(trackingKey)) continue;
+      
       // Check if we already have an item for the current period (by baseTitle + currentPeriodKey)
       const existingCurrentPeriodItem = state.items.find(i =>
         i.baseTitle === baseTitle &&
@@ -335,7 +353,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         !i.isArchived
       );
       
-      if (existingCurrentPeriodItem) continue; // Already have current period item
+      if (existingCurrentPeriodItem) {
+        // Mark as processed so we don't check again for other old period items
+        processedRecurrences.add(trackingKey);
+        continue;
+      }
+      
+      // Mark as processed before creating new item to prevent duplicates
+      processedRecurrences.add(trackingKey);
       
       // Check recurrence limit
       if (recurrence.totalOccurrences !== null &&
@@ -459,13 +484,15 @@ export function useAppState() {
     
     const now = toISOStringLocal();
     const tz = formRecurrence.timezone || DEFAULT_TIMEZONE;
+    const interval = formRecurrence.interval || 1;
     // Use periodKey to determine nextDue, or calculate based on current period
     const nextDue = periodKey
       ? getPeriodDueDate(periodKey)
-      : calculateNextDue(now, formRecurrence.frequency, tz);
+      : calculateNextDue(now, formRecurrence.frequency, tz, interval);
     
     return {
       frequency: formRecurrence.frequency,
+      interval,
       totalOccurrences: formRecurrence.totalOccurrences,
       completedOccurrences: 0,
       timezone: tz,
@@ -665,7 +692,11 @@ export function useAppState() {
   const startTimer = (id: string) => {
     const item = state.items.find(i => i.id === id);
     if (item && 'currentSessionStart' in item) {
-      dispatch({ type: 'START_TIMER', payload: id });
+      // Check settings for concurrent timer support
+      const settings = loadSettings();
+      const allowConcurrent = settings.allowConcurrentTimers;
+      
+      dispatch({ type: 'START_TIMER', payload: { id, allowConcurrent } });
       logAction({
         itemId: id,
         tab: 'spendMyTime',
@@ -680,30 +711,132 @@ export function useAppState() {
       const now = new Date();
       const sessionStart = new Date(item.currentSessionStart);
       const elapsedMinutes = Math.floor((now.getTime() - sessionStart.getTime()) / (1000 * 60));
+      const newCompletedMinutes = item.completedMinutes + elapsedMinutes;
+      const wasNotComplete = item.completedMinutes < item.requiredMinutes;
+      const isNowComplete = newCompletedMinutes >= item.requiredMinutes;
       
       dispatch({ type: 'STOP_TIMER', payload: id });
+      
+      // Log timer stop
       logAction({
         itemId: id,
         tab: 'spendMyTime',
         type: 'timer_stop',
         payload: { durationMinutes: elapsedMinutes },
       });
+      
+      // Log completion when item reaches its goal
+      if (wasNotComplete && isNowComplete) {
+        logAction({
+          itemId: id,
+          tab: 'spendMyTime',
+          type: 'complete',
+          payload: {
+            completedMinutes: newCompletedMinutes,
+            requiredMinutes: item.requiredMinutes,
+            recurrence: item.recurrence ? {
+              completedOccurrence: item.recurrence.completedOccurrences + 1,
+              totalOccurrences: item.recurrence.totalOccurrences,
+            } : undefined,
+          },
+        });
+      }
     }
+  };
+
+  // Helper to check if an item is completed
+  const isItemCompleted = (item: Item): boolean => {
+    // Check for checklist items (isDone)
+    if ('isDone' in item && item.isDone) return true;
+    
+    // Check for time items (completedMinutes >= requiredMinutes)
+    if ('completedMinutes' in item && 'requiredMinutes' in item) {
+      return item.completedMinutes >= item.requiredMinutes;
+    }
+    
+    // Check status
+    if (item.status === ITEM_STATUS.DONE) return true;
+    
+    return false;
   };
 
   const getItemsByTab = (tab: TabId, includeArchived = false) => {
     return state.items.filter(item =>
       item.tab === tab && (includeArchived || !item.isArchived)
     ).sort((a, b) => {
-      // Sort by title (name)
+      // 1. Sort by status: finished/done items go to bottom
+      const aIsDone = isItemCompleted(a);
+      const bIsDone = isItemCompleted(b);
+      if (aIsDone !== bIsDone) {
+        return aIsDone ? 1 : -1; // Done items at bottom
+      }
+      
+      // 2. Sort by due date (earlier due dates come first)
+      const aDue = a.recurrence?.nextDue;
+      const bDue = b.recurrence?.nextDue;
+      if (aDue && bDue) {
+        const dateDiff = new Date(aDue).getTime() - new Date(bDue).getTime();
+        if (dateDiff !== 0) return dateDiff;
+      } else if (aDue && !bDue) {
+        return -1; // Items with due dates come first
+      } else if (!aDue && bDue) {
+        return 1;
+      }
+      
+      // 3. Sort by category and subcategory
+      const aCategory = a.categoryId || '';
+      const bCategory = b.categoryId || '';
+      const categoryDiff = aCategory.localeCompare(bCategory);
+      if (categoryDiff !== 0) return categoryDiff;
+      
+      // 4. Finally sort by title
       return a.title.localeCompare(b.title);
     });
   };
 
+  const archiveAllCompletedInTab = (tab: TabId) => {
+    const completedItems = state.items.filter(item => {
+      if (item.tab !== tab || item.isArchived) return false;
+      
+      // Check for checklist items (isDone)
+      if ('isDone' in item && item.isDone) return true;
+      
+      // Check for time items (completedMinutes >= requiredMinutes)
+      if ('completedMinutes' in item && 'requiredMinutes' in item) {
+        return item.completedMinutes >= item.requiredMinutes;
+      }
+      
+      // Check status
+      if (item.status === ITEM_STATUS.DONE) return true;
+      
+      return false;
+    });
+    
+    completedItems.forEach(item => {
+      dispatch({ type: 'ARCHIVE_ITEM', payload: item.id });
+      logAction({
+        itemId: item.id,
+        tab: item.tab,
+        type: 'archive',
+        payload: { reason: 'batch_archive_completed' },
+      });
+    });
+    
+    return completedItems.length;
+  };
+
+  // Returns first active timer item (for backward compatibility)
   const getActiveTimerItem = () => {
-    return state.items.find(item => 
+    return state.items.find(item =>
       'currentSessionStart' in item && item.currentSessionStart !== null
     ) as TimeItem | undefined;
+  };
+
+  // Returns all active timer items (when concurrent timers are enabled)
+  const getActiveTimerItems = () => {
+    return state.items.filter(item =>
+      'currentSessionStart' in item && item.currentSessionStart !== null
+    ) as TimeItem[];
   };
 
   return {
@@ -722,6 +855,8 @@ export function useAppState() {
     stopTimer,
     getItemsByTab,
     getActiveTimerItem,
+    getActiveTimerItems,
+    archiveAllCompletedInTab,
     logAction,
   };
 }
