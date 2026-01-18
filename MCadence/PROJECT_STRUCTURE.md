@@ -13,7 +13,7 @@ MCadence is a productivity tracking application built with Next.js 14 (App Route
 - Settings panel with customizable preferences
 - Automatic backups with configurable frequency
 - Configurable swipe gestures per tab
-- Long press to edit items (SpendMyTime: name and time spent)
+- Long press to edit items (SpendMyTime: name, category, and time spent)
 
 ---
 
@@ -322,7 +322,7 @@ Each tab follows a similar pattern:
 A reusable wrapper that enables swipe and long press gestures on list items:
 - **Swipe left** → Configurable action (delete or archive)
 - **Swipe right** → Configurable action (delete or archive)
-- **Long press** → Opens edit modal (for SpendMyTime items: edit name and time spent)
+- **Long press** → Opens edit modal (for SpendMyTime items: edit name, category, and time spent)
 
 ```typescript
 <SwipeableItem
@@ -342,7 +342,7 @@ A reusable wrapper that enables swipe and long press gestures on list items:
 
 Supports both touch (mobile) and mouse (desktop) interactions.
 Swipe actions are configurable per-tab in Settings.
-Long press on SpendMyTime items opens an edit modal for name and completed time.
+Long press on SpendMyTime items opens an edit modal for name, category, and completed time.
 Recurrence editing remains accessible via the small recurrence icon on items.
 
 ### SettingsModal Component (`src/components/ui/SettingsModal.tsx`)

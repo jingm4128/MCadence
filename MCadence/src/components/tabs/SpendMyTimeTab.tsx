@@ -18,6 +18,7 @@ import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, get
 interface EditItemState {
   projectId: string;
   title: string;
+  categoryId: string;
   hours: number;
   minutes: number;
 }
@@ -164,6 +165,7 @@ export function SpendMyTimeTab() {
     setEditItemState({
       projectId: project.id,
       title: project.title,
+      categoryId: project.categoryId,
       hours: Math.floor(project.completedMinutes / 60),
       minutes: project.completedMinutes % 60,
     });
@@ -174,6 +176,7 @@ export function SpendMyTimeTab() {
       const newCompletedMinutes = editItemState.hours * 60 + editItemState.minutes;
       updateItem(editItemState.projectId, {
         title: editItemState.title.trim(),
+        categoryId: editItemState.categoryId,
         completedMinutes: newCompletedMinutes
       });
       setEditItemState(null);
@@ -640,7 +643,7 @@ export function SpendMyTimeTab() {
         {editItemState && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Edit the project name and adjust the completed time.
+              Edit the project name, category, and adjust the completed time.
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -657,6 +660,19 @@ export function SpendMyTimeTab() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter project title"
                 autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <CategorySelector
+                value={editItemState.categoryId}
+                onChange={(categoryId) => setEditItemState({
+                  ...editItemState,
+                  categoryId
+                })}
+                placeholder="Select category"
               />
             </div>
             <div>

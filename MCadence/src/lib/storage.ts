@@ -74,10 +74,19 @@ export function clearState(): void {
   }
 }
 
-// Export state as JSON string (for CSV export)
+// Export state as JSON string (includes categories from separate storage)
 export function exportState(): string {
   const state = loadState();
-  return JSON.stringify(state, null, 2);
+  const categories = loadCategories();
+  
+  // Ensure categories are included in the export (use loadCategories() which checks separate storage)
+  const exportData = {
+    items: state.items,
+    actions: state.actions,
+    categories: categories // Use loadCategories() to get the actual categories
+  };
+  
+  return JSON.stringify(exportData, null, 2);
 }
 
 // Import state from JSON string (for CSV import)
