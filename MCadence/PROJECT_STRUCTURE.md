@@ -172,6 +172,9 @@ interface AppSettings {
   // Timer concurrency
   allowConcurrentTimers: boolean;  // Allow multiple timers in Spend My Time
   
+  // Week start day (0=Sunday, 1=Monday, ..., 6=Saturday)
+  weekStartDay: WeekStartDay;  // Affects recurring item due dates for weekly items
+  
   // Swipe action configuration per tab
   swipeConfig: {
     dayToDay: { left: SwipeAction; right: SwipeAction };
@@ -180,6 +183,7 @@ interface AppSettings {
   };
 }
 
+type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;  // Sunday=0 through Saturday=6
 type SwipeAction = 'delete' | 'archive';
 ```
 

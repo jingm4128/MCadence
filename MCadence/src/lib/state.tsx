@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
-import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings } from './types';
+import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings, WeekStartDay } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE, ITEM_STATUS } from './constants';
 import { saveState, loadState, loadSettings } from './storage';
 import { generateId } from '@/utils/uuid';
@@ -19,6 +19,13 @@ import {
   getPeriodDueDate,
   isPeriodPassed
 } from '@/utils/date';
+
+// Helper to get week start day from settings (defaults to Monday)
+function getWeekStartDaySetting(): WeekStartDay {
+  if (typeof window === 'undefined') return 1; // SSR default
+  const settings = loadSettings();
+  return settings.weekStartDay;
+}
 
 // Action types for the reducer
 type AppStateAction =
@@ -240,8 +247,9 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
 
     case 'RESET_WEEKLY_PERIODS':
       const now = getNowInTimezone();
-      const newWeekStart = getWeekStart(now);
-      const newWeekEnd = getWeekEnd(now);
+      const weekStartDay = getWeekStartDaySetting();
+      const newWeekStart = getWeekStart(now, weekStartDay);
+      const newWeekEnd = getWeekEnd(now, weekStartDay);
 
       return {
         ...state,
@@ -338,7 +346,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (!isPeriodPassed(periodKey, recurrence.frequency)) continue;
       
       // Get the current period key
-      const currentPeriodKey = getCurrentPeriodKey(recurrence.frequency);
+      const currentPeriodKey = getCurrentPeriodKey(recurrence.frequency, undefined, getWeekStartDaySetting());
       
       // Create a tracking key for this baseTitle + current period combination
       const trackingKey = `${baseTitle}::${currentPeriodKey}`;
@@ -347,10 +355,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (processedRecurrences.has(trackingKey)) continue;
       
       // Check if we already have an item for the current period (by baseTitle + currentPeriodKey)
+      // Note: We check ALL items (including archived) to prevent duplicates when an item
+      // for the current period was manually archived before it expired
       const existingCurrentPeriodItem = state.items.find(i =>
         i.baseTitle === baseTitle &&
-        i.periodKey === currentPeriodKey &&
-        !i.isArchived
+        i.periodKey === currentPeriodKey
       );
       
       if (existingCurrentPeriodItem) {
@@ -407,8 +416,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       } else if ('completedMinutes' in item) {
         // TimeItem
         const timeItem = item as TimeItem;
-        const weekStart = getWeekStart(getNowInTimezone());
-        const weekEnd = getWeekEnd(getNowInTimezone());
+        const weekStartDaySetting = getWeekStartDaySetting();
+        const weekStart = getWeekStart(getNowInTimezone(), weekStartDaySetting);
+        const weekEnd = getWeekEnd(getNowInTimezone(), weekStartDaySetting);
         
         const newTimeItem: TimeItem = {
           id: generateId(),
@@ -507,7 +517,7 @@ export function useAppState() {
     
     // For recurring items, add period key and format title with date
     const periodKey = hasRecurrence
-      ? getCurrentPeriodKey(form.recurrence!.frequency)
+      ? getCurrentPeriodKey(form.recurrence!.frequency, undefined, getWeekStartDaySetting())
       : undefined;
     
     const recurrence = convertRecurrenceFormToSettings(form.recurrence, periodKey);
@@ -544,14 +554,15 @@ export function useAppState() {
 
   const addTimeItem = (form: TimeItemForm) => {
     const now = getNowInTimezone();
-    const weekStart = getWeekStart(now);
-    const weekEnd = getWeekEnd(now);
+    const weekStartDaySetting = getWeekStartDaySetting();
+    const weekStart = getWeekStart(now, weekStartDaySetting);
+    const weekEnd = getWeekEnd(now, weekStartDaySetting);
     const isoNow = toISOStringLocal();
     const hasRecurrence = form.recurrence?.enabled;
     
     // For recurring items, add period key and format title with date
     const periodKey = hasRecurrence
-      ? getCurrentPeriodKey(form.recurrence!.frequency)
+      ? getCurrentPeriodKey(form.recurrence!.frequency, undefined, weekStartDaySetting)
       : undefined;
     
     const recurrence = convertRecurrenceFormToSettings(form.recurrence, periodKey);

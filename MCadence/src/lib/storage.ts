@@ -267,6 +267,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   backupFrequency: 'weekly',
   lastBackupDate: undefined,
   allowConcurrentTimers: false,
+  weekStartDay: 1, // Monday as default
   swipeConfig: {
     dayToDay: { left: 'delete', right: 'archive' },
     hitMyGoal: { left: 'delete', right: 'archive' },
