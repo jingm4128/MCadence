@@ -49,9 +49,11 @@ export interface BaseItem {
   sortKey: number;   // for ordering within tab
   status: ItemStatus; // active | done | missed
   isArchived: boolean; // Whether user has archived this item
+  isDeleted?: boolean; // Whether user has soft-deleted this item (keeps data but hides from UI)
   createdAt: string;  // ISO
   updatedAt: string;  // ISO
   archivedAt?: string | null; // When the item was archived
+  deletedAt?: string | null; // When the item was soft-deleted
   recurrence?: RecurrenceSettings; // For recurring items
   periodKey?: string; // Period identifier: "20260113" for due date
 }

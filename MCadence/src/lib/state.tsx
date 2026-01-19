@@ -98,10 +98,16 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
       };
 
     case 'DELETE_ITEM':
+      // Soft delete: mark as deleted instead of removing from array
+      // This keeps records and action logs for data history
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.payload),
-        actions: state.actions.filter(log => log.itemId !== action.payload),
+        items: state.items.map(item =>
+          item.id === action.payload
+            ? { ...item, isDeleted: true, deletedAt: toISOStringLocal(), updatedAt: toISOStringLocal() }
+            : item
+        ),
+        // Keep action logs - don't filter them
       };
 
     case 'TOGGLE_CHECKLIST_ITEM':
@@ -299,8 +305,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Save state to localStorage whenever it changes (only after hydration)
+  // Note: We always save after hydration, even if items/actions appear empty,
+  // because soft-deleted items still exist in the array
   useEffect(() => {
-    if (isHydrated && (state.items.length > 0 || state.actions.length > 0)) {
+    if (isHydrated) {
       saveState(state);
     }
   }, [state, isHydrated]);
@@ -324,9 +332,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Find all recurring items with periodKey
     // Note: We include archived items because we still want to create new period items
     // for recurring tasks even if the previous period's item was archived
+    // But we exclude deleted items - they should not generate new occurrences
     const recurringItems = state.items.filter(item =>
       item.periodKey &&
-      item.recurrence
+      item.recurrence &&
+      !item.isDeleted
     );
     
     if (recurringItems.length === 0) return;
@@ -773,7 +783,9 @@ export function useAppState() {
 
   const getItemsByTab = (tab: TabId, includeArchived = false) => {
     return state.items.filter(item =>
-      item.tab === tab && (includeArchived || !item.isArchived)
+      item.tab === tab &&
+      !item.isDeleted && // Always exclude soft-deleted items
+      (includeArchived || !item.isArchived)
     ).sort((a, b) => {
       // 1. Sort by status: finished/done items go to bottom
       const aIsDone = isItemCompleted(a);
@@ -807,7 +819,7 @@ export function useAppState() {
 
   const archiveAllCompletedInTab = (tab: TabId) => {
     const completedItems = state.items.filter(item => {
-      if (item.tab !== tab || item.isArchived) return false;
+      if (item.tab !== tab || item.isArchived || item.isDeleted) return false;
       
       // Check for checklist items (isDone)
       if ('isDone' in item && item.isDone) return true;
@@ -839,6 +851,7 @@ export function useAppState() {
   // Returns first active timer item (for backward compatibility)
   const getActiveTimerItem = () => {
     return state.items.find(item =>
+      !item.isDeleted &&
       'currentSessionStart' in item && item.currentSessionStart !== null
     ) as TimeItem | undefined;
   };
@@ -846,6 +859,7 @@ export function useAppState() {
   // Returns all active timer items (when concurrent timers are enabled)
   const getActiveTimerItems = () => {
     return state.items.filter(item =>
+      !item.isDeleted &&
       'currentSessionStart' in item && item.currentSessionStart !== null
     ) as TimeItem[];
   };
