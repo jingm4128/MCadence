@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { CategoryEditorModal } from './CategoryEditorModal';
-import { AppSettings, BackupFrequency, SwipeAction, SwipeConfig, Category, TabId } from '@/lib/types';
+import { AppSettings, BackupFrequency, SwipeAction, SwipeConfig, Category, TabId, WeekStartDay } from '@/lib/types';
 import { loadSettings, saveSettings, getTimeUntilNextBackup, performAutoBackup, DEFAULT_SETTINGS } from '@/lib/storage';
 import { TAB_CONFIG } from '@/lib/constants';
 
@@ -27,6 +27,17 @@ const BACKUP_FREQUENCY_OPTIONS: { value: BackupFrequency; label: string }[] = [
 const SWIPE_ACTION_OPTIONS: { value: SwipeAction; label: string }[] = [
   { value: 'delete', label: 'Delete' },
   { value: 'archive', label: 'Archive' },
+];
+
+// Week start day options
+const WEEK_START_DAY_OPTIONS: { value: WeekStartDay; label: string }[] = [
+  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
 ];
 
 export function SettingsModal({ isOpen, onClose, categories, onSaveCategories }: SettingsModalProps) {
@@ -115,12 +126,7 @@ export function SettingsModal({ isOpen, onClose, categories, onSaveCategories }:
               onClick={() => setShowCategoryEditor(true)}
               className="w-full"
             >
-              <span className="flex items-center justify-center gap-2">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                Edit Categories
-              </span>
+              Edit Categories
             </Button>
           </div>
 
@@ -166,12 +172,7 @@ export function SettingsModal({ isOpen, onClose, categories, onSaveCategories }:
                 onClick={handleBackupNow}
                 className="w-full"
               >
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  Backup Now
-                </span>
+                Backup Now
               </Button>
             </div>
           </div>
@@ -202,6 +203,34 @@ export function SettingsModal({ isOpen, onClose, categories, onSaveCategories }:
                 </p>
               </div>
             </label>
+          </div>
+
+          {/* Week Start Day Section */}
+          <div className="border-b border-gray-200 pb-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Week Start</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Choose which day your week starts on. This affects recurring item due dates.
+            </p>
+            
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Week Starts On
+              </label>
+              <select
+                value={settings.weekStartDay}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  weekStartDay: parseInt(e.target.value, 10) as WeekStartDay,
+                }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+              >
+                {WEEK_START_DAY_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Swipe Motion Configuration Section */}

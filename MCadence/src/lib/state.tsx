@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
-import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings } from './types';
+import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings, WeekStartDay } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE, ITEM_STATUS } from './constants';
 import { saveState, loadState, loadSettings } from './storage';
 import { generateId } from '@/utils/uuid';
@@ -19,6 +19,13 @@ import {
   getPeriodDueDate,
   isPeriodPassed
 } from '@/utils/date';
+
+// Helper to get week start day from settings (defaults to Monday)
+function getWeekStartDaySetting(): WeekStartDay {
+  if (typeof window === 'undefined') return 1; // SSR default
+  const settings = loadSettings();
+  return settings.weekStartDay;
+}
 
 // Action types for the reducer
 type AppStateAction =
@@ -91,10 +98,16 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
       };
 
     case 'DELETE_ITEM':
+      // Soft delete: mark as deleted instead of removing from array
+      // This keeps records and action logs for data history
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.payload),
-        actions: state.actions.filter(log => log.itemId !== action.payload),
+        items: state.items.map(item =>
+          item.id === action.payload
+            ? { ...item, isDeleted: true, deletedAt: toISOStringLocal(), updatedAt: toISOStringLocal() }
+            : item
+        ),
+        // Keep action logs - don't filter them
       };
 
     case 'TOGGLE_CHECKLIST_ITEM':
@@ -240,8 +253,9 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
 
     case 'RESET_WEEKLY_PERIODS':
       const now = getNowInTimezone();
-      const newWeekStart = getWeekStart(now);
-      const newWeekEnd = getWeekEnd(now);
+      const weekStartDay = getWeekStartDaySetting();
+      const newWeekStart = getWeekStart(now, weekStartDay);
+      const newWeekEnd = getWeekEnd(now, weekStartDay);
 
       return {
         ...state,
@@ -291,8 +305,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Save state to localStorage whenever it changes (only after hydration)
+  // Note: We always save after hydration, even if items/actions appear empty,
+  // because soft-deleted items still exist in the array
   useEffect(() => {
-    if (isHydrated && (state.items.length > 0 || state.actions.length > 0)) {
+    if (isHydrated) {
       saveState(state);
     }
   }, [state, isHydrated]);
@@ -316,9 +332,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Find all recurring items with periodKey
     // Note: We include archived items because we still want to create new period items
     // for recurring tasks even if the previous period's item was archived
+    // But we exclude deleted items - they should not generate new occurrences
     const recurringItems = state.items.filter(item =>
       item.periodKey &&
-      item.recurrence
+      item.recurrence &&
+      !item.isDeleted
     );
     
     if (recurringItems.length === 0) return;
@@ -338,7 +356,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (!isPeriodPassed(periodKey, recurrence.frequency)) continue;
       
       // Get the current period key
-      const currentPeriodKey = getCurrentPeriodKey(recurrence.frequency);
+      const currentPeriodKey = getCurrentPeriodKey(recurrence.frequency, undefined, getWeekStartDaySetting());
       
       // Create a tracking key for this baseTitle + current period combination
       const trackingKey = `${baseTitle}::${currentPeriodKey}`;
@@ -347,10 +365,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (processedRecurrences.has(trackingKey)) continue;
       
       // Check if we already have an item for the current period (by baseTitle + currentPeriodKey)
+      // Note: We check ALL items (including archived) to prevent duplicates when an item
+      // for the current period was manually archived before it expired
       const existingCurrentPeriodItem = state.items.find(i =>
         i.baseTitle === baseTitle &&
-        i.periodKey === currentPeriodKey &&
-        !i.isArchived
+        i.periodKey === currentPeriodKey
       );
       
       if (existingCurrentPeriodItem) {
@@ -407,8 +426,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       } else if ('completedMinutes' in item) {
         // TimeItem
         const timeItem = item as TimeItem;
-        const weekStart = getWeekStart(getNowInTimezone());
-        const weekEnd = getWeekEnd(getNowInTimezone());
+        const weekStartDaySetting = getWeekStartDaySetting();
+        const weekStart = getWeekStart(getNowInTimezone(), weekStartDaySetting);
+        const weekEnd = getWeekEnd(getNowInTimezone(), weekStartDaySetting);
         
         const newTimeItem: TimeItem = {
           id: generateId(),
@@ -507,7 +527,7 @@ export function useAppState() {
     
     // For recurring items, add period key and format title with date
     const periodKey = hasRecurrence
-      ? getCurrentPeriodKey(form.recurrence!.frequency)
+      ? getCurrentPeriodKey(form.recurrence!.frequency, undefined, getWeekStartDaySetting())
       : undefined;
     
     const recurrence = convertRecurrenceFormToSettings(form.recurrence, periodKey);
@@ -544,14 +564,15 @@ export function useAppState() {
 
   const addTimeItem = (form: TimeItemForm) => {
     const now = getNowInTimezone();
-    const weekStart = getWeekStart(now);
-    const weekEnd = getWeekEnd(now);
+    const weekStartDaySetting = getWeekStartDaySetting();
+    const weekStart = getWeekStart(now, weekStartDaySetting);
+    const weekEnd = getWeekEnd(now, weekStartDaySetting);
     const isoNow = toISOStringLocal();
     const hasRecurrence = form.recurrence?.enabled;
     
     // For recurring items, add period key and format title with date
     const periodKey = hasRecurrence
-      ? getCurrentPeriodKey(form.recurrence!.frequency)
+      ? getCurrentPeriodKey(form.recurrence!.frequency, undefined, weekStartDaySetting)
       : undefined;
     
     const recurrence = convertRecurrenceFormToSettings(form.recurrence, periodKey);
@@ -762,7 +783,9 @@ export function useAppState() {
 
   const getItemsByTab = (tab: TabId, includeArchived = false) => {
     return state.items.filter(item =>
-      item.tab === tab && (includeArchived || !item.isArchived)
+      item.tab === tab &&
+      !item.isDeleted && // Always exclude soft-deleted items
+      (includeArchived || !item.isArchived)
     ).sort((a, b) => {
       // 1. Sort by status: finished/done items go to bottom
       const aIsDone = isItemCompleted(a);
@@ -796,7 +819,7 @@ export function useAppState() {
 
   const archiveAllCompletedInTab = (tab: TabId) => {
     const completedItems = state.items.filter(item => {
-      if (item.tab !== tab || item.isArchived) return false;
+      if (item.tab !== tab || item.isArchived || item.isDeleted) return false;
       
       // Check for checklist items (isDone)
       if ('isDone' in item && item.isDone) return true;
@@ -828,6 +851,7 @@ export function useAppState() {
   // Returns first active timer item (for backward compatibility)
   const getActiveTimerItem = () => {
     return state.items.find(item =>
+      !item.isDeleted &&
       'currentSessionStart' in item && item.currentSessionStart !== null
     ) as TimeItem | undefined;
   };
@@ -835,6 +859,7 @@ export function useAppState() {
   // Returns all active timer items (when concurrent timers are enabled)
   const getActiveTimerItems = () => {
     return state.items.filter(item =>
+      !item.isDeleted &&
       'currentSessionStart' in item && item.currentSessionStart !== null
     ) as TimeItem[];
   };

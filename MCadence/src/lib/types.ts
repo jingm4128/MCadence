@@ -49,9 +49,11 @@ export interface BaseItem {
   sortKey: number;   // for ordering within tab
   status: ItemStatus; // active | done | missed
   isArchived: boolean; // Whether user has archived this item
+  isDeleted?: boolean; // Whether user has soft-deleted this item (keeps data but hides from UI)
   createdAt: string;  // ISO
   updatedAt: string;  // ISO
   archivedAt?: string | null; // When the item was archived
+  deletedAt?: string | null; // When the item was soft-deleted
   recurrence?: RecurrenceSettings; // For recurring items
   periodKey?: string; // Period identifier: "20260113" for due date
 }
@@ -151,6 +153,9 @@ export interface SwipeConfig {
 // Backup frequency options
 export type BackupFrequency = 'never' | 'daily' | 'weekly' | 'monthly';
 
+// Week start day (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+export type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
 // App Settings interface
 export interface AppSettings {
   // Backup settings
@@ -159,6 +164,9 @@ export interface AppSettings {
   
   // Concurrency settings - allow multiple timers
   allowConcurrentTimers: boolean;
+  
+  // Week start day (default: Monday = 1)
+  weekStartDay: WeekStartDay;
   
   // Swipe motion configuration per tab
   swipeConfig: {

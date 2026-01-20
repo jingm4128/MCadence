@@ -5,7 +5,7 @@ import weekday from 'dayjs/plugin/weekday';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import { TIMEZONE, URGENCY_RED_THRESHOLD_HOURS, URGENCY_YELLOW_THRESHOLD_HOURS } from '@/lib/constants';
-import { Frequency, RecurrenceSettings } from '@/lib/types';
+import { Frequency, RecurrenceSettings, WeekStartDay } from '@/lib/types';
 
 // Initialize dayjs plugins
 dayjs.extend(utc);
@@ -13,6 +13,9 @@ dayjs.extend(timezone);
 dayjs.extend(weekday);
 dayjs.extend(weekOfYear);
 dayjs.extend(isoWeek);
+
+// Default week start day (Monday)
+const DEFAULT_WEEK_START_DAY: WeekStartDay = 1;
 
 // ============================================================================
 // Core Time Functions
@@ -28,23 +31,38 @@ export function getNowNY(): dayjs.Dayjs {
   return dayjs().tz(TIMEZONE);
 }
 
-// Get Monday of current week (00:00) in America/New_York timezone
-export function getWeekStart(date: Date = getNowInTimezone()): Date {
+/**
+ * Get the start of current week (00:00) in America/New_York timezone.
+ * @param date The date to calculate from (defaults to now)
+ * @param weekStartDay The day the week starts on (0=Sunday, 1=Monday, etc.) - defaults to Monday
+ */
+export function getWeekStart(date: Date = getNowInTimezone(), weekStartDay: WeekStartDay = DEFAULT_WEEK_START_DAY): Date {
   const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-  const monday = new Date(d.setDate(diff));
-  monday.setHours(0, 0, 0, 0);
-  return new Date(monday.toLocaleString("en-US", { timeZone: TIMEZONE }));
+  const currentDay = d.getDay(); // 0=Sunday, 1=Monday, ...
+  
+  // Calculate days to subtract to get to week start
+  let daysToSubtract = currentDay - weekStartDay;
+  if (daysToSubtract < 0) {
+    daysToSubtract += 7; // Wrap around if needed
+  }
+  
+  const weekStart = new Date(d);
+  weekStart.setDate(d.getDate() - daysToSubtract);
+  weekStart.setHours(0, 0, 0, 0);
+  return new Date(weekStart.toLocaleString("en-US", { timeZone: TIMEZONE }));
 }
 
-// Get Sunday of current week (23:59:59) in America/New_York timezone
-export function getWeekEnd(date: Date = getNowInTimezone()): Date {
-  const weekStart = getWeekStart(date);
-  const sunday = new Date(weekStart);
-  sunday.setDate(sunday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  return new Date(sunday.toLocaleString("en-US", { timeZone: TIMEZONE }));
+/**
+ * Get the end of current week (23:59:59) in America/New_York timezone.
+ * @param date The date to calculate from (defaults to now)
+ * @param weekStartDay The day the week starts on (0=Sunday, 1=Monday, etc.) - defaults to Monday
+ */
+export function getWeekEnd(date: Date = getNowInTimezone(), weekStartDay: WeekStartDay = DEFAULT_WEEK_START_DAY): Date {
+  const weekStart = getWeekStart(date, weekStartDay);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+  return new Date(weekEnd.toLocaleString("en-US", { timeZone: TIMEZONE }));
 }
 
 // ============================================================================
@@ -58,18 +76,25 @@ export interface PeriodRange {
 
 /**
  * Get "This Week" range in NY timezone.
- * Week is Monday 00:00:00 to next Monday 00:00:00 (exclusive end).
+ * Week is weekStartDay 00:00:00 to next weekStartDay 00:00:00 (exclusive end).
+ * @param weekStartDay The day the week starts on (0=Sunday, 1=Monday, etc.) - defaults to Monday
  */
-export function getThisWeekRangeNY(): PeriodRange {
+export function getThisWeekRangeNY(weekStartDay: WeekStartDay = DEFAULT_WEEK_START_DAY): PeriodRange {
   const now = getNowNY();
-  // dayjs weekday: 0=Sunday in default locale, but we use weekday plugin
-  // With weekday plugin, weekday(1) = Monday of current week
-  const monday = now.weekday(1).startOf('day');
-  const nextMonday = monday.add(7, 'day');
+  const currentDay = now.day(); // 0=Sunday, 1=Monday, ...
+  
+  // Calculate days to subtract to get to week start
+  let daysToSubtract = currentDay - weekStartDay;
+  if (daysToSubtract < 0) {
+    daysToSubtract += 7;
+  }
+  
+  const weekStart = now.subtract(daysToSubtract, 'day').startOf('day');
+  const nextWeekStart = weekStart.add(7, 'day');
   
   return {
-    startISO: monday.toISOString(),
-    endISO: nextMonday.toISOString(),
+    startISO: weekStart.toISOString(),
+    endISO: nextWeekStart.toISOString(),
   };
 }
 
@@ -413,7 +438,7 @@ export function getUrgencyClasses(status: UrgencyStatus): {
  * Calculate the next due date based on frequency and interval using calendar boundaries.
  * Due dates are at midnight EST of the next calendar period:
  * - Daily: midnight of next N days
- * - Weekly: midnight of next N weeks (Monday)
+ * - Weekly: midnight of start of next N weeks (based on weekStartDay)
  * - Monthly: midnight of 1st of month after N months
  * - Annually: midnight of January 1st after N years
  *
@@ -421,13 +446,15 @@ export function getUrgencyClasses(status: UrgencyStatus): {
  * @param frequency The recurrence frequency
  * @param tz The timezone to use for calculation
  * @param interval How many periods to skip (default 1)
+ * @param weekStartDay The day the week starts on (0=Sunday, 1=Monday, etc.) - defaults to Monday
  * @returns ISO string for the next due date
  */
 export function calculateNextDue(
   currentDue: string,
   frequency: Frequency,
   tz: string = TIMEZONE,
-  interval: number = 1
+  interval: number = 1,
+  weekStartDay: WeekStartDay = DEFAULT_WEEK_START_DAY
 ): string {
   const now = getNowNY();
   const n = Math.max(1, interval); // Ensure at least 1
@@ -437,13 +464,17 @@ export function calculateNextDue(
       // Next N days at midnight EST
       return now.add(n, 'day').startOf('day').toISOString();
     case 'weekly':
-      // Next N weeks - Monday at midnight EST
-      // weekday(1) gives Monday of current week, add N*7 days for next Monday
-      const currentMonday = now.weekday(1).startOf('day');
-      const nextMonday = now.isAfter(currentMonday) || now.isSame(currentMonday)
-        ? currentMonday.add(n * 7, 'day')
-        : currentMonday.add((n - 1) * 7, 'day');
-      return nextMonday.toISOString();
+      // Next N weeks - week start day at midnight EST
+      const currentDay = now.day();
+      let daysToWeekStart = currentDay - weekStartDay;
+      if (daysToWeekStart < 0) {
+        daysToWeekStart += 7;
+      }
+      const currentWeekStart = now.subtract(daysToWeekStart, 'day').startOf('day');
+      const nextWeekStart = now.isAfter(currentWeekStart) || now.isSame(currentWeekStart)
+        ? currentWeekStart.add(n * 7, 'day')
+        : currentWeekStart.add((n - 1) * 7, 'day');
+      return nextWeekStart.toISOString();
     case 'monthly':
       // 1st of month after N months at midnight EST
       return now.add(n, 'month').startOf('month').toISOString();
@@ -452,10 +483,15 @@ export function calculateNextDue(
       return now.add(n, 'year').startOf('year').toISOString();
     default:
       // Default to weekly with interval
-      const defaultMonday = now.weekday(1).startOf('day');
-      return now.isAfter(defaultMonday) || now.isSame(defaultMonday)
-        ? defaultMonday.add(n * 7, 'day').toISOString()
-        : defaultMonday.add((n - 1) * 7, 'day').toISOString();
+      const defaultDay = now.day();
+      let defaultDaysToWeekStart = defaultDay - weekStartDay;
+      if (defaultDaysToWeekStart < 0) {
+        defaultDaysToWeekStart += 7;
+      }
+      const defaultWeekStart = now.subtract(defaultDaysToWeekStart, 'day').startOf('day');
+      return now.isAfter(defaultWeekStart) || now.isSame(defaultWeekStart)
+        ? defaultWeekStart.add(n * 7, 'day').toISOString()
+        : defaultWeekStart.add((n - 1) * 7, 'day').toISOString();
   }
 }
 
@@ -463,13 +499,18 @@ export function calculateNextDue(
  * Get the initial due date for a new recurring item.
  * This is the end of the current period:
  * - Daily: midnight tonight (end of today)
- * - Weekly: next Monday at midnight (end of this week)
+ * - Weekly: start of next week at midnight (end of this week)
  * - Monthly: 1st of next month at midnight (end of this month)
  * - Annually: January 1st of next year at midnight (end of this year)
+ *
+ * @param frequency The recurrence frequency
+ * @param tz The timezone to use for calculation
+ * @param weekStartDay The day the week starts on (0=Sunday, 1=Monday, etc.) - defaults to Monday
  */
 export function getInitialDueDate(
   frequency: Frequency,
-  tz: string = TIMEZONE
+  tz: string = TIMEZONE,
+  weekStartDay: WeekStartDay = DEFAULT_WEEK_START_DAY
 ): string {
   const now = getNowNY();
   
@@ -478,10 +519,15 @@ export function getInitialDueDate(
       // End of today = midnight tomorrow
       return now.add(1, 'day').startOf('day').toISOString();
     case 'weekly':
-      // End of this week = next Monday at midnight
-      const currentMonday = now.weekday(1).startOf('day');
-      const nextMonday = currentMonday.add(7, 'day');
-      return nextMonday.toISOString();
+      // End of this week = start of next week at midnight
+      const currentDay = now.day();
+      let daysToWeekStart = currentDay - weekStartDay;
+      if (daysToWeekStart < 0) {
+        daysToWeekStart += 7;
+      }
+      const currentWeekStart = now.subtract(daysToWeekStart, 'day').startOf('day');
+      const nextWeekStart = currentWeekStart.add(7, 'day');
+      return nextWeekStart.toISOString();
     case 'monthly':
       // End of this month = 1st of next month
       return now.add(1, 'month').startOf('month').toISOString();
@@ -490,8 +536,13 @@ export function getInitialDueDate(
       return now.add(1, 'year').startOf('year').toISOString();
     default:
       // Default to weekly
-      const defaultMonday = now.weekday(1).startOf('day').add(7, 'day');
-      return defaultMonday.toISOString();
+      const defaultDay = now.day();
+      let defaultDaysToWeekStart = defaultDay - weekStartDay;
+      if (defaultDaysToWeekStart < 0) {
+        defaultDaysToWeekStart += 7;
+      }
+      const defaultWeekStart = now.subtract(defaultDaysToWeekStart, 'day').startOf('day').add(7, 'day');
+      return defaultWeekStart.toISOString();
   }
 }
 
@@ -547,15 +598,16 @@ export function isRecurrenceOverdue(nextDue: string | undefined): boolean {
  * Generate a period key for the current period based on frequency.
  * The period key is the DUE DATE (last day of the period) in YYYYMMDD format:
  * - Daily: "20260113" (today's date - due at end of today)
- * - Weekly: "20260119" (Sunday's date - due at end of week)
+ * - Weekly: "20260119" (last day of week based on weekStartDay)
  * - Monthly: "20260131" (last day of month)
  * - Annually: "20261231" (December 31st)
  *
  * @param frequency The recurrence frequency
  * @param date Optional date to use (defaults to now in EST)
+ * @param weekStartDay The day the week starts on (0=Sunday, 1=Monday, etc.) - defaults to Monday
  * @returns Period key string in YYYYMMDD format
  */
-export function getCurrentPeriodKey(frequency: Frequency, date?: dayjs.Dayjs): string {
+export function getCurrentPeriodKey(frequency: Frequency, date?: dayjs.Dayjs, weekStartDay: WeekStartDay = DEFAULT_WEEK_START_DAY): string {
   const d = date || getNowNY();
   
   switch (frequency) {
@@ -563,13 +615,16 @@ export function getCurrentPeriodKey(frequency: Frequency, date?: dayjs.Dayjs): s
       // Due at end of today
       return d.format('YYYYMMDD');
     case 'weekly':
-      // Due at end of week (Sunday)
-      // Get Sunday of current week
-      const sunday = d.weekday(0).add(7, 'day'); // weekday(0) is previous Sunday, add 7 for this Sunday
-      // Actually, let's use end of week as Saturday or Sunday based on week start
-      // Using ISO week: week ends on Sunday, so get next Sunday
-      const endOfWeek = d.endOf('week'); // Sunday
-      return endOfWeek.format('YYYYMMDD');
+      // Due at end of week (day before next week start)
+      const currentDay = d.day();
+      let daysToWeekStart = currentDay - weekStartDay;
+      if (daysToWeekStart < 0) {
+        daysToWeekStart += 7;
+      }
+      // Week starts on weekStartDay, so it ends the day before
+      const currentWeekStart = d.subtract(daysToWeekStart, 'day').startOf('day');
+      const weekEnd = currentWeekStart.add(6, 'day'); // 6 days after week start = last day of week
+      return weekEnd.format('YYYYMMDD');
     case 'monthly':
       // Due at end of month
       return d.endOf('month').format('YYYYMMDD');
@@ -583,15 +638,26 @@ export function getCurrentPeriodKey(frequency: Frequency, date?: dayjs.Dayjs): s
 
 /**
  * Generate the period key for the NEXT period.
+ * @param frequency The recurrence frequency
+ * @param date Optional date to use (defaults to now in EST)
+ * @param weekStartDay The day the week starts on (0=Sunday, 1=Monday, etc.) - defaults to Monday
  */
-export function getNextPeriodKey(frequency: Frequency, date?: dayjs.Dayjs): string {
+export function getNextPeriodKey(frequency: Frequency, date?: dayjs.Dayjs, weekStartDay: WeekStartDay = DEFAULT_WEEK_START_DAY): string {
   const d = date || getNowNY();
   
   switch (frequency) {
     case 'daily':
       return d.add(1, 'day').format('YYYYMMDD');
     case 'weekly':
-      return d.add(1, 'week').endOf('week').format('YYYYMMDD');
+      // Next week's end date
+      const currentDay = d.day();
+      let daysToWeekStart = currentDay - weekStartDay;
+      if (daysToWeekStart < 0) {
+        daysToWeekStart += 7;
+      }
+      const currentWeekStart = d.subtract(daysToWeekStart, 'day').startOf('day');
+      const nextWeekEnd = currentWeekStart.add(13, 'day'); // 7 days to next week start + 6 days to week end
+      return nextWeekEnd.format('YYYYMMDD');
     case 'monthly':
       return d.add(1, 'month').endOf('month').format('YYYYMMDD');
     case 'annually':

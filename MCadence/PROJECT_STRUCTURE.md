@@ -50,7 +50,7 @@ src/
 │   │   ├── SettingsModal.tsx        # App settings (backup, timers, swipe config)
 │   │   ├── SwipeableItem.tsx        # Swipe gestures (configurable actions)
 │   │   ├── TabBar.tsx               # Tab navigation
-│   │   └── TabHeader.tsx            # Shared tab header with archive button
+│   │   └── TabHeader.tsx            # Shared tab header (archive icon, add button, filter)
 │   └── ai/                 # AI Feature components
 │       ├── AiPanel.tsx         # AI settings panel
 │       ├── InsightCard.tsx     # Insight display
@@ -104,6 +104,17 @@ Central type definitions used throughout the app:
 // Tab identifiers
 type TabId = "dayToDay" | "hitMyGoal" | "spendMyTime";
 
+// Base item structure (common fields)
+interface BaseItem {
+  id: string;
+  tab: TabId;
+  title: string;
+  isArchived: boolean;
+  isDeleted?: boolean;    // Soft-delete flag (keeps data, hides from UI)
+  deletedAt?: string;     // When the item was soft-deleted
+  // ... other fields
+}
+
 // Item types
 interface ChecklistItem extends BaseItem { ... }  // For dayToDay, hitMyGoal
 interface TimeItem extends BaseItem { ... }       // For spendMyTime
@@ -133,6 +144,14 @@ const { state, addChecklistItem, addTimeItem, updateItem, ... } = useAppState();
 archiveAllCompletedInTab(tabId)  // Batch archive all completed items in a tab
 isItemCompleted(item)            // Helper to check completion status
 ```
+
+**Soft-Delete Behavior:**
+
+Items are soft-deleted rather than hard-deleted:
+- When deleted, items are marked with `isDeleted: true` and `deletedAt` timestamp
+- Item data and all action logs are preserved in storage (for history/analytics)
+- Soft-deleted items are filtered out from all UI views
+- Recurring items that are deleted will NOT generate new occurrences
 
 **Recurring Item Auto-Creation:**
 
@@ -172,6 +191,9 @@ interface AppSettings {
   // Timer concurrency
   allowConcurrentTimers: boolean;  // Allow multiple timers in Spend My Time
   
+  // Week start day (0=Sunday, 1=Monday, ..., 6=Saturday)
+  weekStartDay: WeekStartDay;  // Affects recurring item due dates for weekly items
+  
   // Swipe action configuration per tab
   swipeConfig: {
     dayToDay: { left: SwipeAction; right: SwipeAction };
@@ -180,6 +202,7 @@ interface AppSettings {
   };
 }
 
+type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6;  // Sunday=0 through Saturday=6
 type SwipeAction = 'delete' | 'archive';
 ```
 
@@ -344,6 +367,20 @@ Supports both touch (mobile) and mouse (desktop) interactions.
 Swipe actions are configurable per-tab in Settings.
 Long press on SpendMyTime items opens an edit modal for name, category, and completed time.
 Recurrence editing remains accessible via the small recurrence icon on items.
+
+### TabHeader Component (`src/components/ui/TabHeader.tsx`)
+
+Shared header component used across all three tabs with unified styling:
+- **Archive Icon Button** - Box icon that toggles archive view
+  - Click: Toggle between active items and archived items view
+  - Long press (500ms): Archive all completed items in the current tab
+  - Shows count badge when there are archived items
+  - Shows green dot indicator when there are completed items to archive
+  - Tooltip shows "Long press to archive X completed" on hover
+- **Add Button** - "+" icon to open add item modal
+- **Category Filter** - Dropdown to filter items by category
+
+All buttons use unified sizing (w-9 h-9) for visual consistency.
 
 ### SettingsModal Component (`src/components/ui/SettingsModal.tsx`)
 
