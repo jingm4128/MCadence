@@ -46,14 +46,13 @@ export function SwipeableItem({
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (disabled) return;
     startXRef.current = e.touches[0].clientX;
     currentXRef.current = translateX;
     setIsTransitioning(false);
     isLongPressRef.current = false;
     hasMoved.current = false;
     
-    // Start long press timer
+    // Start long press timer (always allow long press even when swipes are disabled)
     if (onLongPress) {
       longPressTimerRef.current = setTimeout(() => {
         if (!hasMoved.current) {
@@ -62,10 +61,10 @@ export function SwipeableItem({
         }
       }, longPressDelay);
     }
-  }, [disabled, translateX, onLongPress, longPressDelay]);
+  }, [translateX, onLongPress, longPressDelay]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (disabled || startXRef.current === null) return;
+    if (startXRef.current === null) return;
     
     const currentX = e.touches[0].clientX;
     const diff = currentX - startXRef.current;
@@ -76,21 +75,30 @@ export function SwipeableItem({
       clearLongPressTimer();
     }
     
-    // Limit the swipe distance
-    const maxSwipe = 120;
-    const newTranslate = Math.max(-maxSwipe, Math.min(maxSwipe, diff));
-    
-    setTranslateX(newTranslate);
+    // Only apply swipe translation if not disabled
+    if (!disabled) {
+      // Limit the swipe distance
+      const maxSwipe = 120;
+      const newTranslate = Math.max(-maxSwipe, Math.min(maxSwipe, diff));
+      
+      setTranslateX(newTranslate);
+    }
   }, [disabled, clearLongPressTimer]);
 
   const handleTouchEnd = useCallback(() => {
     clearLongPressTimer();
     
-    if (disabled || startXRef.current === null) return;
+    if (startXRef.current === null) return;
     
     // If long press was triggered, don't do swipe action
     if (isLongPressRef.current) {
       setTranslateX(0);
+      startXRef.current = null;
+      return;
+    }
+    
+    // If swipes are disabled, just reset
+    if (disabled) {
       startXRef.current = null;
       return;
     }
@@ -121,14 +129,13 @@ export function SwipeableItem({
 
   // Mouse events for desktop testing
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (disabled) return;
     startXRef.current = e.clientX;
     currentXRef.current = translateX;
     setIsTransitioning(false);
     isLongPressRef.current = false;
     hasMoved.current = false;
     
-    // Start long press timer for mouse
+    // Start long press timer for mouse (always allow long press even when swipes are disabled)
     if (onLongPress) {
       longPressTimerRef.current = setTimeout(() => {
         if (!hasMoved.current) {
@@ -149,15 +156,17 @@ export function SwipeableItem({
         clearLongPressTimer();
       }
       
-      const maxSwipe = 120;
-      const newTranslate = Math.max(-maxSwipe, Math.min(maxSwipe, diff));
-      
-      setTranslateX(newTranslate);
+      // Only apply swipe translation if not disabled
+      if (!disabled) {
+        const maxSwipe = 120;
+        const newTranslate = Math.max(-maxSwipe, Math.min(maxSwipe, diff));
+        
+        setTranslateX(newTranslate);
+      }
     };
     
     const handleMouseUp = () => {
       clearLongPressTimer();
-      setIsTransitioning(true);
       
       // If long press was triggered, don't do swipe action
       if (isLongPressRef.current) {
@@ -167,6 +176,16 @@ export function SwipeableItem({
         document.removeEventListener('mouseup', handleMouseUp);
         return;
       }
+      
+      // If swipes are disabled, just cleanup
+      if (disabled) {
+        startXRef.current = null;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        return;
+      }
+      
+      setIsTransitioning(true);
       
       if (translateX < -threshold && onSwipeLeft) {
         setTranslateX(-150);

@@ -10,7 +10,7 @@ import { SpendMyTimeTab } from '@/components/tabs/SpendMyTimeTab';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { ImportExportModal } from '@/components/ui/ImportExportModal';
 import { SettingsModal } from '@/components/ui/SettingsModal';
-import { exportState, clearState, saveStateImmediate, saveCategories, loadSettings, isBackupDue, performAutoBackup } from '@/lib/storage';
+import { exportState, clearState, saveStateImmediate, saveCategories, loadSettings, saveSettings, isBackupDue, performAutoBackup } from '@/lib/storage';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 import { useHistoryGuard, useModalHistory, ModalId } from '@/hooks/useHistoryGuard';
 
@@ -95,6 +95,17 @@ export default function HomePageContent() {
   useEffect(() => {
     const checkAutoBackup = () => {
       const settings = loadSettings();
+      
+      // On first load (no previous backup), just initialize the backup date without performing a backup
+      // This prevents an immediate JSON file dump on initial app load
+      if (!settings.lastBackupDate && settings.backupFrequency !== 'never') {
+        saveSettings({
+          ...settings,
+          lastBackupDate: new Date().toISOString(),
+        });
+        return;
+      }
+      
       if (isBackupDue(settings)) {
         // Perform automatic backup
         performAutoBackup();
