@@ -281,6 +281,16 @@ Parses natural language into structured tasks/goals/projects.
 4. AI returns proposals with tab, recurrence, duration
 5. User edits/approves proposals → items created
 
+**Proposal Editing Features:**
+- **Tab Selection** - Switch between Day to Day, Hit My Goal, Spend My Time
+- **Title** - Edit the item title
+- **Category** - Select from available categories
+- **Recurrence** - One-off, Daily, Weekly, Monthly (for hitMyGoal and spendMyTime)
+- **Interval** - "Every X" days/weeks/months (e.g., every 2 weeks) - available when recurrence is enabled
+- **Duration** - Time goal per period (for spendMyTime)
+- **Due Date** (optional) - Available for all tabs, allows setting a deadline
+- **Total Occurrences** - Limit recurring items (leave empty for forever)
+
 ### 2. Insights (`src/lib/ai/insight/`)
 
 Generates weekly productivity insights from aggregated stats.

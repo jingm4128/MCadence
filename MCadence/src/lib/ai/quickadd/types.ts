@@ -58,10 +58,12 @@ export interface ProposalSelection {
   editedTab?: QuickAddTab;
   editedCategoryId?: string;
   editedRecurrence?: RecurrenceType;
+  editedInterval?: number; // Repeat every N periods (e.g., 2 = every 2 days/weeks/months)
   editedDurationMinutes?: number;
   editedFrequencyPerWeek?: number;
   editedRequiredMinutes?: number; // For time projects
   editedTotalOccurrences?: number; // For hitMyGoal recurring items
+  editedDueDate?: string | null; // ISO timestamp for due date (optional)
 }
 
 // ============================================================================
