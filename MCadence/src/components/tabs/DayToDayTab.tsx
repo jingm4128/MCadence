@@ -202,12 +202,13 @@ export function DayToDayTab() {
             const swipeHandlers = getSwipeHandlers(item.id);
             
             // Calculate urgency for items with due date
-            const hasDueDate = !!item.dueDate;
+            const dueDate = item.dueDate ?? undefined;  // Convert null to undefined for type compatibility
+            const hasDueDate = !!dueDate;
             const urgencyStatus: UrgencyStatus = hasDueDate
-              ? getUrgencyStatus(item.dueDate, item.isDone)
+              ? getUrgencyStatus(dueDate, item.isDone)
               : item.isDone ? 'complete' : 'normal';
             const urgencyClasses = getUrgencyClasses(urgencyStatus);
-            const timeUntilDue = hasDueDate ? formatTimeUntilDue(item.dueDate) : '';
+            const timeUntilDue = hasDueDate ? formatTimeUntilDue(dueDate) : '';
             
             return (
               <SwipeableItem

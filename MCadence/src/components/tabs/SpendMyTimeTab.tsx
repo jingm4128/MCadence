@@ -415,7 +415,7 @@ export function SpendMyTimeTab() {
             const progress = Math.min(1, project.completedMinutes / project.requiredMinutes);
             
             // Check urgency - prioritize dueDate, then recurrence nextDue
-            const effectiveDueDate = project.dueDate || project.recurrence?.nextDue;
+            const effectiveDueDate = (project.dueDate ?? project.recurrence?.nextDue) ?? undefined;  // Convert null to undefined
             const hasRecurrence = !!project.recurrence;
             const hasDueDate = !!effectiveDueDate;
             const remainingMinutes = Math.max(0, project.requiredMinutes - project.completedMinutes);

@@ -300,7 +300,7 @@ export function HitMyGoalTab() {
             if (!isChecklistItem(item)) return null;
             
             // Calculate urgency - prioritize dueDate, then recurrence nextDue
-            const effectiveDueDate = item.dueDate || item.recurrence?.nextDue;
+            const effectiveDueDate = (item.dueDate ?? item.recurrence?.nextDue) ?? undefined;  // Convert null to undefined
             const hasRecurrence = !!item.recurrence;
             const hasDueDate = !!effectiveDueDate;
             const urgencyStatus: UrgencyStatus = hasDueDate
