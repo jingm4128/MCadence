@@ -11,6 +11,7 @@ import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryI
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import { loadSettings } from '@/lib/storage';
+import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, formatDateYMD, UrgencyStatus } from '@/utils/date';
 
 export function DayToDayTab() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -21,6 +22,7 @@ export function DayToDayTab() {
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
     categoryId: DEFAULT_CATEGORY_ID,
+    dueDate: undefined,
   });
 
   const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, archiveAllCompletedInTab, state } = useAppState();
@@ -49,9 +51,23 @@ export function DayToDayTab() {
   const handleAddItem = () => {
     if (formData.title.trim()) {
       addChecklistItem('dayToDay', formData);
-      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID });
+      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID, dueDate: undefined });
       setShowAddModal(false);
     }
+  };
+
+  // Helper to convert date input value to ISO string (end of day)
+  const dateInputToISO = (dateStr: string): string => {
+    // Parse YYYY-MM-DD and set to end of day in local time
+    const date = new Date(dateStr + 'T23:59:59');
+    return date.toISOString();
+  };
+
+  // Helper to convert ISO string to date input value
+  const isoToDateInput = (isoStr: string | null | undefined): string => {
+    if (!isoStr) return '';
+    const date = new Date(isoStr);
+    return date.toISOString().split('T')[0];
   };
 
   const handleArchive = (id: string) => {
@@ -184,6 +200,15 @@ export function DayToDayTab() {
           {items.map((item) => {
             if (!isChecklistItem(item)) return null;
             const swipeHandlers = getSwipeHandlers(item.id);
+            
+            // Calculate urgency for items with due date
+            const hasDueDate = !!item.dueDate;
+            const urgencyStatus: UrgencyStatus = hasDueDate
+              ? getUrgencyStatus(item.dueDate, item.isDone)
+              : item.isDone ? 'complete' : 'normal';
+            const urgencyClasses = getUrgencyClasses(urgencyStatus);
+            const timeUntilDue = hasDueDate ? formatTimeUntilDue(item.dueDate) : '';
+            
             return (
               <SwipeableItem
                 key={item.id}
@@ -195,7 +220,13 @@ export function DayToDayTab() {
                 rightColor={swipeHandlers.rightColor}
               >
                 <div
-                  className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm category-transition hover-lift"
+                  className={`bg-white px-3 py-1.5 rounded-lg border shadow-sm category-transition hover-lift ${
+                    urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
+                      ? `${urgencyClasses.border} ${urgencyClasses.bg}`
+                      : urgencyStatus === 'warning'
+                      ? `${urgencyClasses.border} ${urgencyClasses.bg}`
+                      : 'border-gray-200'
+                  }`}
                   style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
                 >
                   <div className="flex items-center gap-2">
@@ -206,10 +237,24 @@ export function DayToDayTab() {
                       className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className={`text-sm font-medium truncate ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                        {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
-                        {item.title}
-                      </h3>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className={`text-sm font-medium truncate ${
+                          item.isDone
+                            ? 'text-gray-500 line-through'
+                            : urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
+                            ? urgencyClasses.text
+                            : 'text-gray-900'
+                        }`}>
+                          {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
+                          {item.title}
+                        </h3>
+                        {/* Time left badge for items with due date */}
+                        {hasDueDate && timeUntilDue && !item.isDone && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
+                            {timeUntilDue}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -256,7 +301,36 @@ export function DayToDayTab() {
             />
           </div>
           
-          {/* Color is now determined by category */}
+          {/* Due Date (optional) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Due Date (optional)
+            </label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="date"
+                value={isoToDateInput(formData.dueDate)}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  dueDate: e.target.value ? dateInputToISO(e.target.value) : null
+                })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent form-input"
+              />
+              {formData.dueDate && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, dueDate: null })}
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  title="Clear due date"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Leave empty for no due date</p>
+          </div>
           
           <div className="flex justify-end gap-3 pt-4">
             <Button

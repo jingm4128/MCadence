@@ -47,8 +47,22 @@ export function HitMyGoalTab() {
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
     categoryId: DEFAULT_CATEGORY_ID,
+    dueDate: undefined,
     recurrence: undefined,
   });
+
+  // Helper to convert date input value to ISO string (end of day)
+  const dateInputToISO = (dateStr: string): string => {
+    const date = new Date(dateStr + 'T23:59:59');
+    return date.toISOString();
+  };
+
+  // Helper to convert ISO string to date input value
+  const isoToDateInput = (isoStr: string | null | undefined): string => {
+    if (!isoStr) return '';
+    const date = new Date(isoStr);
+    return date.toISOString().split('T')[0];
+  };
 
   const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, updateItem, archiveAllCompletedInTab, state } = useAppState();
 
@@ -96,7 +110,7 @@ export function HitMyGoalTab() {
   const handleAddItem = () => {
     if (formData.title.trim()) {
       addChecklistItem('hitMyGoal', formData);
-      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID, recurrence: undefined });
+      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID, dueDate: undefined, recurrence: undefined });
       setShowAddModal(false);
     }
   };
@@ -285,13 +299,15 @@ export function HitMyGoalTab() {
           {items.map((item) => {
             if (!isChecklistItem(item)) return null;
             
-            // Calculate urgency for recurring items
+            // Calculate urgency - prioritize dueDate, then recurrence nextDue
+            const effectiveDueDate = item.dueDate || item.recurrence?.nextDue;
             const hasRecurrence = !!item.recurrence;
-            const urgencyStatus: UrgencyStatus = hasRecurrence
-              ? getUrgencyStatus(item.recurrence?.nextDue, item.isDone)
+            const hasDueDate = !!effectiveDueDate;
+            const urgencyStatus: UrgencyStatus = hasDueDate
+              ? getUrgencyStatus(effectiveDueDate, item.isDone)
               : item.isDone ? 'complete' : 'normal';
             const urgencyClasses = getUrgencyClasses(urgencyStatus);
-            const timeUntilDue = hasRecurrence ? formatTimeUntilDue(item.recurrence?.nextDue) : '';
+            const timeUntilDue = hasDueDate ? formatTimeUntilDue(effectiveDueDate) : '';
             
             const swipeHandlers = getSwipeHandlers(item.id);
             return (
@@ -333,8 +349,8 @@ export function HitMyGoalTab() {
                           {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                           {item.title}
                         </h3>
-                        {/* Time left badge for recurring items */}
-                        {hasRecurrence && timeUntilDue && !item.isDone && (
+                        {/* Time left badge for items with due dates */}
+                        {hasDueDate && timeUntilDue && !item.isDone && (
                           <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
                             {timeUntilDue}
                           </span>
@@ -397,11 +413,42 @@ export function HitMyGoalTab() {
             />
           </div>
           
+          {/* Due Date - only show when no recurrence is set */}
+          {!formData.recurrence?.enabled && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Due Date (optional)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={isoToDateInput(formData.dueDate)}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    dueDate: e.target.value ? dateInputToISO(e.target.value) : undefined
+                  })}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                {formData.dueDate && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, dueDate: undefined })}
+                    className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    title="Clear due date"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Set a due date to track urgency</p>
+            </div>
+          )}
+
           {/* Recurrence Settings */}
           <div>
             <RecurrenceSelector
               value={formData.recurrence}
-              onChange={(recurrence) => setFormData({ ...formData, recurrence })}
+              onChange={(recurrence) => setFormData({ ...formData, recurrence, dueDate: recurrence?.enabled ? undefined : formData.dueDate })}
             />
           </div>
           

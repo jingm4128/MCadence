@@ -550,6 +550,8 @@ export function useAppState() {
       isDone: false,
       createdAt: now,
       updatedAt: now,
+      // Add dueDate if provided (for non-recurring items)
+      ...(form.dueDate !== undefined && { dueDate: form.dueDate }),
       ...(recurrence && { recurrence }),
     };
 
@@ -558,7 +560,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab,
       type: 'create',
-      payload: recurrence ? { recurrence, periodKey } : undefined,
+      payload: recurrence ? { recurrence, periodKey } : (form.dueDate ? { dueDate: form.dueDate } : undefined),
     });
   };
 
@@ -599,6 +601,8 @@ export function useAppState() {
       periodEnd: toISOStringLocal(weekEnd),
       createdAt: isoNow,
       updatedAt: isoNow,
+      // Add dueDate if provided (for non-recurring items)
+      ...(form.dueDate !== undefined && { dueDate: form.dueDate }),
       ...(recurrence && { recurrence }),
     };
 
@@ -607,7 +611,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab: 'spendMyTime',
       type: 'create',
-      payload: recurrence ? { recurrence, periodKey } : undefined,
+      payload: recurrence ? { recurrence, periodKey } : (form.dueDate ? { dueDate: form.dueDate } : undefined),
     });
   };
 
@@ -794,16 +798,22 @@ export function useAppState() {
         return aIsDone ? 1 : -1; // Done items at bottom
       }
       
-      // 2. Sort by due date (earlier due dates come first)
-      const aDue = a.recurrence?.nextDue;
-      const bDue = b.recurrence?.nextDue;
+      // 2. Sort by due date (earlier due dates come first, no due date at bottom)
+      // Use dueDate field first, fall back to recurrence.nextDue for recurring items
+      const aDue = a.dueDate || a.recurrence?.nextDue;
+      const bDue = b.dueDate || b.recurrence?.nextDue;
+      
+      // Items with no due date go to the bottom
+      const aHasDue = !!aDue;
+      const bHasDue = !!bDue;
+      if (aHasDue !== bHasDue) {
+        return aHasDue ? -1 : 1; // Items with due dates come first
+      }
+      
+      // Both have due dates - sort by date (earlier first)
       if (aDue && bDue) {
         const dateDiff = new Date(aDue).getTime() - new Date(bDue).getTime();
         if (dateDiff !== 0) return dateDiff;
-      } else if (aDue && !bDue) {
-        return -1; // Items with due dates come first
-      } else if (!aDue && bDue) {
-        return 1;
       }
       
       // 3. Sort by category and subcategory

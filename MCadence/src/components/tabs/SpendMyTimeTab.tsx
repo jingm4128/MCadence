@@ -44,8 +44,22 @@ export function SpendMyTimeTab() {
     categoryId: DEFAULT_CATEGORY_ID,
     requiredHours: 1,
     requiredMinutes: 0,
+    dueDate: undefined,
     recurrence: undefined,
   });
+
+  // Helper to convert date input value to ISO string (end of day)
+  const dateInputToISO = (dateStr: string): string => {
+    const date = new Date(dateStr + 'T23:59:59');
+    return date.toISOString();
+  };
+
+  // Helper to convert ISO string to date input value
+  const isoToDateInput = (isoStr: string | null | undefined): string => {
+    if (!isoStr) return '';
+    const date = new Date(isoStr);
+    return date.toISOString().split('T')[0];
+  };
 
   const {
     getItemsByTab,
@@ -114,6 +128,7 @@ export function SpendMyTimeTab() {
         categoryId: DEFAULT_CATEGORY_ID,
         requiredHours: 1,
         requiredMinutes: 0,
+        dueDate: undefined,
         recurrence: undefined
       });
       setShowAddModal(false);
@@ -399,14 +414,16 @@ export function SpendMyTimeTab() {
             const isActive = activeTimerProject?.id === project.id;
             const progress = Math.min(1, project.completedMinutes / project.requiredMinutes);
             
-            // Check recurrence urgency for additional visual indicators using work-based calculation
+            // Check urgency - prioritize dueDate, then recurrence nextDue
+            const effectiveDueDate = project.dueDate || project.recurrence?.nextDue;
             const hasRecurrence = !!project.recurrence;
+            const hasDueDate = !!effectiveDueDate;
             const remainingMinutes = Math.max(0, project.requiredMinutes - project.completedMinutes);
-            const recurrenceUrgency: UrgencyStatus = hasRecurrence
-              ? getUrgencyStatusWithWork(project.recurrence?.nextDue, remainingMinutes, progress >= 1)
+            const itemUrgency: UrgencyStatus = hasDueDate
+              ? getUrgencyStatusWithWork(effectiveDueDate, remainingMinutes, progress >= 1)
               : 'normal';
-            const urgencyClasses = getUrgencyClasses(recurrenceUrgency);
-            const timeUntilDue = hasRecurrence ? formatTimeUntilDue(project.recurrence?.nextDue) : '';
+            const urgencyClasses = getUrgencyClasses(itemUrgency);
+            const timeUntilDue = hasDueDate ? formatTimeUntilDue(effectiveDueDate) : '';
             
             // Calculate progress percentage for background
             const progressPercent = Math.min(100, progress * 100);
@@ -476,8 +493,8 @@ export function SpendMyTimeTab() {
                             {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
                             {project.title}
                           </h3>
-                          {/* Urgency badge for recurring items */}
-                          {hasRecurrence && timeUntilDue && progress < 1 && (
+                          {/* Urgency badge for items with due dates */}
+                          {hasDueDate && timeUntilDue && progress < 1 && (
                             <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
                               {timeUntilDue}
                             </span>
@@ -601,11 +618,42 @@ export function SpendMyTimeTab() {
             </div>
           </div>
           
+          {/* Due Date - only show when no recurrence is set */}
+          {!formData.recurrence?.enabled && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Due Date (optional)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={isoToDateInput(formData.dueDate)}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    dueDate: e.target.value ? dateInputToISO(e.target.value) : undefined
+                  })}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                {formData.dueDate && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, dueDate: undefined })}
+                    className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    title="Clear due date"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Set a due date to track urgency</p>
+            </div>
+          )}
+
           {/* Recurrence Settings */}
           <div>
             <RecurrenceSelector
               value={formData.recurrence}
-              onChange={(recurrence) => setFormData({ ...formData, recurrence })}
+              onChange={(recurrence) => setFormData({ ...formData, recurrence, dueDate: recurrence?.enabled ? undefined : formData.dueDate })}
             />
           </div>
           

@@ -112,6 +112,7 @@ interface BaseItem {
   isArchived: boolean;
   isDeleted?: boolean;    // Soft-delete flag (keeps data, hides from UI)
   deletedAt?: string;     // When the item was soft-deleted
+  dueDate?: string | null; // Optional due date (ISO timestamp) - items with no dueDate sort to bottom
   // ... other fields
 }
 
@@ -143,6 +144,10 @@ const { state, addChecklistItem, addTimeItem, updateItem, ... } = useAppState();
 // Archive features
 archiveAllCompletedInTab(tabId)  // Batch archive all completed items in a tab
 isItemCompleted(item)            // Helper to check completion status
+
+// Item sorting by due date
+// Items are sorted by effective due date (dueDate || recurrence.nextDue)
+// Items with no due date are placed at the bottom
 ```
 
 **Soft-Delete Behavior:**
@@ -326,6 +331,7 @@ isPeriodPassed(periodKey, frequency)
 getUrgencyStatus(nextDue, isComplete)              // Basic time-based urgency
 getUrgencyStatusWithWork(nextDue, remainingMin, isComplete)  // Work-based urgency
 // Alert when: time left < 3X of remaining work time
+// Effective due date: uses dueDate if set, otherwise recurrence.nextDue
 ```
 
 ---
