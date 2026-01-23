@@ -631,6 +631,12 @@ export function SpendMyTimeTab() {
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && formData.title.trim() && (formData.requiredHours > 0 || formData.requiredMinutes > 0)) {
+                  e.preventDefault();
+                  handleAddProject();
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Enter project title"
               autoFocus
@@ -781,6 +787,12 @@ export function SpendMyTimeTab() {
                   ...editItemState,
                   title: e.target.value
                 })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editItemState.title.trim()) {
+                    e.preventDefault();
+                    confirmEditItem();
+                  }
+                }}
                 onFocus={(e) => e.target.select()}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter project title"

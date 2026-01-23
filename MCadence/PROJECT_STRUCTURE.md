@@ -15,6 +15,8 @@ MCadence is a productivity tracking application built with Next.js 14 (App Route
 - Configurable swipe gestures per tab
 - Long press to edit items (SpendMyTime: name, category, and time spent)
 - Notes support for all items (free-form text notes per item/occurrence)
+- Enter key to save in edit modals (except notes which use Ctrl+Enter)
+- Long press to edit AI settings items
 
 ---
 
@@ -428,6 +430,22 @@ Pattern for AI feature components:
 3. Display results with edit capability
 4. Handle approval/rejection
 
+### AI Settings Panel (`src/components/ai/AiPanel.tsx`)
+
+The AI Settings panel uses a long-press-to-edit pattern for each setting item:
+- **Provider** - Shows current provider, long press to select different provider
+- **API Key** - Shows masked key or "Not configured", long press to edit
+- **Model** - Shows current model, long press to select different model
+
+Each setting displays as a read-only field that becomes editable on long press (500ms).
+Pressing Enter saves the API key; pressing Escape cancels editing.
+
+### Keyboard Shortcuts
+
+**Add/Edit Modals:**
+- **Enter** - Save and close modal (for title inputs in Add Task, Add Goal, Add Project, Edit Project)
+- Notes editor uses **Ctrl+Enter** (not Enter) to prevent accidental saves while typing
+
 ---
 
 ## API Route Pattern
@@ -464,5 +482,7 @@ export async function POST(request: NextRequest) {
 | Add long press editing | `SwipeableItem.tsx`, tab component (add onLongPress handler) |
 | Recurring item deletion | `state.tsx` (deleteRecurringSeries), `Modal.tsx` (RecurrenceDeleteDialog), tab components |
 | Edit item notes | `Modal.tsx` (NotesEditorModal), tab components (notes button + editNotesState) |
+| Enter key to save | Tab components (add onKeyDown handler to title inputs) |
+| AI settings editing | `AiPanel.tsx` (AISettingsPanel with long press pattern) |
 
 

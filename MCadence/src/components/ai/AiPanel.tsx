@@ -184,8 +184,10 @@ function PeriodSelector({
 }
 
 // ============================================================================
-// AI Settings Component - Multi-Provider Support
+// AI Settings Component - Multi-Provider Support with Long Press to Edit
 // ============================================================================
+
+type EditingField = 'provider' | 'apiKey' | 'model' | null;
 
 interface AISettingsPanelProps {
   userSettings: UserAISettings;
@@ -195,6 +197,35 @@ interface AISettingsPanelProps {
   onModelChange: (provider: AIProvider, model: string) => void;
   onReset: () => void;
   onClose: () => void;
+}
+
+// Long press hook for settings items
+function useLongPress(callback: () => void, delay: number = 500) {
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const isLongPress = React.useRef(false);
+
+  const start = React.useCallback(() => {
+    isLongPress.current = false;
+    timeoutRef.current = setTimeout(() => {
+      isLongPress.current = true;
+      callback();
+    }, delay);
+  }, [callback, delay]);
+
+  const stop = React.useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  return {
+    onMouseDown: start,
+    onMouseUp: stop,
+    onMouseLeave: stop,
+    onTouchStart: start,
+    onTouchEnd: stop,
+  };
 }
 
 function AISettingsPanel({
@@ -210,6 +241,7 @@ function AISettingsPanel({
   const [showKey, setShowKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [editingField, setEditingField] = useState<EditingField>(null);
 
   const envDefaultProvider = getEnvDefaultProvider();
   const hasDefaultKey = hasEnvDefaultKey();
@@ -221,6 +253,11 @@ function AISettingsPanel({
   // Check if user can use the default API key
   const canUseDefault = canUseDefaultKey(currentProvider, currentModel);
 
+  // Long press handlers for each field
+  const providerLongPress = useLongPress(() => setEditingField('provider'));
+  const apiKeyLongPress = useLongPress(() => setEditingField('apiKey'));
+  const modelLongPress = useLongPress(() => setEditingField('model'));
+
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value === 'default') {
@@ -229,12 +266,20 @@ function AISettingsPanel({
       onProviderChange(value as AIProvider);
     }
     setError(null);
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false);
+      setEditingField(null);
+    }, 500);
   };
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onModelChange(currentProvider, e.target.value);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => {
+      setSaved(false);
+      setEditingField(null);
+    }, 500);
   };
 
   const handleSaveKey = () => {
@@ -246,10 +291,9 @@ function AISettingsPanel({
     onApiKeyChange(apiKey);
     setSaved(true);
     setError(null);
-    // Collapse settings panel after short delay to show success message
     setTimeout(() => {
       setSaved(false);
-      onClose();
+      setEditingField(null);
     }, 500);
   };
 
@@ -257,7 +301,10 @@ function AISettingsPanel({
     setApiKey('');
     onApiKeyChange('');
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => {
+      setSaved(false);
+      setEditingField(null);
+    }, 500);
   };
 
   const handleReset = () => {
@@ -265,6 +312,26 @@ function AISettingsPanel({
     onReset();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setApiKey(userSettings.apiKey); // Reset API key to saved value
+    setError(null);
+  };
+
+  // Get display text for provider
+  const getProviderDisplayText = () => {
+    if (userSettings.provider) {
+      return PROVIDERS[userSettings.provider].name;
+    }
+    return `Default (${PROVIDERS[envDefaultProvider].name})`;
+  };
+
+  // Get display text for model
+  const getModelDisplayText = () => {
+    const model = providerConfig.models.find(m => m.id === currentModel);
+    return model ? model.name : currentModel;
   };
 
   return (
@@ -286,83 +353,161 @@ function AISettingsPanel({
           </svg>
         </button>
       </div>
+
+      {/* Hint text */}
+      <p className="text-xs text-gray-400 mb-3">Long press on any item to edit</p>
       
       {/* Provider Selection */}
       <div className="mb-3">
         <label className="block text-sm text-gray-600 mb-1">AI Provider</label>
-        <select
-          value={userSettings.provider || 'default'}
-          onChange={handleProviderChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="default">
-            Default ({PROVIDERS[envDefaultProvider].name})
-            {hasDefaultKey ? ' ✓' : ''}
-          </option>
-          {PROVIDER_LIST.map(provider => (
-            <option key={provider.id} value={provider.id}>
-              {provider.name}
-            </option>
-          ))}
-        </select>
-        {canUseDefault && (
-          <p className="text-xs text-green-600 mt-1">
-            ✓ Using developer-provided API key
-          </p>
+        {editingField === 'provider' ? (
+          <div className="space-y-2">
+            <select
+              value={userSettings.provider || 'default'}
+              onChange={handleProviderChange}
+              autoFocus
+              className="w-full px-3 py-2 border border-primary-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+            >
+              <option value="default">
+                Default ({PROVIDERS[envDefaultProvider].name})
+                {hasDefaultKey ? ' ✓' : ''}
+              </option>
+              {PROVIDER_LIST.map(provider => (
+                <option key={provider.id} value={provider.id}>
+                  {provider.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleCancelEdit}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div
+            {...providerLongPress}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 select-none"
+          >
+            <span className="text-gray-800">{getProviderDisplayText()}</span>
+            {canUseDefault && (
+              <span className="text-xs text-green-600 ml-2">✓ using default key</span>
+            )}
+          </div>
         )}
       </div>
       
-      {/* API Key Input */}
+      {/* API Key */}
       <div className="mb-3">
         <label className="block text-sm text-gray-600 mb-1">
           {providerConfig.name} API Key
           {canUseDefault && (
-            <span className="text-xs text-gray-400 ml-2">(optional - using default)</span>
+            <span className="text-xs text-gray-400 ml-2">(optional)</span>
           )}
         </label>
-        <div className="relative">
-          <input
-            type={showKey ? 'text' : 'password'}
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder={providerConfig.apiKeyPlaceholder}
-            className="w-full px-3 py-2 pr-20 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
-          <button
-            type="button"
-            onClick={() => setShowKey(!showKey)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-700"
+        {editingField === 'apiKey' ? (
+          <div className="space-y-2">
+            <div className="relative">
+              <input
+                type={showKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSaveKey();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEdit();
+                  }
+                }}
+                placeholder={providerConfig.apiKeyPlaceholder}
+                autoFocus
+                className="w-full px-3 py-2 pr-20 border border-primary-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(!showKey)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 hover:text-gray-700"
+              >
+                {showKey ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {error && (
+              <p className="text-xs text-red-600">{error}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveKey}
+                className="px-3 py-1.5 bg-primary-600 text-white text-xs rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Save
+              </button>
+              {userSettings.apiKey && (
+                <button
+                  onClick={handleClearKey}
+                  className="px-3 py-1.5 text-gray-600 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={handleCancelEdit}
+                className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div
+            {...apiKeyLongPress}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 select-none"
           >
-            {showKey ? 'Hide' : 'Show'}
-          </button>
-        </div>
-        {userSettings.apiKey && (
-          <p className="text-xs text-gray-500 mt-1">
-            Current: {maskAPIKey(userSettings.apiKey)}
-          </p>
+            {userSettings.apiKey ? (
+              <span className="text-gray-800">{maskAPIKey(userSettings.apiKey)}</span>
+            ) : (
+              <span className="text-gray-400 italic">
+                {canUseDefault ? 'Using default key' : 'Not configured'}
+              </span>
+            )}
+          </div>
         )}
       </div>
       
       {/* Model Selection */}
       <div className="mb-3">
         <label className="block text-sm text-gray-600 mb-1">Model</label>
-        <select
-          value={currentModel}
-          onChange={handleModelChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          {providerConfig.models.map(model => (
-            <option key={model.id} value={model.id}>
-              {model.name} {model.description ? `(${model.description})` : ''}
-            </option>
-          ))}
-        </select>
+        {editingField === 'model' ? (
+          <div className="space-y-2">
+            <select
+              value={currentModel}
+              onChange={handleModelChange}
+              autoFocus
+              className="w-full px-3 py-2 border border-primary-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+            >
+              {providerConfig.models.map(model => (
+                <option key={model.id} value={model.id}>
+                  {model.name} {model.description ? `(${model.description})` : ''}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleCancelEdit}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div
+            {...modelLongPress}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 select-none"
+          >
+            <span className="text-gray-800">{getModelDisplayText()}</span>
+          </div>
+        )}
       </div>
-      
-      {/* Error Message */}
-      {error && (
-        <p className="text-sm text-red-600 mb-3">{error}</p>
-      )}
       
       {/* Success Message */}
       {saved && (
@@ -387,32 +532,18 @@ function AISettingsPanel({
         </p>
       </div>
       
-      {/* Actions */}
-      <div className="flex gap-2">
-        <button
-          onClick={handleSaveKey}
-          className="flex-1 px-3 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          Save API Key
-        </button>
-        {userSettings.apiKey && (
-          <button
-            onClick={handleClearKey}
-            className="px-3 py-2 text-gray-600 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Clear Key
-          </button>
-        )}
-        {userSettings.hasUserOverride && (
+      {/* Reset Action */}
+      {userSettings.hasUserOverride && (
+        <div className="flex justify-end">
           <button
             onClick={handleReset}
             className="px-3 py-2 text-amber-600 text-sm border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
             title="Reset to default provider and clear API key"
           >
-            Reset
+            Reset All
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
