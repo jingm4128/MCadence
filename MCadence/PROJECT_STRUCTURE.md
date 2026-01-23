@@ -41,7 +41,7 @@ src/
 │   │   └── SpendMyTimeTab.tsx  # Time tracking tab
 │   ├── ui/                 # Reusable UI components
 │   │   ├── Button.tsx          # Button component
-│   │   ├── Modal.tsx           # Base modal component
+│   │   ├── Modal.tsx           # Modal, ConfirmDialog, RecurrenceDeleteDialog
 │   │   ├── CategoryEditorModal.tsx  # Category management
 │   │   ├── CategorySelector.tsx     # Category dropdown
 │   │   ├── ImportExportModal.tsx    # Data import/export
@@ -145,6 +145,10 @@ const { state, addChecklistItem, addTimeItem, updateItem, ... } = useAppState();
 archiveAllCompletedInTab(tabId)  // Batch archive all completed items in a tab
 isItemCompleted(item)            // Helper to check completion status
 
+// Delete features
+deleteItem(id)                   // Soft-delete a single item
+deleteRecurringSeries(id)        // Soft-delete ALL items in a recurring series (same baseTitle)
+
 // Item sorting by due date
 // Items are sorted by effective due date (dueDate || recurrence.nextDue)
 // Items with no due date are placed at the bottom
@@ -157,6 +161,14 @@ Items are soft-deleted rather than hard-deleted:
 - Item data and all action logs are preserved in storage (for history/analytics)
 - Soft-deleted items are filtered out from all UI views
 - Recurring items that are deleted will NOT generate new occurrences
+
+**Recurring Item Deletion:**
+
+When deleting a recurring item, users are presented with a choice dialog:
+- **Delete this occurrence only** - Deletes just the current period item, recurrence continues
+- **Delete all occurrences** - Deletes ALL items with the same `baseTitle`, stopping the series entirely
+
+This is handled by the `RecurrenceDeleteDialog` component in `Modal.tsx`.
 
 **Recurring Item Auto-Creation:**
 
@@ -448,5 +460,6 @@ export async function POST(request: NextRequest) {
 | Change swipe behavior | `storage.ts` (DEFAULT_SETTINGS), tab components |
 | Add backup feature | `storage.ts`, `SettingsModal.tsx` |
 | Add long press editing | `SwipeableItem.tsx`, tab component (add onLongPress handler) |
+| Recurring item deletion | `state.tsx` (deleteRecurringSeries), `Modal.tsx` (RecurrenceDeleteDialog), tab components |
 
 

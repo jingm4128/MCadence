@@ -35,6 +35,7 @@ type AppStateAction =
   | { type: 'UPDATE_ITEM'; payload: { id: string; updates: Partial<Item> } }
   | { type: 'UPDATE_ITEMS'; payload: { id: string; updates: Partial<Item> }[] }
   | { type: 'DELETE_ITEM'; payload: string }
+  | { type: 'DELETE_RECURRING_SERIES'; payload: { baseTitle: string; tab: TabId } }
   | { type: 'TOGGLE_CHECKLIST_ITEM'; payload: string }
   | { type: 'ARCHIVE_ITEM'; payload: string }
   | { type: 'UNARCHIVE_ITEM'; payload: string }
@@ -108,6 +109,19 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
             : item
         ),
         // Keep action logs - don't filter them
+      };
+
+    case 'DELETE_RECURRING_SERIES':
+      // Soft delete ALL items with the same baseTitle in the same tab
+      // This stops the entire recurring series from generating new occurrences
+      const { baseTitle: targetBaseTitle, tab: targetTab } = action.payload;
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.baseTitle === targetBaseTitle && item.tab === targetTab && !item.isDeleted
+            ? { ...item, isDeleted: true, deletedAt: toISOStringLocal(), updatedAt: toISOStringLocal() }
+            : item
+        ),
       };
 
     case 'TOGGLE_CHECKLIST_ITEM':
@@ -640,6 +654,37 @@ export function useAppState() {
     }
   };
 
+  // Delete all items in a recurring series (all items with the same baseTitle)
+  const deleteRecurringSeries = (id: string) => {
+    const item = state.items.find(i => i.id === id);
+    if (item && item.baseTitle) {
+      // Find all items in the series to log them
+      const seriesItems = state.items.filter(i =>
+        i.baseTitle === item.baseTitle &&
+        i.tab === item.tab &&
+        !i.isDeleted
+      );
+      
+      // Log deletion for each item in the series
+      seriesItems.forEach(seriesItem => {
+        logAction({
+          itemId: seriesItem.id,
+          tab: seriesItem.tab,
+          type: 'delete',
+          payload: { reason: 'recurring_series_deleted', baseTitle: item.baseTitle },
+        });
+      });
+      
+      dispatch({
+        type: 'DELETE_RECURRING_SERIES',
+        payload: { baseTitle: item.baseTitle, tab: item.tab }
+      });
+      
+      return seriesItems.length;
+    }
+    return 0;
+  };
+
   const archiveItem = (id: string) => {
     const item = state.items.find(i => i.id === id);
     if (item) {
@@ -883,6 +928,7 @@ export function useAppState() {
     addTimeItem,
     updateItem,
     deleteItem,
+    deleteRecurringSeries,
     archiveItem,
     unarchiveItem,
     toggleChecklistItem,

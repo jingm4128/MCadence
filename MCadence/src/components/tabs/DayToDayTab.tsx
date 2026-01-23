@@ -5,8 +5,7 @@ import { useAppState } from '@/lib/state';
 import { ChecklistItemForm, isChecklistItem, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
-import { ConfirmDialog } from '@/components/ui/Modal';
+import { Modal, ConfirmDialog, RecurrenceDeleteDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
@@ -25,7 +24,7 @@ export function DayToDayTab() {
     dueDate: undefined,
   });
 
-  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, archiveAllCompletedInTab, state } = useAppState();
+  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, deleteRecurringSeries, archiveAllCompletedInTab, state } = useAppState();
 
   // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
   const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
@@ -102,9 +101,38 @@ export function DayToDayTab() {
     };
   }, []);
 
-  const confirmDelete = () => {
+  // Get the item to be deleted
+  const itemToDeleteData = useMemo(() => {
+    if (!itemToDelete) return null;
+    const allItemsIncludingArchived = getItemsByTab('dayToDay', true);
+    return allItemsIncludingArchived.find(i => i.id === itemToDelete) || null;
+  }, [itemToDelete, getItemsByTab]);
+
+  // Check if the item being deleted is a recurring item
+  const isRecurringDelete = useMemo(() => {
+    return itemToDeleteData?.baseTitle && itemToDeleteData?.recurrence;
+  }, [itemToDeleteData]);
+
+  // Get count of items in the recurring series
+  const recurringSeriesCount = useMemo(() => {
+    if (!itemToDeleteData?.baseTitle) return 0;
+    return state.items.filter(i =>
+      i.baseTitle === itemToDeleteData.baseTitle &&
+      i.tab === 'dayToDay' &&
+      !i.isDeleted
+    ).length;
+  }, [itemToDeleteData, state.items]);
+
+  const confirmDeleteOne = () => {
     if (itemToDelete) {
       deleteItem(itemToDelete);
+      setItemToDelete(null);
+    }
+  };
+
+  const confirmDeleteAll = () => {
+    if (itemToDelete) {
+      deleteRecurringSeries(itemToDelete);
       setItemToDelete(null);
     }
   };
@@ -348,16 +376,28 @@ export function DayToDayTab() {
         </div>
       </Modal>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToDelete}
-        onClose={() => setItemToDelete(null)}
-        onConfirm={confirmDelete}
-        title="Delete Task"
-        message="Delete this task and all its history? This cannot be undone."
-        confirmText="Delete"
-        danger={true}
-      />
+      {/* Delete Confirmation - Show different dialogs for recurring vs non-recurring items */}
+      {isRecurringDelete ? (
+        <RecurrenceDeleteDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onDeleteOne={confirmDeleteOne}
+          onDeleteAll={confirmDeleteAll}
+          title="Delete Recurring Task"
+          itemName={itemToDeleteData?.baseTitle}
+          seriesCount={recurringSeriesCount}
+        />
+      ) : (
+        <ConfirmDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onConfirm={confirmDeleteOne}
+          title="Delete Task"
+          message="Delete this task and all its history? This cannot be undone."
+          confirmText="Delete"
+          danger={true}
+        />
+      )}
 
       {/* Toast Message */}
       {toastMessage && (

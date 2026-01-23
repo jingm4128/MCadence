@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAppState } from '@/lib/state';
 import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID, WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
-import { ConfirmDialog } from '@/components/ui/Modal';
+import { Modal, ConfirmDialog, RecurrenceDeleteDialog } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { TabHeader } from '@/components/ui/TabHeader';
@@ -69,6 +68,7 @@ export function SpendMyTimeTab() {
     archiveItem,
     unarchiveItem,
     deleteItem,
+    deleteRecurringSeries,
     getActiveTimerItem,
     updateItem,
     archiveAllCompletedInTab,
@@ -168,9 +168,38 @@ export function SpendMyTimeTab() {
     };
   }, []);
 
-  const confirmDelete = () => {
+  // Get the item to be deleted
+  const itemToDeleteData = useMemo(() => {
+    if (!itemToDelete) return null;
+    const allItemsIncludingArchived = getItemsByTab('spendMyTime', true);
+    return allItemsIncludingArchived.find(i => i.id === itemToDelete) || null;
+  }, [itemToDelete, getItemsByTab]);
+
+  // Check if the item being deleted is a recurring item
+  const isRecurringDelete = useMemo(() => {
+    return itemToDeleteData?.baseTitle && itemToDeleteData?.recurrence;
+  }, [itemToDeleteData]);
+
+  // Get count of items in the recurring series
+  const recurringSeriesCount = useMemo(() => {
+    if (!itemToDeleteData?.baseTitle) return 0;
+    return state.items.filter(i =>
+      i.baseTitle === itemToDeleteData.baseTitle &&
+      i.tab === 'spendMyTime' &&
+      !i.isDeleted
+    ).length;
+  }, [itemToDeleteData, state.items]);
+
+  const confirmDeleteOne = () => {
     if (itemToDelete) {
       deleteItem(itemToDelete);
+      setItemToDelete(null);
+    }
+  };
+
+  const confirmDeleteAll = () => {
+    if (itemToDelete) {
+      deleteRecurringSeries(itemToDelete);
       setItemToDelete(null);
     }
   };
@@ -671,16 +700,28 @@ export function SpendMyTimeTab() {
         </div>
       </Modal>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToDelete}
-        onClose={() => setItemToDelete(null)}
-        onConfirm={confirmDelete}
-        title="Delete Project"
-        message="Delete this project and all its history? This cannot be undone."
-        confirmText="Delete"
-        danger={true}
-      />
+      {/* Delete Confirmation - Show different dialogs for recurring vs non-recurring items */}
+      {isRecurringDelete ? (
+        <RecurrenceDeleteDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onDeleteOne={confirmDeleteOne}
+          onDeleteAll={confirmDeleteAll}
+          title="Delete Recurring Project"
+          itemName={itemToDeleteData?.baseTitle}
+          seriesCount={recurringSeriesCount}
+        />
+      ) : (
+        <ConfirmDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onConfirm={confirmDeleteOne}
+          title="Delete Project"
+          message="Delete this project and all its history? This cannot be undone."
+          confirmText="Delete"
+          danger={true}
+        />
+      )}
 
       {/* Edit Item Modal (Long Press) */}
       <Modal
