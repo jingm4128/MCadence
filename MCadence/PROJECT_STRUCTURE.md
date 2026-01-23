@@ -14,6 +14,9 @@ MCadence is a productivity tracking application built with Next.js 14 (App Route
 - Automatic backups with configurable frequency
 - Configurable swipe gestures per tab
 - Long press to edit items (SpendMyTime: name, category, and time spent)
+- Notes support for all items (free-form text notes per item/occurrence)
+- Enter key to save in edit modals (except notes which use Ctrl+Enter)
+- Long press to edit AI settings items
 
 ---
 
@@ -41,7 +44,7 @@ src/
 │   │   └── SpendMyTimeTab.tsx  # Time tracking tab
 │   ├── ui/                 # Reusable UI components
 │   │   ├── Button.tsx          # Button component
-│   │   ├── Modal.tsx           # Base modal component
+│   │   ├── Modal.tsx           # Modal, ConfirmDialog, RecurrenceDeleteDialog, NotesEditorModal
 │   │   ├── CategoryEditorModal.tsx  # Category management
 │   │   ├── CategorySelector.tsx     # Category dropdown
 │   │   ├── ImportExportModal.tsx    # Data import/export
@@ -112,6 +115,8 @@ interface BaseItem {
   isArchived: boolean;
   isDeleted?: boolean;    // Soft-delete flag (keeps data, hides from UI)
   deletedAt?: string;     // When the item was soft-deleted
+  dueDate?: string | null; // Optional due date (ISO timestamp) - items with no dueDate sort to bottom
+  notes?: string;         // Free-form text notes for the item
   // ... other fields
 }
 
@@ -143,6 +148,14 @@ const { state, addChecklistItem, addTimeItem, updateItem, ... } = useAppState();
 // Archive features
 archiveAllCompletedInTab(tabId)  // Batch archive all completed items in a tab
 isItemCompleted(item)            // Helper to check completion status
+
+// Delete features
+deleteItem(id)                   // Soft-delete a single item
+deleteRecurringSeries(id)        // Soft-delete ALL items in a recurring series (same baseTitle)
+
+// Item sorting by due date
+// Items are sorted by effective due date (dueDate || recurrence.nextDue)
+// Items with no due date are placed at the bottom
 ```
 
 **Soft-Delete Behavior:**
@@ -152,6 +165,14 @@ Items are soft-deleted rather than hard-deleted:
 - Item data and all action logs are preserved in storage (for history/analytics)
 - Soft-deleted items are filtered out from all UI views
 - Recurring items that are deleted will NOT generate new occurrences
+
+**Recurring Item Deletion:**
+
+When deleting a recurring item, users are presented with a choice dialog:
+- **Delete this occurrence only** - Deletes just the current period item, recurrence continues
+- **Delete all occurrences** - Deletes ALL items with the same `baseTitle`, stopping the series entirely
+
+This is handled by the `RecurrenceDeleteDialog` component in `Modal.tsx`.
 
 **Recurring Item Auto-Creation:**
 
@@ -276,6 +297,16 @@ Parses natural language into structured tasks/goals/projects.
 4. AI returns proposals with tab, recurrence, duration
 5. User edits/approves proposals → items created
 
+**Proposal Editing Features:**
+- **Tab Selection** - Switch between Day to Day, Hit My Goal, Spend My Time
+- **Title** - Edit the item title
+- **Category** - Select from available categories
+- **Recurrence** - One-off, Daily, Weekly, Monthly (for hitMyGoal and spendMyTime)
+- **Interval** - "Every X" days/weeks/months (e.g., every 2 weeks) - available when recurrence is enabled
+- **Duration** - Time goal per period (for spendMyTime)
+- **Due Date** (optional) - Available for all tabs, allows setting a deadline
+- **Total Occurrences** - Limit recurring items (leave empty for forever)
+
 ### 2. Insights (`src/lib/ai/insight/`)
 
 Generates weekly productivity insights from aggregated stats.
@@ -326,6 +357,7 @@ isPeriodPassed(periodKey, frequency)
 getUrgencyStatus(nextDue, isComplete)              // Basic time-based urgency
 getUrgencyStatusWithWork(nextDue, remainingMin, isComplete)  // Work-based urgency
 // Alert when: time left < 3X of remaining work time
+// Effective due date: uses dueDate if set, otherwise recurrence.nextDue
 ```
 
 ---
@@ -398,6 +430,22 @@ Pattern for AI feature components:
 3. Display results with edit capability
 4. Handle approval/rejection
 
+### AI Settings Panel (`src/components/ai/AiPanel.tsx`)
+
+The AI Settings panel uses a long-press-to-edit pattern for each setting item:
+- **Provider** - Shows current provider, long press to select different provider
+- **API Key** - Shows masked key or "Not configured", long press to edit
+- **Model** - Shows current model, long press to select different model
+
+Each setting displays as a read-only field that becomes editable on long press (500ms).
+Pressing Enter saves the API key; pressing Escape cancels editing.
+
+### Keyboard Shortcuts
+
+**Add/Edit Modals:**
+- **Enter** - Save and close modal (for title inputs in Add Task, Add Goal, Add Project, Edit Project)
+- Notes editor uses **Ctrl+Enter** (not Enter) to prevent accidental saves while typing
+
 ---
 
 ## API Route Pattern
@@ -432,5 +480,9 @@ export async function POST(request: NextRequest) {
 | Change swipe behavior | `storage.ts` (DEFAULT_SETTINGS), tab components |
 | Add backup feature | `storage.ts`, `SettingsModal.tsx` |
 | Add long press editing | `SwipeableItem.tsx`, tab component (add onLongPress handler) |
+| Recurring item deletion | `state.tsx` (deleteRecurringSeries), `Modal.tsx` (RecurrenceDeleteDialog), tab components |
+| Edit item notes | `Modal.tsx` (NotesEditorModal), tab components (notes button + editNotesState) |
+| Enter key to save | Tab components (add onKeyDown handler to title inputs) |
+| AI settings editing | `AiPanel.tsx` (AISettingsPanel with long press pattern) |
 
 

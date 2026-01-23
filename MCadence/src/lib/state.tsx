@@ -35,6 +35,7 @@ type AppStateAction =
   | { type: 'UPDATE_ITEM'; payload: { id: string; updates: Partial<Item> } }
   | { type: 'UPDATE_ITEMS'; payload: { id: string; updates: Partial<Item> }[] }
   | { type: 'DELETE_ITEM'; payload: string }
+  | { type: 'DELETE_RECURRING_SERIES'; payload: { baseTitle: string; tab: TabId } }
   | { type: 'TOGGLE_CHECKLIST_ITEM'; payload: string }
   | { type: 'ARCHIVE_ITEM'; payload: string }
   | { type: 'UNARCHIVE_ITEM'; payload: string }
@@ -108,6 +109,19 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
             : item
         ),
         // Keep action logs - don't filter them
+      };
+
+    case 'DELETE_RECURRING_SERIES':
+      // Soft delete ALL items with the same baseTitle in the same tab
+      // This stops the entire recurring series from generating new occurrences
+      const { baseTitle: targetBaseTitle, tab: targetTab } = action.payload;
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.baseTitle === targetBaseTitle && item.tab === targetTab && !item.isDeleted
+            ? { ...item, isDeleted: true, deletedAt: toISOStringLocal(), updatedAt: toISOStringLocal() }
+            : item
+        ),
       };
 
     case 'TOGGLE_CHECKLIST_ITEM':
@@ -550,6 +564,8 @@ export function useAppState() {
       isDone: false,
       createdAt: now,
       updatedAt: now,
+      // Add dueDate if provided (for non-recurring items)
+      ...(form.dueDate !== undefined && { dueDate: form.dueDate }),
       ...(recurrence && { recurrence }),
     };
 
@@ -558,7 +574,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab,
       type: 'create',
-      payload: recurrence ? { recurrence, periodKey } : undefined,
+      payload: recurrence ? { recurrence, periodKey } : (form.dueDate ? { dueDate: form.dueDate } : undefined),
     });
   };
 
@@ -599,6 +615,8 @@ export function useAppState() {
       periodEnd: toISOStringLocal(weekEnd),
       createdAt: isoNow,
       updatedAt: isoNow,
+      // Add dueDate if provided (for non-recurring items)
+      ...(form.dueDate !== undefined && { dueDate: form.dueDate }),
       ...(recurrence && { recurrence }),
     };
 
@@ -607,7 +625,7 @@ export function useAppState() {
       itemId: newItem.id,
       tab: 'spendMyTime',
       type: 'create',
-      payload: recurrence ? { recurrence, periodKey } : undefined,
+      payload: recurrence ? { recurrence, periodKey } : (form.dueDate ? { dueDate: form.dueDate } : undefined),
     });
   };
 
@@ -634,6 +652,37 @@ export function useAppState() {
       });
       dispatch({ type: 'DELETE_ITEM', payload: id });
     }
+  };
+
+  // Delete all items in a recurring series (all items with the same baseTitle)
+  const deleteRecurringSeries = (id: string) => {
+    const item = state.items.find(i => i.id === id);
+    if (item && item.baseTitle) {
+      // Find all items in the series to log them
+      const seriesItems = state.items.filter(i =>
+        i.baseTitle === item.baseTitle &&
+        i.tab === item.tab &&
+        !i.isDeleted
+      );
+      
+      // Log deletion for each item in the series
+      seriesItems.forEach(seriesItem => {
+        logAction({
+          itemId: seriesItem.id,
+          tab: seriesItem.tab,
+          type: 'delete',
+          payload: { reason: 'recurring_series_deleted', baseTitle: item.baseTitle },
+        });
+      });
+      
+      dispatch({
+        type: 'DELETE_RECURRING_SERIES',
+        payload: { baseTitle: item.baseTitle, tab: item.tab }
+      });
+      
+      return seriesItems.length;
+    }
+    return 0;
   };
 
   const archiveItem = (id: string) => {
@@ -794,16 +843,22 @@ export function useAppState() {
         return aIsDone ? 1 : -1; // Done items at bottom
       }
       
-      // 2. Sort by due date (earlier due dates come first)
-      const aDue = a.recurrence?.nextDue;
-      const bDue = b.recurrence?.nextDue;
+      // 2. Sort by due date (earlier due dates come first, no due date at bottom)
+      // Use dueDate field first, fall back to recurrence.nextDue for recurring items
+      const aDue = a.dueDate || a.recurrence?.nextDue;
+      const bDue = b.dueDate || b.recurrence?.nextDue;
+      
+      // Items with no due date go to the bottom
+      const aHasDue = !!aDue;
+      const bHasDue = !!bDue;
+      if (aHasDue !== bHasDue) {
+        return aHasDue ? -1 : 1; // Items with due dates come first
+      }
+      
+      // Both have due dates - sort by date (earlier first)
       if (aDue && bDue) {
         const dateDiff = new Date(aDue).getTime() - new Date(bDue).getTime();
         if (dateDiff !== 0) return dateDiff;
-      } else if (aDue && !bDue) {
-        return -1; // Items with due dates come first
-      } else if (!aDue && bDue) {
-        return 1;
       }
       
       // 3. Sort by category and subcategory
@@ -873,6 +928,7 @@ export function useAppState() {
     addTimeItem,
     updateItem,
     deleteItem,
+    deleteRecurringSeries,
     archiveItem,
     unarchiveItem,
     toggleChecklistItem,

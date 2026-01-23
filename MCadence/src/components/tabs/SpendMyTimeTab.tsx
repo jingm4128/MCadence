@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAppState } from '@/lib/state';
 import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID, WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
-import { ConfirmDialog } from '@/components/ui/Modal';
+import { Modal, ConfirmDialog, RecurrenceDeleteDialog, NotesEditorModal } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { TabHeader } from '@/components/ui/TabHeader';
@@ -30,12 +29,20 @@ interface EditRecurrenceState {
   hasExistingRecurrence: boolean;
 }
 
+// Edit notes state
+interface EditNotesState {
+  itemId: string;
+  notes: string;
+  itemTitle: string;
+}
+
 export function SpendMyTimeTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [editItemState, setEditItemState] = useState<EditItemState | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
+  const [editNotesState, setEditNotesState] = useState<EditNotesState | null>(null);
   const [elapsedMinutes, setElapsedMinutes] = useState(0); // Real-time elapsed minutes for active timer
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -44,8 +51,22 @@ export function SpendMyTimeTab() {
     categoryId: DEFAULT_CATEGORY_ID,
     requiredHours: 1,
     requiredMinutes: 0,
+    dueDate: undefined,
     recurrence: undefined,
   });
+
+  // Helper to convert date input value to ISO string (end of day)
+  const dateInputToISO = (dateStr: string): string => {
+    const date = new Date(dateStr + 'T23:59:59');
+    return date.toISOString();
+  };
+
+  // Helper to convert ISO string to date input value
+  const isoToDateInput = (isoStr: string | null | undefined): string => {
+    if (!isoStr) return '';
+    const date = new Date(isoStr);
+    return date.toISOString().split('T')[0];
+  };
 
   const {
     getItemsByTab,
@@ -55,6 +76,7 @@ export function SpendMyTimeTab() {
     archiveItem,
     unarchiveItem,
     deleteItem,
+    deleteRecurringSeries,
     getActiveTimerItem,
     updateItem,
     archiveAllCompletedInTab,
@@ -114,6 +136,7 @@ export function SpendMyTimeTab() {
         categoryId: DEFAULT_CATEGORY_ID,
         requiredHours: 1,
         requiredMinutes: 0,
+        dueDate: undefined,
         recurrence: undefined
       });
       setShowAddModal(false);
@@ -153,9 +176,38 @@ export function SpendMyTimeTab() {
     };
   }, []);
 
-  const confirmDelete = () => {
+  // Get the item to be deleted
+  const itemToDeleteData = useMemo(() => {
+    if (!itemToDelete) return null;
+    const allItemsIncludingArchived = getItemsByTab('spendMyTime', true);
+    return allItemsIncludingArchived.find(i => i.id === itemToDelete) || null;
+  }, [itemToDelete, getItemsByTab]);
+
+  // Check if the item being deleted is a recurring item
+  const isRecurringDelete = useMemo(() => {
+    return itemToDeleteData?.baseTitle && itemToDeleteData?.recurrence;
+  }, [itemToDeleteData]);
+
+  // Get count of items in the recurring series
+  const recurringSeriesCount = useMemo(() => {
+    if (!itemToDeleteData?.baseTitle) return 0;
+    return state.items.filter(i =>
+      i.baseTitle === itemToDeleteData.baseTitle &&
+      i.tab === 'spendMyTime' &&
+      !i.isDeleted
+    ).length;
+  }, [itemToDeleteData, state.items]);
+
+  const confirmDeleteOne = () => {
     if (itemToDelete) {
       deleteItem(itemToDelete);
+      setItemToDelete(null);
+    }
+  };
+
+  const confirmDeleteAll = () => {
+    if (itemToDelete) {
+      deleteRecurringSeries(itemToDelete);
       setItemToDelete(null);
     }
   };
@@ -225,6 +277,22 @@ export function SpendMyTimeTab() {
       }
       
       setEditRecurrenceState(null);
+    }
+  };
+
+  // Edit notes functions
+  const handleEditNotes = (project: TimeItem) => {
+    setEditNotesState({
+      itemId: project.id,
+      notes: project.notes || '',
+      itemTitle: project.title,
+    });
+  };
+
+  const confirmEditNotes = (notes: string) => {
+    if (editNotesState) {
+      updateItem(editNotesState.itemId, { notes: notes || undefined });
+      setEditNotesState(null);
     }
   };
 
@@ -399,14 +467,16 @@ export function SpendMyTimeTab() {
             const isActive = activeTimerProject?.id === project.id;
             const progress = Math.min(1, project.completedMinutes / project.requiredMinutes);
             
-            // Check recurrence urgency for additional visual indicators using work-based calculation
+            // Check urgency - prioritize dueDate, then recurrence nextDue
+            const effectiveDueDate = (project.dueDate ?? project.recurrence?.nextDue) ?? undefined;  // Convert null to undefined
             const hasRecurrence = !!project.recurrence;
+            const hasDueDate = !!effectiveDueDate;
             const remainingMinutes = Math.max(0, project.requiredMinutes - project.completedMinutes);
-            const recurrenceUrgency: UrgencyStatus = hasRecurrence
-              ? getUrgencyStatusWithWork(project.recurrence?.nextDue, remainingMinutes, progress >= 1)
+            const itemUrgency: UrgencyStatus = hasDueDate
+              ? getUrgencyStatusWithWork(effectiveDueDate, remainingMinutes, progress >= 1)
               : 'normal';
-            const urgencyClasses = getUrgencyClasses(recurrenceUrgency);
-            const timeUntilDue = hasRecurrence ? formatTimeUntilDue(project.recurrence?.nextDue) : '';
+            const urgencyClasses = getUrgencyClasses(itemUrgency);
+            const timeUntilDue = hasDueDate ? formatTimeUntilDue(effectiveDueDate) : '';
             
             // Calculate progress percentage for background
             const progressPercent = Math.min(100, progress * 100);
@@ -476,8 +546,8 @@ export function SpendMyTimeTab() {
                             {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
                             {project.title}
                           </h3>
-                          {/* Urgency badge for recurring items */}
-                          {hasRecurrence && timeUntilDue && progress < 1 && (
+                          {/* Urgency badge for items with due dates */}
+                          {hasDueDate && timeUntilDue && progress < 1 && (
                             <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
                               {timeUntilDue}
                             </span>
@@ -507,6 +577,18 @@ export function SpendMyTimeTab() {
                         </div>
                       </div>
                       <div className="flex gap-0.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditNotes(project);
+                          }}
+                          className={`p-0.5 ${project.notes ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400 hover:text-gray-600'}`}
+                          title={project.notes ? "Edit Notes" : "Add Notes"}
+                        >
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -549,6 +631,12 @@ export function SpendMyTimeTab() {
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && formData.title.trim() && (formData.requiredHours > 0 || formData.requiredMinutes > 0)) {
+                  e.preventDefault();
+                  handleAddProject();
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Enter project title"
               autoFocus
@@ -601,11 +689,42 @@ export function SpendMyTimeTab() {
             </div>
           </div>
           
+          {/* Due Date - only show when no recurrence is set */}
+          {!formData.recurrence?.enabled && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Due Date (optional)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={isoToDateInput(formData.dueDate)}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    dueDate: e.target.value ? dateInputToISO(e.target.value) : undefined
+                  })}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                />
+                {formData.dueDate && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, dueDate: undefined })}
+                    className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    title="Clear due date"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Set a due date to track urgency</p>
+            </div>
+          )}
+
           {/* Recurrence Settings */}
           <div>
             <RecurrenceSelector
               value={formData.recurrence}
-              onChange={(recurrence) => setFormData({ ...formData, recurrence })}
+              onChange={(recurrence) => setFormData({ ...formData, recurrence, dueDate: recurrence?.enabled ? undefined : formData.dueDate })}
             />
           </div>
           
@@ -623,16 +742,28 @@ export function SpendMyTimeTab() {
         </div>
       </Modal>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToDelete}
-        onClose={() => setItemToDelete(null)}
-        onConfirm={confirmDelete}
-        title="Delete Project"
-        message="Delete this project and all its history? This cannot be undone."
-        confirmText="Delete"
-        danger={true}
-      />
+      {/* Delete Confirmation - Show different dialogs for recurring vs non-recurring items */}
+      {isRecurringDelete ? (
+        <RecurrenceDeleteDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onDeleteOne={confirmDeleteOne}
+          onDeleteAll={confirmDeleteAll}
+          title="Delete Recurring Project"
+          itemName={itemToDeleteData?.baseTitle}
+          seriesCount={recurringSeriesCount}
+        />
+      ) : (
+        <ConfirmDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onConfirm={confirmDeleteOne}
+          title="Delete Project"
+          message="Delete this project and all its history? This cannot be undone."
+          confirmText="Delete"
+          danger={true}
+        />
+      )}
 
       {/* Edit Item Modal (Long Press) */}
       <Modal
@@ -656,6 +787,12 @@ export function SpendMyTimeTab() {
                   ...editItemState,
                   title: e.target.value
                 })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editItemState.title.trim()) {
+                    e.preventDefault();
+                    confirmEditItem();
+                  }
+                }}
                 onFocus={(e) => e.target.select()}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter project title"
@@ -766,6 +903,15 @@ export function SpendMyTimeTab() {
           </div>
         )}
       </Modal>
+
+      {/* Notes Editor Modal */}
+      <NotesEditorModal
+        isOpen={!!editNotesState}
+        onClose={() => setEditNotesState(null)}
+        onSave={confirmEditNotes}
+        notes={editNotesState?.notes || ''}
+        itemTitle={editNotesState?.itemTitle}
+      />
 
       {/* Toast Message */}
       {toastMessage && (

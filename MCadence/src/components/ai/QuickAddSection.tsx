@@ -42,7 +42,9 @@ function ProposalCard({
   const currentTitle = selection.editedTitle ?? proposal.title;
   const currentCategoryId = selection.editedCategoryId ?? proposal.categoryId;
   const currentRecurrence = selection.editedRecurrence ?? proposal.recurrence;
+  const currentInterval = selection.editedInterval ?? 1; // Default interval is 1
   const currentDurationMinutes = selection.editedDurationMinutes ?? proposal.durationMinutes ?? 60;
+  const currentDueDate = selection.editedDueDate;
   
   // Get all subcategories flattened for the dropdown
   const allSubcategories = categories.flatMap(cat =>
@@ -56,6 +58,8 @@ function ProposalCard({
   // Tab type checks
   const isTimeProject = currentTab === 'spendMyTime';
   const isHitMyGoal = currentTab === 'hitMyGoal';
+  const isDayToDay = currentTab === 'dayToDay';
+  const hasRecurrence = currentRecurrence !== 'one_off';
   
   // Handle tab change
   const handleTabChange = (newTab: QuickAddTab) => {
@@ -70,6 +74,43 @@ function ProposalCard({
   // Handle recurrence change
   const handleRecurrenceChange = (recurrence: RecurrenceType) => {
     onUpdate(proposal.id, { editedRecurrence: recurrence });
+  };
+  
+  // Handle interval change
+  const handleIntervalChange = (interval: number) => {
+    onUpdate(proposal.id, { editedInterval: Math.max(1, interval) });
+  };
+  
+  // Handle due date change
+  const handleDueDateChange = (dateStr: string | null) => {
+    if (dateStr) {
+      // Parse YYYY-MM-DD and set to end of day in local time
+      const date = new Date(dateStr + 'T23:59:59');
+      onUpdate(proposal.id, { editedDueDate: date.toISOString() });
+    } else {
+      onUpdate(proposal.id, { editedDueDate: null });
+    }
+  };
+  
+  // Helper to convert ISO string to date input value
+  const isoToDateInput = (isoStr: string | null | undefined): string => {
+    if (!isoStr) return '';
+    const date = new Date(isoStr);
+    return date.toISOString().split('T')[0];
+  };
+  
+  // Get frequency label (plural if interval > 1)
+  const getFrequencyLabel = (rec: RecurrenceType): string => {
+    if (rec === 'one_off') return 'One-off';
+    if (currentInterval > 1) {
+      switch (rec) {
+        case 'daily': return 'days';
+        case 'weekly': return 'weeks';
+        case 'monthly': return 'months';
+        default: return rec;
+      }
+    }
+    return RECURRENCE_LABELS[rec];
   };
   
   return (
@@ -160,8 +201,26 @@ function ProposalCard({
             </div>
           </div>
           
+          {/* Interval for recurring items (every X days/weeks/months) */}
+          {hasRecurrence && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Repeat every</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={currentInterval}
+                  onChange={(e) => handleIntervalChange(parseInt(e.target.value) || 1)}
+                  className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
+                />
+                <span className="text-sm text-gray-600">{getFrequencyLabel(currentRecurrence)}</span>
+              </div>
+            </div>
+          )}
+          
           {/* Occurrences limit for recurring goals */}
-          {currentRecurrence !== 'one_off' && (
+          {hasRecurrence && (
             <div>
               <label className="block text-xs text-gray-500 mb-1">Total occurrences (leave empty for forever)</label>
               <input
@@ -202,6 +261,24 @@ function ProposalCard({
             </div>
           </div>
           
+          {/* Interval for recurring items (every X days/weeks/months) */}
+          {hasRecurrence && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Repeat every</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={currentInterval}
+                  onChange={(e) => handleIntervalChange(parseInt(e.target.value) || 1)}
+                  className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
+                />
+                <span className="text-sm text-gray-600">{getFrequencyLabel(currentRecurrence)}</span>
+              </div>
+            </div>
+          )}
+          
           {/* Duration per period */}
           <div>
             <label className="block text-xs text-gray-500 mb-1">
@@ -237,6 +314,31 @@ function ProposalCard({
           </div>
         </div>
       )}
+      
+      {/* Due Date (optional) - available for all tabs */}
+      <div className="pt-2 border-t border-gray-100 mt-3">
+        <label className="block text-xs text-gray-500 mb-1">Due Date (optional)</label>
+        <div className="flex gap-2 items-center">
+          <input
+            type="date"
+            value={isoToDateInput(currentDueDate)}
+            onChange={(e) => handleDueDateChange(e.target.value || null)}
+            className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+          {currentDueDate && (
+            <button
+              type="button"
+              onClick={() => handleDueDateChange(null)}
+              className="p-1.5 text-gray-400 hover:text-gray-600"
+              title="Clear due date"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
       
       {/* Reason (if provided) */}
       {proposal.reason && (
@@ -352,6 +454,7 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
   // Helper to convert RecurrenceType to RecurrenceFormSettings
   const convertToRecurrenceForm = (
     recurrence: RecurrenceType,
+    interval: number = 1,
     totalOccurrences?: number
   ): RecurrenceFormSettings | undefined => {
     if (recurrence === 'one_off') return undefined;
@@ -367,7 +470,7 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
     return {
       enabled: true,
       frequency: frequencyMap[recurrence],
-      interval: 1, // Default interval of 1
+      interval: Math.max(1, interval), // Use provided interval, min 1
       totalOccurrences: totalOccurrences ?? null,
       timezone: DEFAULT_TIMEZONE,
     };
@@ -390,27 +493,30 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
       const categoryId = selection?.editedCategoryId ?? proposal.categoryId;
       const tab = selection?.editedTab ?? proposal.tab;
       const recurrence = selection?.editedRecurrence ?? proposal.recurrence;
+      const interval = selection?.editedInterval ?? 1;
       const totalOccurrences = selection?.editedTotalOccurrences;
+      const dueDate = selection?.editedDueDate ?? null;
       
       if (tab === 'dayToDay') {
-        // Add as checklist item (no recurrence for day-to-day)
-        addChecklistItem(tab, { title, categoryId });
+        // Add as checklist item (no recurrence for day-to-day, but can have due date)
+        addChecklistItem(tab, { title, categoryId, dueDate });
         addedCount++;
       } else if (tab === 'hitMyGoal') {
-        // Add as checklist item with optional recurrence
-        const recurrenceForm = convertToRecurrenceForm(recurrence, totalOccurrences);
-        addChecklistItem(tab, { title, categoryId, recurrence: recurrenceForm });
+        // Add as checklist item with optional recurrence and due date
+        const recurrenceForm = convertToRecurrenceForm(recurrence, interval, totalOccurrences);
+        addChecklistItem(tab, { title, categoryId, dueDate, recurrence: recurrenceForm });
         addedCount++;
       } else if (tab === 'spendMyTime') {
-        // Add as time project with optional recurrence
+        // Add as time project with optional recurrence and due date
         // Use per-session duration (not weekly total) as the time target per period
         const durationMinutes = selection?.editedDurationMinutes ?? proposal.durationMinutes ?? 60;
-        const recurrenceForm = convertToRecurrenceForm(recurrence, totalOccurrences);
+        const recurrenceForm = convertToRecurrenceForm(recurrence, interval, totalOccurrences);
         addTimeItem({
           title,
           categoryId,
           requiredHours: Math.floor(durationMinutes / 60),
           requiredMinutes: durationMinutes % 60,
+          dueDate,
           recurrence: recurrenceForm,
         });
         addedCount++;

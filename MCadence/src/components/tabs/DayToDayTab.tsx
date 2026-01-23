@@ -2,28 +2,37 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppState } from '@/lib/state';
-import { ChecklistItemForm, isChecklistItem, SwipeAction } from '@/lib/types';
+import { ChecklistItem, ChecklistItemForm, isChecklistItem, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
-import { Modal } from '@/components/ui/Modal';
-import { ConfirmDialog } from '@/components/ui/Modal';
+import { Modal, ConfirmDialog, RecurrenceDeleteDialog, NotesEditorModal } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import { loadSettings } from '@/lib/storage';
+import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, formatDateYMD, UrgencyStatus } from '@/utils/date';
+
+// Edit notes state
+interface EditNotesState {
+  itemId: string;
+  notes: string;
+  itemTitle: string;
+}
 
 export function DayToDayTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [editNotesState, setEditNotesState] = useState<EditNotesState | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formData, setFormData] = useState<ChecklistItemForm>({
     title: '',
     categoryId: DEFAULT_CATEGORY_ID,
+    dueDate: undefined,
   });
 
-  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, archiveAllCompletedInTab, state } = useAppState();
+  const { getItemsByTab, addChecklistItem, toggleChecklistItem, archiveItem, unarchiveItem, deleteItem, deleteRecurringSeries, archiveAllCompletedInTab, updateItem, state } = useAppState();
 
   // Get parent categories for filter dropdown - ensure we use getCategories() which loads from storage
   const categories = (state?.categories && state.categories.length > 0) ? state.categories : getCategories();
@@ -49,9 +58,23 @@ export function DayToDayTab() {
   const handleAddItem = () => {
     if (formData.title.trim()) {
       addChecklistItem('dayToDay', formData);
-      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID });
+      setFormData({ title: '', categoryId: DEFAULT_CATEGORY_ID, dueDate: undefined });
       setShowAddModal(false);
     }
+  };
+
+  // Helper to convert date input value to ISO string (end of day)
+  const dateInputToISO = (dateStr: string): string => {
+    // Parse YYYY-MM-DD and set to end of day in local time
+    const date = new Date(dateStr + 'T23:59:59');
+    return date.toISOString();
+  };
+
+  // Helper to convert ISO string to date input value
+  const isoToDateInput = (isoStr: string | null | undefined): string => {
+    if (!isoStr) return '';
+    const date = new Date(isoStr);
+    return date.toISOString().split('T')[0];
   };
 
   const handleArchive = (id: string) => {
@@ -86,10 +109,55 @@ export function DayToDayTab() {
     };
   }, []);
 
-  const confirmDelete = () => {
+  // Get the item to be deleted
+  const itemToDeleteData = useMemo(() => {
+    if (!itemToDelete) return null;
+    const allItemsIncludingArchived = getItemsByTab('dayToDay', true);
+    return allItemsIncludingArchived.find(i => i.id === itemToDelete) || null;
+  }, [itemToDelete, getItemsByTab]);
+
+  // Check if the item being deleted is a recurring item
+  const isRecurringDelete = useMemo(() => {
+    return itemToDeleteData?.baseTitle && itemToDeleteData?.recurrence;
+  }, [itemToDeleteData]);
+
+  // Get count of items in the recurring series
+  const recurringSeriesCount = useMemo(() => {
+    if (!itemToDeleteData?.baseTitle) return 0;
+    return state.items.filter(i =>
+      i.baseTitle === itemToDeleteData.baseTitle &&
+      i.tab === 'dayToDay' &&
+      !i.isDeleted
+    ).length;
+  }, [itemToDeleteData, state.items]);
+
+  const confirmDeleteOne = () => {
     if (itemToDelete) {
       deleteItem(itemToDelete);
       setItemToDelete(null);
+    }
+  };
+
+  const confirmDeleteAll = () => {
+    if (itemToDelete) {
+      deleteRecurringSeries(itemToDelete);
+      setItemToDelete(null);
+    }
+  };
+
+  // Edit notes functions
+  const handleEditNotes = (item: ChecklistItem) => {
+    setEditNotesState({
+      itemId: item.id,
+      notes: item.notes || '',
+      itemTitle: item.title,
+    });
+  };
+
+  const confirmEditNotes = (notes: string) => {
+    if (editNotesState) {
+      updateItem(editNotesState.itemId, { notes: notes || undefined });
+      setEditNotesState(null);
     }
   };
 
@@ -184,6 +252,16 @@ export function DayToDayTab() {
           {items.map((item) => {
             if (!isChecklistItem(item)) return null;
             const swipeHandlers = getSwipeHandlers(item.id);
+            
+            // Calculate urgency for items with due date
+            const dueDate = item.dueDate ?? undefined;  // Convert null to undefined for type compatibility
+            const hasDueDate = !!dueDate;
+            const urgencyStatus: UrgencyStatus = hasDueDate
+              ? getUrgencyStatus(dueDate, item.isDone)
+              : item.isDone ? 'complete' : 'normal';
+            const urgencyClasses = getUrgencyClasses(urgencyStatus);
+            const timeUntilDue = hasDueDate ? formatTimeUntilDue(dueDate) : '';
+            
             return (
               <SwipeableItem
                 key={item.id}
@@ -195,7 +273,13 @@ export function DayToDayTab() {
                 rightColor={swipeHandlers.rightColor}
               >
                 <div
-                  className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm category-transition hover-lift"
+                  className={`bg-white px-3 py-1.5 rounded-lg border shadow-sm category-transition hover-lift ${
+                    urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
+                      ? `${urgencyClasses.border} ${urgencyClasses.bg}`
+                      : urgencyStatus === 'warning'
+                      ? `${urgencyClasses.border} ${urgencyClasses.bg}`
+                      : 'border-gray-200'
+                  }`}
                   style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
                 >
                   <div className="flex items-center gap-2">
@@ -206,10 +290,35 @@ export function DayToDayTab() {
                       className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className={`text-sm font-medium truncate ${item.isDone ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                        {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
-                        {item.title}
-                      </h3>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className={`text-sm font-medium truncate ${
+                          item.isDone
+                            ? 'text-gray-500 line-through'
+                            : urgencyStatus === 'overdue' || urgencyStatus === 'urgent'
+                            ? urgencyClasses.text
+                            : 'text-gray-900'
+                        }`}>
+                          {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
+                          {item.title}
+                        </h3>
+                        {/* Time left badge for items with due date */}
+                        {hasDueDate && timeUntilDue && !item.isDone && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
+                            {timeUntilDue}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      <button
+                        onClick={() => handleEditNotes(item)}
+                        className={`p-0.5 ${item.notes ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400 hover:text-gray-600'}`}
+                        title={item.notes ? "Edit Notes" : "Add Notes"}
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -239,6 +348,12 @@ export function DayToDayTab() {
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && formData.title.trim()) {
+                  e.preventDefault();
+                  handleAddItem();
+                }
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent form-input"
               placeholder="Enter task title"
               autoFocus
@@ -256,7 +371,36 @@ export function DayToDayTab() {
             />
           </div>
           
-          {/* Color is now determined by category */}
+          {/* Due Date (optional) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Due Date (optional)
+            </label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="date"
+                value={isoToDateInput(formData.dueDate)}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  dueDate: e.target.value ? dateInputToISO(e.target.value) : null
+                })}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent form-input"
+              />
+              {formData.dueDate && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, dueDate: null })}
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  title="Clear due date"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Leave empty for no due date</p>
+          </div>
           
           <div className="flex justify-end gap-3 pt-4">
             <Button
@@ -273,15 +417,36 @@ export function DayToDayTab() {
         </div>
       </Modal>
 
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={!!itemToDelete}
-        onClose={() => setItemToDelete(null)}
-        onConfirm={confirmDelete}
-        title="Delete Task"
-        message="Delete this task and all its history? This cannot be undone."
-        confirmText="Delete"
-        danger={true}
+      {/* Delete Confirmation - Show different dialogs for recurring vs non-recurring items */}
+      {isRecurringDelete ? (
+        <RecurrenceDeleteDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onDeleteOne={confirmDeleteOne}
+          onDeleteAll={confirmDeleteAll}
+          title="Delete Recurring Task"
+          itemName={itemToDeleteData?.baseTitle}
+          seriesCount={recurringSeriesCount}
+        />
+      ) : (
+        <ConfirmDialog
+          isOpen={!!itemToDelete}
+          onClose={() => setItemToDelete(null)}
+          onConfirm={confirmDeleteOne}
+          title="Delete Task"
+          message="Delete this task and all its history? This cannot be undone."
+          confirmText="Delete"
+          danger={true}
+        />
+      )}
+
+      {/* Notes Editor Modal */}
+      <NotesEditorModal
+        isOpen={!!editNotesState}
+        onClose={() => setEditNotesState(null)}
+        onSave={confirmEditNotes}
+        notes={editNotesState?.notes || ''}
+        itemTitle={editNotesState?.itemTitle}
       />
 
       {/* Toast Message */}

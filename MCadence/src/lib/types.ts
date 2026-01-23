@@ -54,8 +54,10 @@ export interface BaseItem {
   updatedAt: string;  // ISO
   archivedAt?: string | null; // When the item was archived
   deletedAt?: string | null; // When the item was soft-deleted
+  dueDate?: string | null; // ISO timestamp for due date (optional, independent of recurrence)
   recurrence?: RecurrenceSettings; // For recurring items
   periodKey?: string; // Period identifier: "20260113" for due date
+  notes?: string; // Free-form text notes for the item
 }
 
 export interface ChecklistItem extends BaseItem {
@@ -126,6 +128,7 @@ export interface RecurrenceFormSettings {
 export interface ChecklistItemForm {
   title: string;
   categoryId: string;
+  dueDate?: string | null; // ISO timestamp for due date (optional)
   recurrence?: RecurrenceFormSettings; // Only for hitMyGoal tab
 }
 
@@ -134,6 +137,7 @@ export interface TimeItemForm {
   categoryId: string;
   requiredHours: number;
   requiredMinutes: number;
+  dueDate?: string | null; // ISO timestamp for due date (optional)
   recurrence?: RecurrenceFormSettings;
 }
 
