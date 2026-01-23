@@ -57,6 +57,7 @@ export interface BaseItem {
   dueDate?: string | null; // ISO timestamp for due date (optional, independent of recurrence)
   recurrence?: RecurrenceSettings; // For recurring items
   periodKey?: string; // Period identifier: "20260113" for due date
+  notes?: string; // Free-form text notes for the item
 }
 
 export interface ChecklistItem extends BaseItem {

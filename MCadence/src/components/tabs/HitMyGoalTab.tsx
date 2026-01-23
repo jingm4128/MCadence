@@ -5,7 +5,7 @@ import { useAppState } from '@/lib/state';
 import { ChecklistItem, ChecklistItemForm, isChecklistItem, RecurrenceFormSettings, RecurrenceSettings, SwipeAction } from '@/lib/types';
 import { DEFAULT_CATEGORY_ID } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
-import { Modal, ConfirmDialog, RecurrenceDeleteDialog } from '@/components/ui/Modal';
+import { Modal, ConfirmDialog, RecurrenceDeleteDialog, NotesEditorModal } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { TabHeader } from '@/components/ui/TabHeader';
@@ -36,11 +36,19 @@ interface EditRecurrenceState {
   hasExistingRecurrence: boolean;
 }
 
+// Edit notes state
+interface EditNotesState {
+  itemId: string;
+  notes: string;
+  itemTitle: string;
+}
+
 export function HitMyGoalTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
+  const [editNotesState, setEditNotesState] = useState<EditNotesState | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formData, setFormData] = useState<ChecklistItemForm>({
@@ -229,6 +237,22 @@ export function HitMyGoalTab() {
     }
   };
 
+  // Edit notes functions
+  const handleEditNotes = (item: ChecklistItem) => {
+    setEditNotesState({
+      itemId: item.id,
+      notes: item.notes || '',
+      itemTitle: item.title,
+    });
+  };
+
+  const confirmEditNotes = (notes: string) => {
+    if (editNotesState) {
+      updateItem(editNotesState.itemId, { notes: notes || undefined });
+      setEditNotesState(null);
+    }
+  };
+
   // Check if there are completed items to archive
   const completedCount = allItems.filter(item =>
     isChecklistItem(item) && item.isDone
@@ -386,6 +410,15 @@ export function HitMyGoalTab() {
                       </div>
                     </div>
                     <div className="flex gap-0.5">
+                      <button
+                        onClick={() => handleEditNotes(item)}
+                        className={`p-0.5 ${item.notes ? 'text-blue-500 hover:text-blue-700' : 'text-gray-400 hover:text-gray-600'}`}
+                        title={item.notes ? "Edit Notes" : "Add Notes"}
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
                       <button
                         onClick={() => handleEditRecurrence(item)}
                         className="text-gray-400 hover:text-gray-600 p-0.5"
@@ -551,6 +584,15 @@ export function HitMyGoalTab() {
           </div>
         )}
       </Modal>
+
+      {/* Notes Editor Modal */}
+      <NotesEditorModal
+        isOpen={!!editNotesState}
+        onClose={() => setEditNotesState(null)}
+        onSave={confirmEditNotes}
+        notes={editNotesState?.notes || ''}
+        itemTitle={editNotesState?.itemTitle}
+      />
 
       {/* Toast Notification */}
       {toast && (

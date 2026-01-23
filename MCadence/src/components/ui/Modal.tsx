@@ -199,3 +199,83 @@ export function RecurrenceDeleteDialog({
     </Modal>
   );
 }
+
+// Notes editor modal - allows editing free-form text notes for any item
+interface NotesEditorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (notes: string) => void;
+  notes: string;
+  itemTitle?: string;
+}
+
+export function NotesEditorModal({
+  isOpen,
+  onClose,
+  onSave,
+  notes,
+  itemTitle,
+}: NotesEditorModalProps) {
+  const [editedNotes, setEditedNotes] = React.useState(notes);
+
+  // Reset edited notes when modal opens with new notes
+  React.useEffect(() => {
+    if (isOpen) {
+      setEditedNotes(notes);
+    }
+  }, [isOpen, notes]);
+
+  if (!isOpen) return null;
+
+  const handleSave = () => {
+    onSave(editedNotes.trim());
+    onClose();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Ctrl/Cmd + Enter to save
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      handleSave();
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Notes">
+      <div className="space-y-4">
+        {itemTitle && (
+          <p className="text-sm text-gray-600">
+            Notes for: <span className="font-medium text-gray-800">{itemTitle}</span>
+          </p>
+        )}
+        
+        <textarea
+          value={editedNotes}
+          onChange={(e) => setEditedNotes(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Add notes here..."
+          className="w-full h-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm"
+          autoFocus
+        />
+        
+        <p className="text-xs text-gray-400">
+          Tip: Press Ctrl+Enter to save
+        </p>
+        
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-colors"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}

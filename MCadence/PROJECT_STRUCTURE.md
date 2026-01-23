@@ -14,6 +14,7 @@ MCadence is a productivity tracking application built with Next.js 14 (App Route
 - Automatic backups with configurable frequency
 - Configurable swipe gestures per tab
 - Long press to edit items (SpendMyTime: name, category, and time spent)
+- Notes support for all items (free-form text notes per item/occurrence)
 
 ---
 
@@ -41,7 +42,7 @@ src/
 │   │   └── SpendMyTimeTab.tsx  # Time tracking tab
 │   ├── ui/                 # Reusable UI components
 │   │   ├── Button.tsx          # Button component
-│   │   ├── Modal.tsx           # Modal, ConfirmDialog, RecurrenceDeleteDialog
+│   │   ├── Modal.tsx           # Modal, ConfirmDialog, RecurrenceDeleteDialog, NotesEditorModal
 │   │   ├── CategoryEditorModal.tsx  # Category management
 │   │   ├── CategorySelector.tsx     # Category dropdown
 │   │   ├── ImportExportModal.tsx    # Data import/export
@@ -113,6 +114,7 @@ interface BaseItem {
   isDeleted?: boolean;    // Soft-delete flag (keeps data, hides from UI)
   deletedAt?: string;     // When the item was soft-deleted
   dueDate?: string | null; // Optional due date (ISO timestamp) - items with no dueDate sort to bottom
+  notes?: string;         // Free-form text notes for the item
   // ... other fields
 }
 
@@ -461,5 +463,6 @@ export async function POST(request: NextRequest) {
 | Add backup feature | `storage.ts`, `SettingsModal.tsx` |
 | Add long press editing | `SwipeableItem.tsx`, tab component (add onLongPress handler) |
 | Recurring item deletion | `state.tsx` (deleteRecurringSeries), `Modal.tsx` (RecurrenceDeleteDialog), tab components |
+| Edit item notes | `Modal.tsx` (NotesEditorModal), tab components (notes button + editNotesState) |
 
 
