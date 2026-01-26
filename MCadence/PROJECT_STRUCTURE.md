@@ -53,7 +53,8 @@ src/
 │   │   ├── SettingsModal.tsx        # App settings (backup, timers, swipe config)
 │   │   ├── SwipeableItem.tsx        # Swipe gestures (configurable actions)
 │   │   ├── TabBar.tsx               # Tab navigation
-│   │   └── TabHeader.tsx            # Shared tab header (archive icon, add button, filter)
+│   │   ├── TabHeader.tsx            # Shared tab header (archive icon, add button, filter)
+│   │   └── WelcomeModal.tsx         # First-time user welcome/import prompt
 │   └── ai/                 # AI Feature components
 │       ├── AiPanel.tsx         # AI settings panel
 │       ├── InsightCard.tsx     # Insight display
@@ -198,6 +199,12 @@ LocalStorage persistence functions:
 - `loadCategories()` / `saveCategories()` - Categories
 - `exportState()` / `importState()` - Import/export
 - `loadSettings()` / `saveSettings()` - App settings
+
+Data detection and welcome modal functions:
+- `hasData()` - Check if there are any non-deleted items in localStorage
+- `hasSeenWelcome()` - Check if user has seen the welcome modal
+- `markWelcomeSeen()` - Mark welcome modal as seen
+- `clearWelcomeSeen()` - Reset welcome modal state (called by `clearState()`)
 
 ### 5. App Settings (`src/lib/types.ts` + `src/lib/storage.ts`)
 
@@ -422,6 +429,19 @@ Central settings panel accessible from the menu:
 - **Timer Settings** - Enable/disable concurrent timers for Spend My Time
 - **Swipe Configuration** - Customize swipe left/right actions per tab
 
+### WelcomeModal Component (`src/components/ui/WelcomeModal.tsx`)
+
+First-time user onboarding modal that appears when:
+- No data exists in localStorage (first visit or after clearing data)
+- User has not previously dismissed the modal
+
+The modal offers two options:
+- **Import Backup** - Opens file picker to import a previous backup JSON file
+- **Start Fresh** - Dismisses the modal and begins with empty data
+
+This improves UX for users who need to restore data after browser clear or deployment changes.
+The modal state is tracked via `hasSeenWelcome()` and `markWelcomeSeen()` in storage.ts.
+
 ### AI Components
 
 Pattern for AI feature components:
@@ -484,5 +504,6 @@ export async function POST(request: NextRequest) {
 | Edit item notes | `Modal.tsx` (NotesEditorModal), tab components (notes button + editNotesState) |
 | Enter key to save | Tab components (add onKeyDown handler to title inputs) |
 | AI settings editing | `AiPanel.tsx` (AISettingsPanel with long press pattern) |
+| First-time user onboarding | `WelcomeModal.tsx`, `storage.ts` (hasData, welcome state functions), `HomePageContent.tsx` |
 
 
