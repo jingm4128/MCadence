@@ -383,6 +383,28 @@ export function formatTimeUntilDue(nextDueISO: string | undefined): string {
 }
 
 /**
+ * Format the due date display text for an item.
+ * Shows time remaining if there's a due date, or "- no due date" if not.
+ * Used for consistent due date display across all tabs.
+ *
+ * @param dueDate The due date ISO string (from item.dueDate or item.recurrence?.nextDue)
+ * @param isComplete Whether the item is completed
+ * @returns Display string for the due date
+ */
+export function formatDueDateDisplay(dueDate: string | null | undefined, isComplete: boolean = false): string {
+  if (!dueDate) {
+    return '- no due date';
+  }
+  
+  if (isComplete) {
+    // For completed items, just show the date
+    return formatDateYMD(dueDate);
+  }
+  
+  return formatTimeUntilDue(dueDate) || formatDateYMD(dueDate);
+}
+
+/**
  * Get CSS classes for urgency status.
  */
 export function getUrgencyClasses(status: UrgencyStatus): {

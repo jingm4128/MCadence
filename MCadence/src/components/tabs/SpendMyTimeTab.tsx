@@ -3,15 +3,15 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAppState } from '@/lib/state';
 import { TimeItemForm, TimeItem, isTimeProject, RecurrenceFormSettings, RecurrenceSettings, SwipeAction } from '@/lib/types';
-import { DEFAULT_CATEGORY_ID, WEEKLY_PROGRESS_ALERT_THRESHOLD } from '@/lib/constants';
+import { DEFAULT_CATEGORY_ID, WEEKLY_PROGRESS_ALERT_THRESHOLD, DEFAULT_TIMEZONE } from '@/lib/constants';
 import { Button } from '@/components/ui/Button';
 import { Modal, ConfirmDialog, RecurrenceDeleteDialog, NotesEditorModal } from '@/components/ui/Modal';
 import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryId, getCategories } from '@/components/ui/CategorySelector';
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
-import { loadSettings } from '@/lib/storage';
-import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyStatusWithWork, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
+import { loadSettings, loadSettings as getSettings } from '@/lib/storage';
+import { formatMinutes, getPeriodProgress, getNowInTimezone, needsWeekReset, getUrgencyStatus, getUrgencyStatusWithWork, getUrgencyClasses, formatDueDateDisplay, getCurrentPeriodKey, formatTitleWithPeriod, getPeriodDueDate, UrgencyStatus } from '@/utils/date';
 
 // Edit item form state (for long press editing)
 interface EditItemState {
@@ -255,25 +255,62 @@ export function SpendMyTimeTab() {
     if (editRecurrenceState) {
       const { projectId, recurrence } = editRecurrenceState;
       
+      // Find the item to check for existing recurrence
+      const allProjectsList = getItemsByTab('spendMyTime', true);
+      const project = allProjectsList.find(p => p.id === projectId);
+      if (!project || !isTimeProject(project)) {
+        setEditRecurrenceState(null);
+        return;
+      }
+      
+      const existingRecurrence = project.recurrence;
+      
       if (!recurrence || !recurrence.enabled) {
         // Remove recurrence
         updateItem(projectId, { recurrence: undefined });
       } else {
-        // Update recurrence - preserve existing completedOccurrences
-        const project = items.find(p => p.id === projectId);
-        const existingRecurrence = project?.recurrence;
+        // Check if we're converting a non-recurring item to recurring
+        const isConvertingToRecurring = !existingRecurrence;
         
+        // Get settings for week start day
+        const settings = getSettings();
+        const weekStartDay = settings.weekStartDay;
+        
+        // Calculate periodKey and nextDue for recurring items
+        const periodKey = getCurrentPeriodKey(recurrence.frequency, undefined, weekStartDay);
+        const nextDue = getPeriodDueDate(periodKey);
+        
+        // Build new recurrence settings
         const newRecurrence: RecurrenceSettings = {
           frequency: recurrence.frequency,
           interval: recurrence.interval || 1,
           totalOccurrences: recurrence.totalOccurrences,
           completedOccurrences: existingRecurrence?.completedOccurrences || 0,
-          timezone: recurrence.timezone,
+          timezone: recurrence.timezone || DEFAULT_TIMEZONE,
           startDate: existingRecurrence?.startDate || new Date().toISOString(),
-          nextDue: existingRecurrence?.nextDue || new Date().toISOString(),
+          nextDue: nextDue,
         };
         
-        updateItem(projectId, { recurrence: newRecurrence });
+        if (isConvertingToRecurring) {
+          // Converting non-recurring to recurring:
+          // - Set baseTitle to preserve original title
+          // - Update title with period suffix
+          // - Set periodKey for the current period
+          // - Clear any explicit dueDate (recurrence.nextDue will be used)
+          const baseTitle = project.baseTitle || project.title;
+          const newTitle = formatTitleWithPeriod(baseTitle, periodKey);
+          
+          updateItem(projectId, {
+            recurrence: newRecurrence,
+            baseTitle: baseTitle,
+            title: newTitle,
+            periodKey: periodKey,
+            dueDate: undefined, // Clear explicit due date when using recurrence
+          });
+        } else {
+          // Just updating existing recurrence settings
+          updateItem(projectId, { recurrence: newRecurrence });
+        }
       }
       
       setEditRecurrenceState(null);
@@ -476,7 +513,7 @@ export function SpendMyTimeTab() {
               ? getUrgencyStatusWithWork(effectiveDueDate, remainingMinutes, progress >= 1)
               : 'normal';
             const urgencyClasses = getUrgencyClasses(itemUrgency);
-            const timeUntilDue = hasDueDate ? formatTimeUntilDue(effectiveDueDate) : '';
+            const dueDateDisplay = formatDueDateDisplay(effectiveDueDate, progress >= 1);
             
             // Calculate progress percentage for background
             const progressPercent = Math.min(100, progress * 100);
@@ -546,10 +583,10 @@ export function SpendMyTimeTab() {
                             {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
                             {project.title}
                           </h3>
-                          {/* Urgency badge for items with due dates */}
-                          {hasDueDate && timeUntilDue && progress < 1 && (
-                            <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
-                              {timeUntilDue}
+                          {/* Due date display - always shown at end of item */}
+                          {progress < 1 && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${hasDueDate ? urgencyClasses.badge : 'bg-gray-100 text-gray-500'}`}>
+                              {dueDateDisplay}
                             </span>
                           )}
                         </div>

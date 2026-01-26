@@ -1,4 +1,4 @@
-import { AppState, Category, AppSettings, BackupFrequency } from './types';
+import { AppState, Category, AppSettings, BackupFrequency, Item } from './types';
 import { STORAGE_KEY, DEBOUNCE_MS, DEFAULT_CATEGORIES } from './constants';
 
 // Separate storage key for categories (for independent export/import)
@@ -37,6 +37,60 @@ export function loadState(): AppState {
   }
 }
 
+// Check if there is any meaningful data (items) in localStorage
+// Returns true if there are items, false if empty or no data
+export function hasData(): boolean {
+  // SSR safety check
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return false;
+    
+    const parsed = JSON.parse(stored);
+    if (!parsed || !Array.isArray(parsed.items)) return false;
+    
+    // Check for non-deleted items only
+    const activeItems = parsed.items.filter((item: Item) => !item.isDeleted);
+    return activeItems.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+// Storage key for tracking if user has dismissed welcome modal
+const WELCOME_DISMISSED_KEY = 'mcadence_welcome_dismissed';
+
+// Check if the user has dismissed the welcome/import prompt
+export function hasSeenWelcome(): boolean {
+  // SSR safety check
+  if (typeof window === 'undefined') return true; // Default to true on server to avoid flash
+  
+  try {
+    return localStorage.getItem(WELCOME_DISMISSED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+// Mark that the user has dismissed the welcome modal
+export function markWelcomeSeen(): void {
+  try {
+    localStorage.setItem(WELCOME_DISMISSED_KEY, 'true');
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+// Clear the welcome seen flag (for testing or after data clear)
+export function clearWelcomeSeen(): void {
+  try {
+    localStorage.removeItem(WELCOME_DISMISSED_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 // Save state to localStorage with debouncing
 let saveTimeout: NodeJS.Timeout | null = null;
 
@@ -63,12 +117,13 @@ export function saveStateImmediate(state: AppState): void {
   }
 }
 
-// Clear all data from localStorage (state, categories, and active tab)
+// Clear all data from localStorage (state, categories, active tab, and welcome flag)
 export function clearState(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(CATEGORIES_STORAGE_KEY);
     localStorage.removeItem('mcadence_active_tab'); // Also clear active tab preference
+    localStorage.removeItem(WELCOME_DISMISSED_KEY); // Reset welcome modal so it shows again
   } catch (error) {
     console.error('Error clearing state from localStorage:', error);
   }

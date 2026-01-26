@@ -10,8 +10,9 @@ import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryI
 import { RecurrenceSelector, getRecurrenceDisplayText, getSavedRecurrenceDisplayText } from '@/components/ui/RecurrenceSelector';
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
-import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, UrgencyStatus } from '@/utils/date';
-import { loadSettings } from '@/lib/storage';
+import { getUrgencyStatus, getUrgencyClasses, formatDueDateDisplay, getCurrentPeriodKey, formatTitleWithPeriod, getPeriodDueDate, UrgencyStatus } from '@/utils/date';
+import { loadSettings, loadSettings as getSettings } from '@/lib/storage';
+import { DEFAULT_TIMEZONE } from '@/lib/constants';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'success' | 'info'; onClose: () => void }) {
@@ -211,26 +212,61 @@ export function HitMyGoalTab() {
       const { itemId, recurrence } = editRecurrenceState;
       
       // Find the item to preserve existing recurrence data
-      const allItems = getItemsByTab('hitMyGoal', true);
-      const item = allItems.find(i => i.id === itemId);
-      const existingRecurrence = item && isChecklistItem(item) ? item.recurrence : undefined;
+      const allItemsList = getItemsByTab('hitMyGoal', true);
+      const item = allItemsList.find(i => i.id === itemId);
+      if (!item || !isChecklistItem(item)) {
+        setEditRecurrenceState(null);
+        return;
+      }
+      
+      const existingRecurrence = item.recurrence;
       
       if (!recurrence || !recurrence.enabled) {
         // Remove recurrence
         updateItem(itemId, { recurrence: undefined });
       } else {
-        // Update recurrence - preserve existing completedOccurrences
+        // Check if we're converting a non-recurring item to recurring
+        const isConvertingToRecurring = !existingRecurrence;
+        
+        // Get settings for week start day
+        const settings = getSettings();
+        const weekStartDay = settings.weekStartDay;
+        
+        // Calculate periodKey and nextDue for recurring items
+        const periodKey = getCurrentPeriodKey(recurrence.frequency, undefined, weekStartDay);
+        const nextDue = getPeriodDueDate(periodKey);
+        
+        // Build new recurrence settings
         const newRecurrence: RecurrenceSettings = {
           frequency: recurrence.frequency,
           interval: recurrence.interval || 1,
           totalOccurrences: recurrence.totalOccurrences,
           completedOccurrences: existingRecurrence?.completedOccurrences || 0,
-          timezone: recurrence.timezone,
+          timezone: recurrence.timezone || DEFAULT_TIMEZONE,
           startDate: existingRecurrence?.startDate || new Date().toISOString(),
-          nextDue: existingRecurrence?.nextDue || new Date().toISOString(),
+          nextDue: nextDue,
         };
         
-        updateItem(itemId, { recurrence: newRecurrence });
+        if (isConvertingToRecurring) {
+          // Converting non-recurring to recurring:
+          // - Set baseTitle to preserve original title
+          // - Update title with period suffix
+          // - Set periodKey for the current period
+          // - Clear any explicit dueDate (recurrence.nextDue will be used)
+          const baseTitle = item.baseTitle || item.title;
+          const newTitle = formatTitleWithPeriod(baseTitle, periodKey);
+          
+          updateItem(itemId, {
+            recurrence: newRecurrence,
+            baseTitle: baseTitle,
+            title: newTitle,
+            periodKey: periodKey,
+            dueDate: undefined, // Clear explicit due date when using recurrence
+          });
+        } else {
+          // Just updating existing recurrence settings
+          updateItem(itemId, { recurrence: newRecurrence });
+        }
       }
       
       setEditRecurrenceState(null);
@@ -359,7 +395,7 @@ export function HitMyGoalTab() {
               ? getUrgencyStatus(effectiveDueDate, item.isDone)
               : item.isDone ? 'complete' : 'normal';
             const urgencyClasses = getUrgencyClasses(urgencyStatus);
-            const timeUntilDue = hasDueDate ? formatTimeUntilDue(effectiveDueDate) : '';
+            const dueDateDisplay = formatDueDateDisplay(effectiveDueDate, item.isDone);
             
             const swipeHandlers = getSwipeHandlers(item.id);
             return (
@@ -401,10 +437,10 @@ export function HitMyGoalTab() {
                           {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                           {item.title}
                         </h3>
-                        {/* Time left badge for items with due dates */}
-                        {hasDueDate && timeUntilDue && !item.isDone && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
-                            {timeUntilDue}
+                        {/* Due date display - always shown at end of item */}
+                        {!item.isDone && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${hasDueDate ? urgencyClasses.badge : 'bg-gray-100 text-gray-500'}`}>
+                            {dueDateDisplay}
                           </span>
                         )}
                       </div>

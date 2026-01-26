@@ -10,7 +10,8 @@ import { SpendMyTimeTab } from '@/components/tabs/SpendMyTimeTab';
 import { ConfirmDialog } from '@/components/ui/Modal';
 import { ImportExportModal } from '@/components/ui/ImportExportModal';
 import { SettingsModal } from '@/components/ui/SettingsModal';
-import { exportState, clearState, saveStateImmediate, saveCategories, loadSettings, saveSettings, isBackupDue, performAutoBackup } from '@/lib/storage';
+import { WelcomeModal } from '@/components/ui/WelcomeModal';
+import { exportState, clearState, saveStateImmediate, saveCategories, loadSettings, saveSettings, isBackupDue, performAutoBackup, hasData, hasSeenWelcome, markWelcomeSeen } from '@/lib/storage';
 import { DEFAULT_CATEGORIES } from '@/lib/constants';
 import { useHistoryGuard, useModalHistory, ModalId } from '@/hooks/useHistoryGuard';
 
@@ -89,7 +90,19 @@ export default function HomePageContent() {
   const settingsModal = useModalWithHistory('settings');
   const aiModal = useModalWithHistory('ai');
   
-  const { state, dispatch } = useAppState();
+  // Welcome modal state (for first-time users or after data clear)
+  const [showWelcome, setShowWelcome] = useState(false);
+  
+  const { state, dispatch, isHydrated } = useAppState();
+  
+  // Check if we should show the welcome modal (after hydration)
+  useEffect(() => {
+    if (isHydrated) {
+      // Show welcome modal if there's no data and user hasn't dismissed it before
+      const shouldShowWelcome = !hasData() && !hasSeenWelcome();
+      setShowWelcome(shouldShowWelcome);
+    }
+  }, [isHydrated]);
 
   // Check for automatic backup on app mount
   useEffect(() => {
@@ -212,6 +225,28 @@ export default function HomePageContent() {
     
     // Mark as user navigation after import
     markUserNavigation();
+    
+    // Mark welcome as seen after successful import
+    markWelcomeSeen();
+  };
+  
+  // Handle welcome modal "Start Fresh" action
+  const handleStartFresh = useCallback(() => {
+    markWelcomeSeen();
+    setShowWelcome(false);
+  }, []);
+  
+  // Handle welcome modal close
+  const handleWelcomeClose = useCallback(() => {
+    setShowWelcome(false);
+    // Don't mark as seen on close, so it shows again next time if still no data
+  }, []);
+  
+  // Handle welcome modal import (wrapper for handleImport)
+  // Note: Not using useCallback here to avoid stale closure issues
+  const handleWelcomeImport = (data: { state: any; mode: 'overwrite' }) => {
+    handleImport(data);
+    setShowWelcome(false);
   };
 
   const handleClearData = () => {
@@ -377,6 +412,14 @@ export default function HomePageContent() {
           />
         </Suspense>
       )}
+
+      {/* Welcome Modal - shows for first-time users or after data clear */}
+      <WelcomeModal
+        isOpen={showWelcome}
+        onClose={handleWelcomeClose}
+        onImport={handleWelcomeImport}
+        onStartFresh={handleStartFresh}
+      />
 
     </Layout>
   );

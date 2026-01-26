@@ -53,7 +53,8 @@ src/
 │   │   ├── SettingsModal.tsx        # App settings (backup, timers, swipe config)
 │   │   ├── SwipeableItem.tsx        # Swipe gestures (configurable actions)
 │   │   ├── TabBar.tsx               # Tab navigation
-│   │   └── TabHeader.tsx            # Shared tab header (archive icon, add button, filter)
+│   │   ├── TabHeader.tsx            # Shared tab header (archive icon, add button, filter)
+│   │   └── WelcomeModal.tsx         # First-time user welcome/import prompt
 │   └── ai/                 # AI Feature components
 │       ├── AiPanel.tsx         # AI settings panel
 │       ├── InsightCard.tsx     # Insight display
@@ -182,6 +183,17 @@ The state provider includes a useEffect that automatically creates new period it
 - Old items are marked as "missed" if not completed
 - **Deduplication**: A `processedRecurrences` Set prevents duplicate items when multiple old period items exist for the same recurring task
 
+**Converting Non-Recurring to Recurring:**
+
+When editing a non-recurring item and enabling recurrence, the `confirmEditRecurrence` function in tab components:
+1. Sets `baseTitle` to the original title (without period suffix)
+2. Formats `title` with the period key suffix (e.g., "Task-20260126")
+3. Sets `periodKey` to the current period (YYYYMMDD format)
+4. Sets `recurrence.nextDue` to the appropriate due date for the period
+5. Clears the explicit `dueDate` field (recurring items use `recurrence.nextDue` instead)
+
+This ensures the converted item behaves identically to items created as recurring from the start.
+
 ### 3. Constants (`src/lib/constants.ts`)
 
 Application constants including:
@@ -198,6 +210,12 @@ LocalStorage persistence functions:
 - `loadCategories()` / `saveCategories()` - Categories
 - `exportState()` / `importState()` - Import/export
 - `loadSettings()` / `saveSettings()` - App settings
+
+Data detection and welcome modal functions:
+- `hasData()` - Check if there are any non-deleted items in localStorage
+- `hasSeenWelcome()` - Check if user has seen the welcome modal
+- `markWelcomeSeen()` - Mark welcome modal as seen
+- `clearWelcomeSeen()` - Reset welcome modal state (called by `clearState()`)
 
 ### 5. App Settings (`src/lib/types.ts` + `src/lib/storage.ts`)
 
@@ -352,6 +370,13 @@ advanceRecurrence(settings)                        // Honors interval from setti
 getCurrentPeriodKey(frequency)
 formatTitleWithPeriod(title, periodKey)
 isPeriodPassed(periodKey, frequency)
+getPeriodDueDate(periodKey, frequency)            // Get due date for a specific period
+
+// Due date display
+formatDueDateDisplay(dueDate, isComplete)         // Consistent due date formatting
+// Returns "- no due date" when no date exists
+// Returns relative time ("2d left") for active items
+// Returns formatted date for completed items
 
 // Urgency status (for deadline alerts)
 getUrgencyStatus(nextDue, isComplete)              // Basic time-based urgency
@@ -422,6 +447,19 @@ Central settings panel accessible from the menu:
 - **Timer Settings** - Enable/disable concurrent timers for Spend My Time
 - **Swipe Configuration** - Customize swipe left/right actions per tab
 
+### WelcomeModal Component (`src/components/ui/WelcomeModal.tsx`)
+
+First-time user onboarding modal that appears when:
+- No data exists in localStorage (first visit or after clearing data)
+- User has not previously dismissed the modal
+
+The modal offers two options:
+- **Import Backup** - Opens file picker to import a previous backup JSON file
+- **Start Fresh** - Dismisses the modal and begins with empty data
+
+This improves UX for users who need to restore data after browser clear or deployment changes.
+The modal state is tracked via `hasSeenWelcome()` and `markWelcomeSeen()` in storage.ts.
+
 ### AI Components
 
 Pattern for AI feature components:
@@ -484,5 +522,6 @@ export async function POST(request: NextRequest) {
 | Edit item notes | `Modal.tsx` (NotesEditorModal), tab components (notes button + editNotesState) |
 | Enter key to save | Tab components (add onKeyDown handler to title inputs) |
 | AI settings editing | `AiPanel.tsx` (AISettingsPanel with long press pattern) |
+| First-time user onboarding | `WelcomeModal.tsx`, `storage.ts` (hasData, welcome state functions), `HomePageContent.tsx` |
 
 
