@@ -329,47 +329,38 @@ export function HitMyGoalTab() {
                 style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
               >
                 <div className="flex items-center gap-2">
-                  {/* Done/Open status indicator */}
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                    isDone
-                      ? 'bg-green-100 border-green-500 text-green-600'
-                      : 'bg-gray-100 border-gray-400'
-                  }`}>
-                    {isDone && (
-                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
                   <div className="flex-1 min-w-0">
                     <h3 className={`text-sm font-medium truncate ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
                       {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                       {item.title}
+                      {isDone && <span className="ml-1 text-green-600">✓</span>}
                     </h3>
                     {/* Show recurrence info if available */}
                     {checklistItem?.recurrence && (
-                      <span className="text-xs text-gray-400">
-                        {checklistItem.recurrence.completedOccurrences}
-                        {checklistItem.recurrence.totalOccurrences ? `/${checklistItem.recurrence.totalOccurrences}` : ''} completed
-                      </span>
+                      <div className="flex items-center gap-2 text-xs mt-0.5">
+                        <span className="text-gray-400">
+                          {checklistItem.recurrence.completedOccurrences}
+                          {checklistItem.recurrence.totalOccurrences ? `/${checklistItem.recurrence.totalOccurrences}` : ''} completed
+                        </span>
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-0.5">
                     <button
                       onClick={() => unarchiveItem(item.id)}
-                      className="text-primary-600 hover:text-primary-800 p-1"
+                      className="text-primary-600 hover:text-primary-800 p-0.5"
                       title="Restore"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                       </svg>
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-400 hover:text-red-600 p-1"
+                      className="text-red-400 hover:text-red-600 p-0.5"
                       title="Delete"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
