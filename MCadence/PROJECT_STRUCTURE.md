@@ -183,6 +183,17 @@ The state provider includes a useEffect that automatically creates new period it
 - Old items are marked as "missed" if not completed
 - **Deduplication**: A `processedRecurrences` Set prevents duplicate items when multiple old period items exist for the same recurring task
 
+**Converting Non-Recurring to Recurring:**
+
+When editing a non-recurring item and enabling recurrence, the `confirmEditRecurrence` function in tab components:
+1. Sets `baseTitle` to the original title (without period suffix)
+2. Formats `title` with the period key suffix (e.g., "Task-20260126")
+3. Sets `periodKey` to the current period (YYYYMMDD format)
+4. Sets `recurrence.nextDue` to the appropriate due date for the period
+5. Clears the explicit `dueDate` field (recurring items use `recurrence.nextDue` instead)
+
+This ensures the converted item behaves identically to items created as recurring from the start.
+
 ### 3. Constants (`src/lib/constants.ts`)
 
 Application constants including:
@@ -359,6 +370,13 @@ advanceRecurrence(settings)                        // Honors interval from setti
 getCurrentPeriodKey(frequency)
 formatTitleWithPeriod(title, periodKey)
 isPeriodPassed(periodKey, frequency)
+getPeriodDueDate(periodKey, frequency)            // Get due date for a specific period
+
+// Due date display
+formatDueDateDisplay(dueDate, isComplete)         // Consistent due date formatting
+// Returns "- no due date" when no date exists
+// Returns relative time ("2d left") for active items
+// Returns formatted date for completed items
 
 // Urgency status (for deadline alerts)
 getUrgencyStatus(nextDue, isComplete)              // Basic time-based urgency

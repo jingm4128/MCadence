@@ -10,7 +10,7 @@ import { CategorySelector, getCategoryColor, getCategoryIcon, getParentCategoryI
 import { TabHeader } from '@/components/ui/TabHeader';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import { loadSettings } from '@/lib/storage';
-import { getUrgencyStatus, getUrgencyClasses, formatTimeUntilDue, formatDateYMD, UrgencyStatus } from '@/utils/date';
+import { getUrgencyStatus, getUrgencyClasses, formatDueDateDisplay, UrgencyStatus } from '@/utils/date';
 
 // Edit notes state
 interface EditNotesState {
@@ -260,7 +260,7 @@ export function DayToDayTab() {
               ? getUrgencyStatus(dueDate, item.isDone)
               : item.isDone ? 'complete' : 'normal';
             const urgencyClasses = getUrgencyClasses(urgencyStatus);
-            const timeUntilDue = hasDueDate ? formatTimeUntilDue(dueDate) : '';
+            const dueDateDisplay = formatDueDateDisplay(dueDate, item.isDone);
             
             return (
               <SwipeableItem
@@ -301,10 +301,10 @@ export function DayToDayTab() {
                           {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                           {item.title}
                         </h3>
-                        {/* Time left badge for items with due date */}
-                        {hasDueDate && timeUntilDue && !item.isDone && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${urgencyClasses.badge}`}>
-                            {timeUntilDue}
+                        {/* Due date display - always shown at end of task */}
+                        {!item.isDone && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${hasDueDate ? urgencyClasses.badge : 'bg-gray-100 text-gray-500'}`}>
+                            {dueDateDisplay}
                           </span>
                         )}
                       </div>
