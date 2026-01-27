@@ -162,7 +162,7 @@ export function DayToDayTab() {
       leftColor: swipeConfig.left === 'delete' ? 'bg-red-500' : 'bg-blue-500',
       rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
     };
-  }, []);
+  }, [archiveItem, deleteItem]);
 
   // Get the item to be deleted
   const itemToDeleteData = useMemo(() => {

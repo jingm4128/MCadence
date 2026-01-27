@@ -175,7 +175,7 @@ export function SpendMyTimeTab() {
       rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
       disabled: isActive,
     };
-  }, []);
+  }, [archiveItem, deleteItem]);
 
   // Get the item to be deleted
   const itemToDeleteData = useMemo(() => {
