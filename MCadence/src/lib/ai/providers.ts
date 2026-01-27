@@ -40,8 +40,6 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
     models: [
       { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Fast and affordable' },
       { id: 'gpt-4o', name: 'GPT-4o', description: 'Most capable' },
-      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Powerful with vision' },
-      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fastest' },
     ],
     apiKeyPrefix: 'sk-',
     apiKeyPlaceholder: 'sk-...',
@@ -53,9 +51,8 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
     name: 'Google Gemini',
     defaultModel: 'gemini-2.0-flash',
     models: [
-      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Fast and free tier' },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', description: 'Stable' },
-      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', description: 'Most capable' },
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Fast and affordable' },
+      { id: 'gemini-2.0-pro', name: 'Gemini 2.0 Pro', description: 'Most capable' },
     ],
     apiKeyPrefix: 'AIza',
     apiKeyPlaceholder: 'AIza...',
@@ -67,9 +64,8 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
     name: 'Anthropic',
     defaultModel: 'claude-3-5-sonnet-20241022',
     models: [
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', description: 'Best balance' },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', description: 'Fast and affordable' },
-      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', description: 'Most capable' },
+      { id: 'claude-3-5-haiku-latest', name: 'Claude 3.5 Haiku', description: 'Fast and affordable' },
+      { id: 'claude-3-5-sonnet-latest', name: 'Claude 3.5 Sonnet', description: 'Best balance' },
     ],
     apiKeyPrefix: 'sk-ant-',
     apiKeyPlaceholder: 'sk-ant-...',

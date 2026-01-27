@@ -697,6 +697,7 @@ export function SpendMyTimeTab() {
                   min="0"
                   value={formData.requiredHours}
                   onChange={(e) => setFormData({ ...formData, requiredHours: parseInt(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Hours"
                 />
@@ -711,6 +712,7 @@ export function SpendMyTimeTab() {
                   max="59"
                   value={formData.requiredMinutes}
                   onChange={(e) => setFormData({ ...formData, requiredMinutes: parseInt(e.target.value) || 0 })}
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Minutes"
                 />
