@@ -20,6 +20,7 @@ interface EditItemState {
   categoryId: string;
   hours: number;
   minutes: number;
+  dueDate: string | null | undefined;
 }
 
 // Edit recurrence state
@@ -145,7 +146,7 @@ export function SpendMyTimeTab() {
 
   const handleArchive = (id: string) => {
     archiveItem(id);
-    setToastMessage('Archived, go to archived to recover');
+    setToastMessage('Item archived');
   };
 
   const handleDelete = (id: string) => {
@@ -174,7 +175,7 @@ export function SpendMyTimeTab() {
       rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
       disabled: isActive,
     };
-  }, []);
+  }, [archiveItem, deleteItem]);
 
   // Get the item to be deleted
   const itemToDeleteData = useMemo(() => {
@@ -220,6 +221,7 @@ export function SpendMyTimeTab() {
       categoryId: project.categoryId,
       hours: Math.floor(project.completedMinutes / 60),
       minutes: project.completedMinutes % 60,
+      dueDate: project.dueDate,
     });
   };
 
@@ -229,7 +231,8 @@ export function SpendMyTimeTab() {
       updateItem(editItemState.projectId, {
         title: editItemState.title.trim(),
         categoryId: editItemState.categoryId,
-        completedMinutes: newCompletedMinutes
+        completedMinutes: newCompletedMinutes,
+        dueDate: editItemState.dueDate || undefined
       });
       setEditItemState(null);
     }
@@ -440,54 +443,49 @@ export function SpendMyTimeTab() {
             return (
               <div
                 key={project.id}
-                className="bg-white px-3 py-1.5 rounded-lg border border-gray-200 opacity-70"
+                className="bg-white rounded-lg border border-gray-200 opacity-70"
                 style={{ borderLeftColor: getCategoryColor(project.categoryId), borderLeftWidth: "4px" }}
               >
-                <div className="flex items-center gap-2">
-                  {/* Completion status indicator */}
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                    isComplete
-                      ? 'bg-green-100 border-green-500 text-green-600'
-                      : 'bg-gray-100 border-gray-400'
-                  }`}>
-                    {isComplete && (
-                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-sm font-medium truncate ${isComplete ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
-                      {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
-                      {project.title}
-                    </h3>
-                    {/* Show time progress */}
-                    {timeProject && (
-                      <span className="text-xs text-gray-400">
-                        {formatMinutes(timeProject.completedMinutes)} / {formatMinutes(timeProject.requiredMinutes)}
-                        {isComplete && ' ✓'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-0.5">
-                    <button
-                      onClick={() => unarchiveItem(project.id)}
-                      className="text-primary-600 hover:text-primary-800 p-0.5"
-                      title="Restore"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(project.id)}
-                      className="text-red-400 hover:text-red-600 p-0.5"
-                      title="Delete"
-                    >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                {/* Content - same structure as active items */}
+                <div className="px-3 py-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <h3 className={`text-sm font-medium truncate ${isComplete ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
+                          {project.categoryId && <span className="mr-1">{getCategoryIcon(project.categoryId)}</span>}
+                          {project.title}
+                        </h3>
+                      </div>
+                      {/* Time display - same structure as active items */}
+                      {timeProject && (
+                        <div className="flex items-center gap-2 text-xs mt-0.5">
+                          <span className={`font-medium ${isComplete ? 'text-green-600' : 'text-gray-600'}`}>
+                            {formatMinutes(timeProject.completedMinutes)} / {formatMinutes(timeProject.requiredMinutes)}
+                            {isComplete && ' ✓'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-0.5">
+                      <button
+                        onClick={() => unarchiveItem(project.id)}
+                        className="text-primary-600 hover:text-primary-800 p-0.5"
+                        title="Restore"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(project.id)}
+                        className="text-red-400 hover:text-red-600 p-0.5"
+                        title="Delete"
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -648,10 +646,7 @@ export function SpendMyTimeTab() {
           {items.length === 0 && (
             <div className="text-center py-12 empty-state">
               <div className="empty-state-icon">⏱️</div>
-              <p className="text-gray-500 mb-4">No time projects yet</p>
-              <Button onClick={() => setShowAddModal(true)} className="btn-press">
-                Add your first project
-              </Button>
+              <p className="text-gray-500">No time projects yet</p>
             </div>
           )}
         </div>
@@ -811,7 +806,7 @@ export function SpendMyTimeTab() {
         {editItemState && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Edit the project name, category, and adjust the completed time.
+              Edit the project name, category, due date, and adjust the completed time.
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -891,6 +886,43 @@ export function SpendMyTimeTab() {
                 </div>
               </div>
             </div>
+            {/* Due Date - only show when item has no recurrence */}
+            {(() => {
+              const project = items.find(p => p.id === editItemState.projectId) ||
+                             archivedItems.find(p => p.id === editItemState.projectId);
+              const hasRecurrence = project?.recurrence;
+              return !hasRecurrence ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date (optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={isoToDateInput(editItemState.dueDate)}
+                      onChange={(e) => setEditItemState({
+                        ...editItemState,
+                        dueDate: e.target.value ? dateInputToISO(e.target.value) : undefined
+                      })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    {editItemState.dueDate && (
+                      <button
+                        type="button"
+                        onClick={() => setEditItemState({ ...editItemState, dueDate: undefined })}
+                        className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        title="Clear due date"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Set a due date to track urgency</p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">Due date is managed by recurrence settings</p>
+              );
+            })()}
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="secondary"

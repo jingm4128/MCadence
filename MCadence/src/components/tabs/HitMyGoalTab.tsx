@@ -30,6 +30,14 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   );
 }
 
+// Edit item state (for long press editing)
+interface EditItemState {
+  itemId: string;
+  title: string;
+  categoryId: string;
+  dueDate: string | null | undefined;
+}
+
 // Edit recurrence state
 interface EditRecurrenceState {
   itemId: string;
@@ -48,6 +56,7 @@ export function HitMyGoalTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [editItemState, setEditItemState] = useState<EditItemState | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [editNotesState, setEditNotesState] = useState<EditNotesState | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
@@ -125,7 +134,7 @@ export function HitMyGoalTab() {
 
   const handleArchive = (id: string) => {
     archiveItem(id);
-    setToast({ message: 'Archived, go to archived to recover', type: 'info' });
+    setToast({ message: 'Item archived', type: 'info' });
   };
 
   const handleDelete = (id: string) => {
@@ -153,7 +162,7 @@ export function HitMyGoalTab() {
       leftColor: swipeConfig.left === 'delete' ? 'bg-red-500' : 'bg-blue-500',
       rightColor: swipeConfig.right === 'delete' ? 'bg-red-500' : 'bg-blue-500',
     };
-  }, []);
+  }, [archiveItem, deleteItem]);
 
   // Get the item to be deleted
   const itemToDeleteData = useMemo(() => {
@@ -273,6 +282,27 @@ export function HitMyGoalTab() {
     }
   };
 
+  // Edit item functions (long press)
+  const handleEditItem = (item: ChecklistItem) => {
+    setEditItemState({
+      itemId: item.id,
+      title: item.title,
+      categoryId: item.categoryId,
+      dueDate: item.dueDate,
+    });
+  };
+
+  const confirmEditItem = () => {
+    if (editItemState) {
+      updateItem(editItemState.itemId, {
+        title: editItemState.title.trim(),
+        categoryId: editItemState.categoryId,
+        dueDate: editItemState.dueDate || undefined
+      });
+      setEditItemState(null);
+    }
+  };
+
   // Edit notes functions
   const handleEditNotes = (item: ChecklistItem) => {
     setEditNotesState({
@@ -329,47 +359,38 @@ export function HitMyGoalTab() {
                 style={{ borderLeftColor: getCategoryColor(item.categoryId), borderLeftWidth: "4px" }}
               >
                 <div className="flex items-center gap-2">
-                  {/* Done/Open status indicator */}
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                    isDone
-                      ? 'bg-green-100 border-green-500 text-green-600'
-                      : 'bg-gray-100 border-gray-400'
-                  }`}>
-                    {isDone && (
-                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
                   <div className="flex-1 min-w-0">
                     <h3 className={`text-sm font-medium truncate ${isDone ? 'text-gray-500 line-through' : 'text-gray-700'}`}>
                       {item.categoryId && <span className="mr-1">{getCategoryIcon(item.categoryId)}</span>}
                       {item.title}
+                      {isDone && <span className="ml-1 text-green-600">✓</span>}
                     </h3>
                     {/* Show recurrence info if available */}
                     {checklistItem?.recurrence && (
-                      <span className="text-xs text-gray-400">
-                        {checklistItem.recurrence.completedOccurrences}
-                        {checklistItem.recurrence.totalOccurrences ? `/${checklistItem.recurrence.totalOccurrences}` : ''} completed
-                      </span>
+                      <div className="flex items-center gap-2 text-xs mt-0.5">
+                        <span className="text-gray-400">
+                          {checklistItem.recurrence.completedOccurrences}
+                          {checklistItem.recurrence.totalOccurrences ? `/${checklistItem.recurrence.totalOccurrences}` : ''} completed
+                        </span>
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-0.5">
                     <button
                       onClick={() => unarchiveItem(item.id)}
-                      className="text-primary-600 hover:text-primary-800 p-1"
+                      className="text-primary-600 hover:text-primary-800 p-0.5"
                       title="Restore"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                       </svg>
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="text-red-400 hover:text-red-600 p-1"
+                      className="text-red-400 hover:text-red-600 p-0.5"
                       title="Delete"
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
@@ -403,6 +424,7 @@ export function HitMyGoalTab() {
                 key={item.id}
                 onSwipeLeft={swipeHandlers.onSwipeLeft}
                 onSwipeRight={swipeHandlers.onSwipeRight}
+                onLongPress={() => handleEditItem(item)}
                 leftLabel={swipeHandlers.leftLabel}
                 rightLabel={swipeHandlers.rightLabel}
                 leftColor={swipeHandlers.leftColor}
@@ -473,10 +495,7 @@ export function HitMyGoalTab() {
           {items.length === 0 && (
             <div className="text-center py-12 empty-state">
               <div className="empty-state-icon">🎯</div>
-              <p className="text-gray-500 mb-4">No goals yet</p>
-              <Button onClick={() => setShowAddModal(true)} className="btn-press">
-                Add your first goal
-              </Button>
+              <p className="text-gray-500">No goals yet</p>
             </div>
           )}
         </div>
@@ -620,6 +639,105 @@ export function HitMyGoalTab() {
                 Cancel
               </Button>
               <Button onClick={confirmEditRecurrence}>
+                Save
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Edit Item Modal (Long Press) */}
+      <Modal
+        isOpen={!!editItemState}
+        onClose={() => setEditItemState(null)}
+        title="Edit Goal"
+      >
+        {editItemState && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Edit the goal title, category, and due date.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Goal Title
+              </label>
+              <input
+                type="text"
+                value={editItemState.title}
+                onChange={(e) => setEditItemState({
+                  ...editItemState,
+                  title: e.target.value
+                })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editItemState.title.trim()) {
+                    e.preventDefault();
+                    confirmEditItem();
+                  }
+                }}
+                onFocus={(e) => e.target.select()}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Enter goal title"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <CategorySelector
+                value={editItemState.categoryId}
+                onChange={(categoryId) => setEditItemState({
+                  ...editItemState,
+                  categoryId
+                })}
+                placeholder="Select category"
+              />
+            </div>
+            {/* Due Date - only show when item has no recurrence */}
+            {(() => {
+              const item = items.find(i => i.id === editItemState.itemId) ||
+                          archivedItems.find(i => i.id === editItemState.itemId);
+              const hasRecurrence = item?.recurrence;
+              return !hasRecurrence ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date (optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={isoToDateInput(editItemState.dueDate)}
+                      onChange={(e) => setEditItemState({
+                        ...editItemState,
+                        dueDate: e.target.value ? dateInputToISO(e.target.value) : undefined
+                      })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    {editItemState.dueDate && (
+                      <button
+                        type="button"
+                        onClick={() => setEditItemState({ ...editItemState, dueDate: undefined })}
+                        className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        title="Clear due date"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Set a due date to track urgency</p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">Due date is managed by recurrence settings</p>
+              );
+            })()}
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="secondary"
+                onClick={() => setEditItemState(null)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={confirmEditItem}>
                 Save
               </Button>
             </div>

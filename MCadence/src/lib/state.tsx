@@ -274,11 +274,18 @@ function appStateReducer(state: AppState, action: AppStateAction): AppState {
       return {
         ...state,
         items: state.items.map(item => {
+          // Skip archived items entirely - they are historical records
+          if (item.isArchived) {
+            return item;
+          }
           if ('currentSessionStart' in item) {
+            // Only update period dates, preserve completedMinutes
+            // This prevents data loss when importing backups with old period dates
+            // New occurrences for recurring items are created separately with completedMinutes: 0
             return {
               ...item,
               currentSessionStart: null,
-              completedMinutes: 0,
+              // completedMinutes is intentionally NOT reset - preserves imported/historical progress
               periodStart: toISOStringLocal(newWeekStart),
               periodEnd: toISOStringLocal(newWeekEnd),
               updatedAt: toISOStringLocal(),
