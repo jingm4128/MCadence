@@ -179,8 +179,8 @@ function ProposalCard({
         </select>
       </div>
       
-      {/* Hit My Goal - Recurrence Selector */}
-      {isHitMyGoal && (
+      {/* Day to Day / Hit My Goal - Recurrence Selector */}
+      {(isDayToDay || isHitMyGoal) && (
         <div className="space-y-3 pt-2 border-t border-gray-100">
           <div>
             <label className="block text-xs text-gray-500 mb-1">Recurrence</label>
@@ -219,7 +219,7 @@ function ProposalCard({
             </div>
           )}
           
-          {/* Occurrences limit for recurring goals */}
+          {/* Occurrences limit for recurring items */}
           {hasRecurrence && (
             <div>
               <label className="block text-xs text-gray-500 mb-1">Total occurrences (leave empty for forever)</label>
@@ -276,6 +276,23 @@ function ProposalCard({
                 />
                 <span className="text-sm text-gray-600">{getFrequencyLabel(currentRecurrence)}</span>
               </div>
+            </div>
+          )}
+          
+          {/* Occurrences limit for recurring time projects */}
+          {hasRecurrence && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Total occurrences (leave empty for forever)</label>
+              <input
+                type="number"
+                value={selection.editedTotalOccurrences ?? ''}
+                onChange={(e) => onUpdate(proposal.id, {
+                  editedTotalOccurrences: e.target.value ? parseInt(e.target.value) : undefined
+                })}
+                placeholder="Forever"
+                className="w-24 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
+                min={1}
+              />
             </div>
           )}
           
@@ -498,8 +515,9 @@ export function QuickAddSection({ aiEnabled }: QuickAddSectionProps) {
       const dueDate = selection?.editedDueDate ?? null;
       
       if (tab === 'dayToDay') {
-        // Add as checklist item (no recurrence for day-to-day, but can have due date)
-        addChecklistItem(tab, { title, categoryId, dueDate });
+        // Add as checklist item with optional recurrence and due date
+        const recurrenceForm = convertToRecurrenceForm(recurrence, interval, totalOccurrences);
+        addChecklistItem(tab, { title, categoryId, dueDate, recurrence: recurrenceForm });
         addedCount++;
       } else if (tab === 'hitMyGoal') {
         // Add as checklist item with optional recurrence and due date
