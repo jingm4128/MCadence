@@ -84,6 +84,7 @@ export function RecurrenceSelector({ value, onChange, className = '' }: Recurren
                 max="365"
                 value={value.interval || 1}
                 onChange={(e) => handleIntervalChange(parseInt(e.target.value) || 1)}
+                onFocus={(e) => e.target.select()}
                 className="w-16 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
               <select
@@ -129,6 +130,7 @@ export function RecurrenceSelector({ value, onChange, className = '' }: Recurren
                     max="999"
                     value={value.totalOccurrences}
                     onChange={(e) => handleOccurrencesChange(parseInt(e.target.value) || 1)}
+                    onFocus={(e) => e.target.select()}
                     className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                   <span className="text-sm text-gray-600">times</span>

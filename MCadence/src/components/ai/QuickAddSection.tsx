@@ -212,6 +212,7 @@ function ProposalCard({
                   max="365"
                   value={currentInterval}
                   onChange={(e) => handleIntervalChange(parseInt(e.target.value) || 1)}
+                  onFocus={(e) => e.target.select()}
                   className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 />
                 <span className="text-sm text-gray-600">{getFrequencyLabel(currentRecurrence)}</span>
@@ -229,6 +230,7 @@ function ProposalCard({
                 onChange={(e) => onUpdate(proposal.id, {
                   editedTotalOccurrences: e.target.value ? parseInt(e.target.value) : undefined
                 })}
+                onFocus={(e) => e.target.select()}
                 placeholder="Forever"
                 className="w-24 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 min={1}
@@ -272,6 +274,7 @@ function ProposalCard({
                   max="365"
                   value={currentInterval}
                   onChange={(e) => handleIntervalChange(parseInt(e.target.value) || 1)}
+                  onFocus={(e) => e.target.select()}
                   className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 />
                 <span className="text-sm text-gray-600">{getFrequencyLabel(currentRecurrence)}</span>
@@ -289,6 +292,7 @@ function ProposalCard({
                 onChange={(e) => onUpdate(proposal.id, {
                   editedTotalOccurrences: e.target.value ? parseInt(e.target.value) : undefined
                 })}
+                onFocus={(e) => e.target.select()}
                 placeholder="Forever"
                 className="w-24 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 min={1}
@@ -310,6 +314,7 @@ function ProposalCard({
                   const mins = currentDurationMinutes % 60;
                   handleDurationChange(hours * 60 + mins);
                 }}
+                onFocus={(e) => e.target.select()}
                 className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 min={0}
               />
@@ -322,6 +327,7 @@ function ProposalCard({
                   const hours = Math.floor(currentDurationMinutes / 60);
                   handleDurationChange(hours * 60 + mins);
                 }}
+                onFocus={(e) => e.target.select()}
                 className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center"
                 min={0}
                 max={59}

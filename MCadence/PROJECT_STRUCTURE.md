@@ -17,7 +17,8 @@ MCadence is a productivity tracking application built with Next.js 14 (App Route
 - Recurrence support for all tabs (Day to Day, Hit My Goal, Spend My Time)
 - Notes support for all items (free-form text notes per item/occurrence)
 - Enter key to save in edit modals (except notes which use Ctrl+Enter)
-- Long press to edit AI settings items
+- Click to edit AI settings items (provider, API key, model)
+- Select-all on focus for number inputs (easier editing)
 
 ---
 
@@ -476,13 +477,14 @@ Pattern for AI feature components:
 
 ### AI Settings Panel (`src/components/ai/AiPanel.tsx`)
 
-The AI Settings panel uses a long-press-to-edit pattern for each setting item:
-- **Provider** - Shows current provider, long press to select different provider
-- **API Key** - Shows masked key or "Not configured", long press to edit
-- **Model** - Shows current model, long press to select different model
+The AI Settings panel uses a click-to-edit pattern for each setting item:
+- **Provider** - Shows current provider, click to select different provider
+- **API Key** - Shows masked key or "Click to configure", click to edit
+- **Model** - Shows current model, click to select different model
 
-Each setting displays as a read-only field that becomes editable on long press (500ms).
+Each setting displays as a read-only field that becomes editable on click.
 Pressing Enter saves the API key; pressing Escape cancels editing.
+Fields highlight on hover to indicate they are clickable.
 
 ### Keyboard Shortcuts
 
@@ -527,7 +529,7 @@ export async function POST(request: NextRequest) {
 | Recurring item deletion | `state.tsx` (deleteRecurringSeries), `Modal.tsx` (RecurrenceDeleteDialog), tab components |
 | Edit item notes | `Modal.tsx` (NotesEditorModal), tab components (notes button + editNotesState) |
 | Enter key to save | Tab components (add onKeyDown handler to title inputs) |
-| AI settings editing | `AiPanel.tsx` (AISettingsPanel with long press pattern) |
+| AI settings editing | `AiPanel.tsx` (AISettingsPanel with click-to-edit pattern) |
 | First-time user onboarding | `WelcomeModal.tsx`, `storage.ts` (hasData, welcome state functions), `HomePageContent.tsx` |
 
 

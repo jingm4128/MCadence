@@ -199,32 +199,18 @@ interface AISettingsPanelProps {
   onClose: () => void;
 }
 
-// Long press hook for settings items
-function useLongPress(callback: () => void, delay: number = 500) {
-  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-  const isLongPress = React.useRef(false);
-
-  const start = React.useCallback(() => {
-    isLongPress.current = false;
-    timeoutRef.current = setTimeout(() => {
-      isLongPress.current = true;
-      callback();
-    }, delay);
-  }, [callback, delay]);
-
-  const stop = React.useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
-
+// Click handler hook for settings items (simplified from long-press to regular click)
+function useClickToEdit(callback: () => void) {
   return {
-    onMouseDown: start,
-    onMouseUp: stop,
-    onMouseLeave: stop,
-    onTouchStart: start,
-    onTouchEnd: stop,
+    onClick: callback,
+    role: 'button' as const,
+    tabIndex: 0,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        callback();
+      }
+    },
   };
 }
 
@@ -253,10 +239,10 @@ function AISettingsPanel({
   // Check if user can use the default API key
   const canUseDefault = canUseDefaultKey(currentProvider, currentModel);
 
-  // Long press handlers for each field
-  const providerLongPress = useLongPress(() => setEditingField('provider'));
-  const apiKeyLongPress = useLongPress(() => setEditingField('apiKey'));
-  const modelLongPress = useLongPress(() => setEditingField('model'));
+  // Click handlers for each field (simplified from long-press)
+  const providerClickHandler = useClickToEdit(() => setEditingField('provider'));
+  const apiKeyClickHandler = useClickToEdit(() => setEditingField('apiKey'));
+  const modelClickHandler = useClickToEdit(() => setEditingField('model'));
 
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -320,12 +306,13 @@ function AISettingsPanel({
     setError(null);
   };
 
-  // Get display text for provider
+  // Get display text for provider (show effective provider for consistency)
   const getProviderDisplayText = () => {
+    const providerName = PROVIDERS[currentProvider].name;
     if (userSettings.provider) {
-      return PROVIDERS[userSettings.provider].name;
+      return providerName;
     }
-    return `Default (${PROVIDERS[envDefaultProvider].name})`;
+    return `${providerName} (default)`;
   };
 
   // Get display text for model
@@ -355,7 +342,7 @@ function AISettingsPanel({
       </div>
 
       {/* Hint text */}
-      <p className="text-xs text-gray-400 mb-3">Long press on any item to edit</p>
+      <p className="text-xs text-gray-400 mb-3">Click on any field to edit</p>
       
       {/* Provider Selection */}
       <div className="mb-3">
@@ -387,8 +374,8 @@ function AISettingsPanel({
           </div>
         ) : (
           <div
-            {...providerLongPress}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 select-none"
+            {...providerClickHandler}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 hover:border-primary-300 select-none transition-colors"
           >
             <span className="text-gray-800">{getProviderDisplayText()}</span>
             {canUseDefault && (
@@ -461,14 +448,14 @@ function AISettingsPanel({
           </div>
         ) : (
           <div
-            {...apiKeyLongPress}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 select-none"
+            {...apiKeyClickHandler}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 hover:border-primary-300 select-none transition-colors"
           >
             {userSettings.apiKey ? (
               <span className="text-gray-800">{maskAPIKey(userSettings.apiKey)}</span>
             ) : (
               <span className="text-gray-400 italic">
-                {canUseDefault ? 'Using default key' : 'Not configured'}
+                {canUseDefault ? 'Using default key' : 'Click to configure'}
               </span>
             )}
           </div>
@@ -501,8 +488,8 @@ function AISettingsPanel({
           </div>
         ) : (
           <div
-            {...modelLongPress}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 select-none"
+            {...modelClickHandler}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white cursor-pointer hover:bg-gray-50 hover:border-primary-300 select-none transition-colors"
           >
             <span className="text-gray-800">{getModelDisplayText()}</span>
           </div>
