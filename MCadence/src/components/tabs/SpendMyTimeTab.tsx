@@ -20,6 +20,7 @@ interface EditItemState {
   categoryId: string;
   hours: number;
   minutes: number;
+  dueDate: string | null | undefined;
 }
 
 // Edit recurrence state
@@ -220,6 +221,7 @@ export function SpendMyTimeTab() {
       categoryId: project.categoryId,
       hours: Math.floor(project.completedMinutes / 60),
       minutes: project.completedMinutes % 60,
+      dueDate: project.dueDate,
     });
   };
 
@@ -229,7 +231,8 @@ export function SpendMyTimeTab() {
       updateItem(editItemState.projectId, {
         title: editItemState.title.trim(),
         categoryId: editItemState.categoryId,
-        completedMinutes: newCompletedMinutes
+        completedMinutes: newCompletedMinutes,
+        dueDate: editItemState.dueDate || undefined
       });
       setEditItemState(null);
     }
@@ -806,7 +809,7 @@ export function SpendMyTimeTab() {
         {editItemState && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Edit the project name, category, and adjust the completed time.
+              Edit the project name, category, due date, and adjust the completed time.
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -886,6 +889,43 @@ export function SpendMyTimeTab() {
                 </div>
               </div>
             </div>
+            {/* Due Date - only show when item has no recurrence */}
+            {(() => {
+              const project = items.find(p => p.id === editItemState.projectId) ||
+                             archivedItems.find(p => p.id === editItemState.projectId);
+              const hasRecurrence = project?.recurrence;
+              return !hasRecurrence ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date (optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={isoToDateInput(editItemState.dueDate)}
+                      onChange={(e) => setEditItemState({
+                        ...editItemState,
+                        dueDate: e.target.value ? dateInputToISO(e.target.value) : undefined
+                      })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    {editItemState.dueDate && (
+                      <button
+                        type="button"
+                        onClick={() => setEditItemState({ ...editItemState, dueDate: undefined })}
+                        className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        title="Clear due date"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Set a due date to track urgency</p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">Due date is managed by recurrence settings</p>
+              );
+            })()}
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="secondary"

@@ -13,7 +13,8 @@ MCadence is a productivity tracking application built with Next.js 14 (App Route
 - Settings panel with customizable preferences
 - Automatic backups with configurable frequency
 - Configurable swipe gestures per tab
-- Long press to edit items (SpendMyTime: name, category, and time spent)
+- Long press to edit items (all tabs: title, category, due date; SpendMyTime also: time spent)
+- Recurrence support for all tabs (Day to Day, Hit My Goal, Spend My Time)
 - Notes support for all items (free-form text notes per item/occurrence)
 - Enter key to save in edit modals (except notes which use Ctrl+Enter)
 - Long press to edit AI settings items
@@ -39,9 +40,9 @@ src/
 │   │   ├── Header.tsx          # App header
 │   │   └── Layout.tsx          # Main layout wrapper
 │   ├── tabs/               # Tab content components
-│   │   ├── DayToDayTab.tsx     # Checklist tab (daily tasks)
-│   │   ├── HitMyGoalTab.tsx    # Checklist tab (goals)
-│   │   └── SpendMyTimeTab.tsx  # Time tracking tab
+│   │   ├── DayToDayTab.tsx     # Checklist tab (daily tasks, with recurrence support)
+│   │   ├── HitMyGoalTab.tsx    # Checklist tab (goals, with recurrence support)
+│   │   └── SpendMyTimeTab.tsx  # Time tracking tab (with recurrence support)
 │   ├── ui/                 # Reusable UI components
 │   │   ├── Button.tsx          # Button component
 │   │   ├── Modal.tsx           # Modal, ConfirmDialog, RecurrenceDeleteDialog, NotesEditorModal
@@ -319,7 +320,7 @@ Parses natural language into structured tasks/goals/projects.
 - **Tab Selection** - Switch between Day to Day, Hit My Goal, Spend My Time
 - **Title** - Edit the item title
 - **Category** - Select from available categories
-- **Recurrence** - One-off, Daily, Weekly, Monthly (for hitMyGoal and spendMyTime)
+- **Recurrence** - One-off, Daily, Weekly, Monthly (for all tabs)
 - **Interval** - "Every X" days/weeks/months (e.g., every 2 weeks) - available when recurrence is enabled
 - **Duration** - Time goal per period (for spendMyTime)
 - **Due Date** (optional) - Available for all tabs, allows setting a deadline
@@ -402,7 +403,7 @@ Each tab follows a similar pattern:
 A reusable wrapper that enables swipe and long press gestures on list items:
 - **Swipe left** → Configurable action (delete or archive)
 - **Swipe right** → Configurable action (delete or archive)
-- **Long press** → Opens edit modal (for SpendMyTime items: edit name, category, and time spent)
+- **Long press** → Opens edit modal for all tabs
 
 ```typescript
 <SwipeableItem
@@ -422,7 +423,12 @@ A reusable wrapper that enables swipe and long press gestures on list items:
 
 Supports both touch (mobile) and mouse (desktop) interactions.
 Swipe actions are configurable per-tab in Settings.
-Long press on SpendMyTime items opens an edit modal for name, category, and completed time.
+
+**Long Press Edit Modal (all tabs):**
+- **Day to Day** - Edit title, category, and due date
+- **Hit My Goal** - Edit title, category, and due date
+- **Spend My Time** - Edit title, category, due date, and completed time
+
 Recurrence editing remains accessible via the small recurrence icon on items.
 
 ### TabHeader Component (`src/components/ui/TabHeader.tsx`)

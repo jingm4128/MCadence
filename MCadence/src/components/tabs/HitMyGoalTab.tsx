@@ -30,6 +30,14 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   );
 }
 
+// Edit item state (for long press editing)
+interface EditItemState {
+  itemId: string;
+  title: string;
+  categoryId: string;
+  dueDate: string | null | undefined;
+}
+
 // Edit recurrence state
 interface EditRecurrenceState {
   itemId: string;
@@ -48,6 +56,7 @@ export function HitMyGoalTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [editItemState, setEditItemState] = useState<EditItemState | null>(null);
   const [editRecurrenceState, setEditRecurrenceState] = useState<EditRecurrenceState | null>(null);
   const [editNotesState, setEditNotesState] = useState<EditNotesState | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
@@ -273,6 +282,27 @@ export function HitMyGoalTab() {
     }
   };
 
+  // Edit item functions (long press)
+  const handleEditItem = (item: ChecklistItem) => {
+    setEditItemState({
+      itemId: item.id,
+      title: item.title,
+      categoryId: item.categoryId,
+      dueDate: item.dueDate,
+    });
+  };
+
+  const confirmEditItem = () => {
+    if (editItemState) {
+      updateItem(editItemState.itemId, {
+        title: editItemState.title.trim(),
+        categoryId: editItemState.categoryId,
+        dueDate: editItemState.dueDate || undefined
+      });
+      setEditItemState(null);
+    }
+  };
+
   // Edit notes functions
   const handleEditNotes = (item: ChecklistItem) => {
     setEditNotesState({
@@ -394,6 +424,7 @@ export function HitMyGoalTab() {
                 key={item.id}
                 onSwipeLeft={swipeHandlers.onSwipeLeft}
                 onSwipeRight={swipeHandlers.onSwipeRight}
+                onLongPress={() => handleEditItem(item)}
                 leftLabel={swipeHandlers.leftLabel}
                 rightLabel={swipeHandlers.rightLabel}
                 leftColor={swipeHandlers.leftColor}
@@ -611,6 +642,105 @@ export function HitMyGoalTab() {
                 Cancel
               </Button>
               <Button onClick={confirmEditRecurrence}>
+                Save
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Edit Item Modal (Long Press) */}
+      <Modal
+        isOpen={!!editItemState}
+        onClose={() => setEditItemState(null)}
+        title="Edit Goal"
+      >
+        {editItemState && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Edit the goal title, category, and due date.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Goal Title
+              </label>
+              <input
+                type="text"
+                value={editItemState.title}
+                onChange={(e) => setEditItemState({
+                  ...editItemState,
+                  title: e.target.value
+                })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editItemState.title.trim()) {
+                    e.preventDefault();
+                    confirmEditItem();
+                  }
+                }}
+                onFocus={(e) => e.target.select()}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Enter goal title"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <CategorySelector
+                value={editItemState.categoryId}
+                onChange={(categoryId) => setEditItemState({
+                  ...editItemState,
+                  categoryId
+                })}
+                placeholder="Select category"
+              />
+            </div>
+            {/* Due Date - only show when item has no recurrence */}
+            {(() => {
+              const item = items.find(i => i.id === editItemState.itemId) ||
+                          archivedItems.find(i => i.id === editItemState.itemId);
+              const hasRecurrence = item?.recurrence;
+              return !hasRecurrence ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Due Date (optional)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={isoToDateInput(editItemState.dueDate)}
+                      onChange={(e) => setEditItemState({
+                        ...editItemState,
+                        dueDate: e.target.value ? dateInputToISO(e.target.value) : undefined
+                      })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    {editItemState.dueDate && (
+                      <button
+                        type="button"
+                        onClick={() => setEditItemState({ ...editItemState, dueDate: undefined })}
+                        className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        title="Clear due date"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Set a due date to track urgency</p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">Due date is managed by recurrence settings</p>
+              );
+            })()}
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="secondary"
+                onClick={() => setEditItemState(null)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={confirmEditItem}>
                 Save
               </Button>
             </div>
