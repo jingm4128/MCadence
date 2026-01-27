@@ -146,7 +146,7 @@ export function SpendMyTimeTab() {
 
   const handleArchive = (id: string) => {
     archiveItem(id);
-    setToastMessage('Archived, go to archived to recover');
+    setToastMessage('Item archived');
   };
 
   const handleDelete = (id: string) => {
@@ -646,10 +646,7 @@ export function SpendMyTimeTab() {
           {items.length === 0 && (
             <div className="text-center py-12 empty-state">
               <div className="empty-state-icon">⏱️</div>
-              <p className="text-gray-500 mb-4">No time projects yet</p>
-              <Button onClick={() => setShowAddModal(true)} className="btn-press">
-                Add your first project
-              </Button>
+              <p className="text-gray-500">No time projects yet</p>
             </div>
           )}
         </div>

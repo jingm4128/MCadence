@@ -134,7 +134,7 @@ export function DayToDayTab() {
 
   const handleArchive = (id: string) => {
     archiveItem(id);
-    setToast({ message: 'Archived, go to archived to recover', type: 'info' });
+    setToast({ message: 'Item archived', type: 'info' });
   };
 
   const handleDelete = (id: string) => {
@@ -495,10 +495,7 @@ export function DayToDayTab() {
           {items.length === 0 && (
             <div className="text-center py-12 empty-state">
               <div className="empty-state-icon">📝</div>
-              <p className="text-gray-500 mb-4">No tasks yet</p>
-              <Button onClick={() => setShowAddModal(true)} className="btn-press">
-                Add your first task
-              </Button>
+              <p className="text-gray-500">No tasks yet</p>
             </div>
           )}
         </div>
