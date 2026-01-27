@@ -62,7 +62,7 @@ export const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   anthropic: {
     id: 'anthropic',
     name: 'Anthropic',
-    defaultModel: 'claude-3-5-sonnet-20241022',
+    defaultModel: 'claude-3-5-haiku-latest',
     models: [
       { id: 'claude-3-5-haiku-latest', name: 'Claude 3.5 Haiku', description: 'Fast and affordable' },
       { id: 'claude-3-5-sonnet-latest', name: 'Claude 3.5 Sonnet', description: 'Best balance' },
