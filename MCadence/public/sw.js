@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mcadence-v1';
+const CACHE_NAME = 'mcadence-v2';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -7,11 +7,10 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
+      .then((cache) => cache.addAll(urlsToCache))
   );
 });
 
@@ -20,39 +19,58 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Only cache GET requests for our own domain
+  // Only handle GET requests for our own origin
   if (request.method !== 'GET' || url.origin !== location.origin) {
-    return fetch(request);
+    return;
   }
 
-  // Try to serve from cache first
+  // Bypass caching for Next.js assets and API routes to avoid stale/hanging refresh
+  if (
+    url.pathname.startsWith('/_next/') ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname === '/sw.js'
+  ) {
+    return;
+  }
+
+  // Network-first for navigations to prevent serving stale HTML
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, response.clone());
+            return response;
+          });
+        })
+        .catch(() => caches.match('/'))
+    );
+    return;
+  }
+
+  // Cache-first for other static assets
   event.respondWith(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.match(request)
-          .then((response) => {
-            // Return cached version or fetch from network
-            return response || fetch(request);
-          });
-      })
-      .catch(() => {
-        // If cache fails, try network
-        return fetch(request);
-      })
+      .then((cache) => cache.match(request))
+      .then((response) => response || fetch(request))
+      .catch(() => fetch(request))
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    Promise.all([
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      self.clients.claim(),
+    ])
   );
 });
