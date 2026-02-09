@@ -120,6 +120,10 @@ export default function HomePageContent() {
       }
       
       if (isBackupDue(settings)) {
+        // Force immediate save of current state before backup
+        // This ensures any recent changes (that are still in debounce) are included
+        saveStateImmediate(state);
+        
         // Perform automatic backup
         performAutoBackup();
       }
@@ -131,7 +135,7 @@ export default function HomePageContent() {
     // Check periodically (every hour)
     const interval = setInterval(checkAutoBackup, 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [state]); // Add state as dependency to ensure we use current state
 
   // Mark user navigation when tab changes (intentional in-app navigation)
   const handleTabChange = useCallback((tab: TabId) => {
@@ -146,6 +150,10 @@ export default function HomePageContent() {
 
   const handleExport = () => {
     try {
+      // Force immediate save of current state before exporting
+      // This ensures any recent changes (that are still in debounce) are included
+      saveStateImmediate(state);
+      
       // Export JSON backup (includes all items, actions, and categories)
       const jsonData = exportState();
       const jsonBlob = new Blob([jsonData], { type: 'application/json' });

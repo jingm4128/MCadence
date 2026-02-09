@@ -1,3 +1,4 @@
+
 import { AppState, Category, AppSettings, BackupFrequency, Item } from './types';
 import { STORAGE_KEY, DEBOUNCE_MS, DEFAULT_CATEGORIES } from './constants';
 
@@ -319,7 +320,7 @@ export function getStorageInfo(): { used: number; available: number; percentage:
 
 // Default settings
 export const DEFAULT_SETTINGS: AppSettings = {
-  backupFrequency: 'weekly',
+  backupFrequency: 'daily',
   lastBackupDate: undefined,
   allowConcurrentTimers: false,
   weekStartDay: 1, // Monday as default
@@ -406,6 +407,7 @@ export function generateBackupFilename(): string {
 }
 
 // Create backup data (combines state and categories)
+// Note: Caller should ensure state is saved to localStorage first via saveStateImmediate()
 export function createBackupData(): string {
   const state = loadState();
   const categories = loadCategories();
