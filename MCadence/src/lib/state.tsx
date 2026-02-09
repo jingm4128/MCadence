@@ -318,6 +318,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appStateReducer, { items: [], actions: [], categories: DEFAULT_CATEGORIES });
   const [isHydrated, setIsHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Track if we've already processed recurring items to prevent infinite loops
+  const [processedOnce, setProcessedOnce] = useState(false);
 
   // Load state from localStorage on mount (async to prevent blocking on large data)
   useEffect(() => {
@@ -377,9 +380,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state, isHydrated]);
 
-  // Check for weekly period reset
+  // Check for weekly period reset (ONLY ONCE after hydration to prevent infinite loop)
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || processedOnce) return;
     
     const timeItems = state.items.filter((item): item is TimeItem => 'periodEnd' in item);
     const needsReset = timeItems.some(item => needsWeekReset(item.periodEnd));
@@ -387,12 +390,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     if (needsReset) {
       dispatch({ type: 'RESET_WEEKLY_PERIODS' });
     }
-  }, [state.items, isHydrated]);
+  }, [isHydrated, processedOnce]);
 
   // Auto-create new period items when period passes (for date-tagged recurring items)
   // Deferred to prevent blocking UI on large datasets
+  // ONLY RUNS ONCE after hydration to prevent infinite loop
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || processedOnce) return;
     
     // Defer processing to not block UI on initial load
     const timeoutId = setTimeout(() => {
@@ -532,10 +536,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (newItems.length > 0) {
         dispatch({ type: 'ADD_ITEMS', payload: newItems });
       }
+      
+      // Mark as processed to prevent re-running
+      setProcessedOnce(true);
     }, 100); // 100ms delay to let UI render first
     
     return () => clearTimeout(timeoutId);
-  }, [state.items, isHydrated]);
+  }, [isHydrated, processedOnce]);
 
   return (
     <AppStateContext.Provider value={{ state, dispatch, isHydrated }}>
