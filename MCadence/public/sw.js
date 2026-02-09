@@ -7,6 +7,7 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
+  // Force immediate activation of new service worker
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -57,7 +58,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and take control immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     Promise.all([
@@ -65,11 +66,13 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== CACHE_NAME) {
+              console.log('Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       }),
+      // Take control of all pages immediately
       self.clients.claim(),
     ])
   );

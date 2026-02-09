@@ -1,0 +1,4499 @@
+{
+  "items": [
+    {
+      "id": "d9eb2e29-97d2-4f6e-a6ec-b9ce0e267260",
+      "tab": "dayToDay",
+      "title": "娃回国证件",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769484684487,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-01-27T03:31:24.000Z",
+      "dueDate": null
+    },
+    {
+      "id": "420cc14d-0fc0-4f23-a721-3c5180da87f1",
+      "tab": "dayToDay",
+      "title": "陪娃排敏开心果",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769484684488,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-01-27T03:31:24.000Z",
+      "dueDate": null
+    },
+    {
+      "id": "c7a3b80e-5a05-445b-ae22-c413cbe5dd0a",
+      "tab": "dayToDay",
+      "title": "陪娃排敏榛子",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769484684488,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-01-27T03:31:24.000Z",
+      "dueDate": null
+    },
+    {
+      "id": "145244a7-d9c6-4257-8138-7c660145a70c",
+      "tab": "dayToDay",
+      "title": "陪娃排敏鸡蛋",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769484684489,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-02-09T02:34:20.000Z",
+      "dueDate": "2026-01-31T04:59:59.000Z",
+      "completedAt": "2026-02-09T02:34:05.000Z",
+      "archivedAt": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "id": "f38f7ea8-a063-414a-b900-d956f88b40ba",
+      "tab": "dayToDay",
+      "title": "Renew condo insurance",
+      "categoryId": "sub-other",
+      "sortKey": 1769484684489,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-02-09T02:34:20.000Z",
+      "dueDate": "2026-01-31T04:59:59.000Z",
+      "completedAt": "2026-02-09T02:34:06.000Z",
+      "archivedAt": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "id": "0af92e65-48f4-421d-9de3-65030450d0bf",
+      "tab": "dayToDay",
+      "title": "加固床",
+      "categoryId": "sub-chores",
+      "sortKey": 1769484684490,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-01-27T03:31:24.000Z",
+      "dueDate": null
+    },
+    {
+      "id": "344c8958-19c1-48ea-b5e9-7ae1f63410d0",
+      "tab": "dayToDay",
+      "title": "回复明明",
+      "categoryId": "sub-family",
+      "sortKey": 1769484684490,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-02-09T02:34:16.000Z",
+      "dueDate": null,
+      "isDeleted": true,
+      "deletedAt": "2026-02-09T02:34:16.000Z"
+    },
+    {
+      "id": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "title": "买车",
+      "categoryId": "sub-chores",
+      "sortKey": 1769484684491,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-02-09T02:34:20.000Z",
+      "dueDate": "2026-02-02T04:59:59.000Z",
+      "completedAt": "2026-01-31T10:17:37.000Z",
+      "archivedAt": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "id": "2d55386d-3a47-4968-965b-710f3d20dbc9",
+      "tab": "dayToDay",
+      "title": "给闫岩娃买生日礼物",
+      "categoryId": "sub-social",
+      "sortKey": 1769484684491,
+      "status": "active",
+      "isArchived": true,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-01-31T18:45:20.000Z",
+      "dueDate": "2026-02-07T04:59:59.000Z",
+      "archivedAt": "2026-01-31T18:45:20.000Z"
+    },
+    {
+      "id": "b452fc9d-9228-4929-88bf-ffebd0473d64",
+      "tab": "dayToDay",
+      "title": "收房租-20260131",
+      "baseTitle": "收房租",
+      "periodKey": "20260131",
+      "categoryId": "sub-finance",
+      "sortKey": 1769484684500,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-02-09T02:34:20.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:31:24.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:07.000Z",
+      "archivedAt": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "id": "ab70469a-b02f-4aa0-8ebe-8b3d29cdaf22",
+      "tab": "spendMyTime",
+      "title": "整理家庭BS-20260131",
+      "baseTitle": "整理家庭BS",
+      "periodKey": "20260131",
+      "categoryId": "sub-finance",
+      "sortKey": 1769484684502,
+      "status": "active",
+      "isArchived": false,
+      "requiredMinutes": 60,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:31:24.000Z",
+      "updatedAt": "2026-02-09T02:36:27.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:31:24.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "isDeleted": true,
+      "deletedAt": "2026-01-27T03:37:07.000Z"
+    },
+    {
+      "id": "2caf29e8-99d7-451b-9978-da40e5b7e35e",
+      "tab": "hitMyGoal",
+      "title": "高尔夫-20260131",
+      "baseTitle": "高尔夫",
+      "periodKey": "20260131",
+      "categoryId": "sub-fitness",
+      "sortKey": 1769484814402,
+      "status": "missed",
+      "isArchived": true,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-02-06T03:02:31.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-31T18:45:01.000Z"
+    },
+    {
+      "id": "ca19aabe-ef8c-4edc-9c35-ced2939d171b",
+      "tab": "hitMyGoal",
+      "title": "旅行-20260131",
+      "baseTitle": "旅行",
+      "periodKey": "20260131",
+      "categoryId": "sub-travel",
+      "sortKey": 1769484814403,
+      "status": "missed",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-02-09T02:34:30.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "isDeleted": true,
+      "deletedAt": "2026-02-09T02:34:30.000Z"
+    },
+    {
+      "id": "5ba180f1-c9e8-403b-9391-6cfb1b35f3dd",
+      "tab": "hitMyGoal",
+      "title": "带娃去社交活动-20260201",
+      "baseTitle": "带娃去社交活动",
+      "periodKey": "20260201",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769484814405,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:33.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "eb0cd3b6-6391-4520-a9ae-8e64689536b2",
+      "tab": "hitMyGoal",
+      "title": "全家外出用餐或者聚会-20260201",
+      "baseTitle": "全家外出用餐或者聚会",
+      "periodKey": "20260201",
+      "categoryId": "sub-family",
+      "sortKey": 1769484814406,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-01-29T00:56:21.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "completedAt": "2026-01-29T00:56:17.000Z",
+      "archivedAt": "2026-01-29T00:56:21.000Z"
+    },
+    {
+      "id": "b05db444-0b9e-4dea-95d8-e0308b6f9711",
+      "tab": "hitMyGoal",
+      "title": "一对一社交-20260201",
+      "baseTitle": "一对一社交",
+      "periodKey": "20260201",
+      "categoryId": "sub-social",
+      "sortKey": 1769484814407,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-01-30T20:18:17.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "notes": "钱宇颖",
+      "completedAt": "2026-01-30T13:32:45.000Z",
+      "archivedAt": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "id": "12a1e1f5-2aa7-4ace-8c86-285759a804ad",
+      "tab": "hitMyGoal",
+      "title": "完成一个工作的major item-20260201",
+      "baseTitle": "完成一个工作的major item",
+      "periodKey": "20260201",
+      "categoryId": "sub-work",
+      "sortKey": 1769484814408,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "completedAt": "2026-01-28T13:56:09.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "bad0377a-18f3-4dfe-9e98-1fcdc12e98ff",
+      "tab": "hitMyGoal",
+      "title": "思考在公司当前战略中的位置-20260201",
+      "baseTitle": "思考在公司当前战略中的位置",
+      "periodKey": "20260201",
+      "categoryId": "sub-work",
+      "sortKey": 1769484814410,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "notes": "从奖金看还是值点钱吧，未来还是可以在保持技术的同时，考虑判断和统筹，不急于回答具体问题",
+      "completedAt": "2026-01-29T00:58:45.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "82b8894b-8bc9-405e-a187-d89e6b226073",
+      "tab": "hitMyGoal",
+      "title": "考过CNC",
+      "categoryId": "sub-learning",
+      "sortKey": 1769484814410,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T03:33:34.000Z",
+      "updatedAt": "2026-01-27T03:33:34.000Z",
+      "dueDate": null
+    },
+    {
+      "id": "71d3ca4c-2b6b-4f1c-ae15-b36e65de3d8c",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260126",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260126",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769484976030,
+      "status": "missed",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 150,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-01-27T05:53:44.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-27T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-27T03:38:42.000Z"
+    },
+    {
+      "id": "da65afa6-770b-436f-8abf-44c98b3036b5",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260126",
+      "baseTitle": "睡觉",
+      "periodKey": "20260126",
+      "categoryId": "sub-sleep",
+      "sortKey": 1769484976031,
+      "status": "missed",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 480,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-01-27T05:53:44.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-27T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-27T03:38:42.000Z"
+    },
+    {
+      "id": "60fd856b-7d2c-4c1c-a3df-fd4057f0953d",
+      "tab": "spendMyTime",
+      "title": "练钢琴曲一步之遥-20260201",
+      "baseTitle": "练钢琴曲一步之遥",
+      "periodKey": "20260201",
+      "categoryId": "sub-art",
+      "sortKey": 1769484976033,
+      "status": "missed",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-02-09T02:36:06.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:06.000Z"
+    },
+    {
+      "id": "136e6e05-d2db-4d0e-b734-c8486add634b",
+      "tab": "spendMyTime",
+      "title": "健身-20260201",
+      "baseTitle": "健身",
+      "periodKey": "20260201",
+      "categoryId": "sub-fitness",
+      "sortKey": 1769484976035,
+      "status": "missed",
+      "isArchived": true,
+      "requiredMinutes": 120,
+      "completedMinutes": 60,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-02-09T02:36:13.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:13.000Z"
+    },
+    {
+      "id": "306cb439-8965-45a7-a7a2-81c49006ed7f",
+      "tab": "spendMyTime",
+      "title": "Squad/Opt-20260201",
+      "baseTitle": "Squad/Opt",
+      "periodKey": "20260201",
+      "categoryId": "sub-side-prep",
+      "sortKey": 1769484976036,
+      "status": "missed",
+      "isArchived": true,
+      "requiredMinutes": 240,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-02-09T02:36:05.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:05.000Z"
+    },
+    {
+      "id": "f59b98dc-0e9a-41d8-ab54-02b8ad9e4bd6",
+      "tab": "spendMyTime",
+      "title": "写作-20260201",
+      "baseTitle": "写作",
+      "periodKey": "20260201",
+      "categoryId": "sub-art",
+      "sortKey": 1769484976038,
+      "status": "missed",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-02-09T02:36:07.000Z",
+      "dueDate": null,
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:07.000Z"
+    },
+    {
+      "id": "5489b693-bc81-4645-b2b2-41f1bc36b6c6",
+      "tab": "spendMyTime",
+      "title": "读书-20260201",
+      "baseTitle": "读书",
+      "periodKey": "20260201",
+      "categoryId": "sub-reading",
+      "sortKey": 1769484976040,
+      "status": "missed",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 15,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-02-09T02:36:12.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:12.000Z"
+    },
+    {
+      "id": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "title": "AI微创业-20260201",
+      "baseTitle": "AI微创业",
+      "periodKey": "20260201",
+      "categoryId": "sub-side-prep",
+      "sortKey": 1769484976041,
+      "status": "done",
+      "isArchived": true,
+      "requiredMinutes": 300,
+      "completedMinutes": 392,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-02-09T02:35:22.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": 3,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:35:22.000Z"
+    },
+    {
+      "id": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "title": "工作-20260201",
+      "baseTitle": "工作",
+      "periodKey": "20260201",
+      "categoryId": "sub-work",
+      "sortKey": 1769484976043,
+      "status": "done",
+      "isArchived": true,
+      "requiredMinutes": 2100,
+      "completedMinutes": 2280,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-27T03:36:16.000Z",
+      "updatedAt": "2026-01-30T20:19:09.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-30T20:19:09.000Z"
+    },
+    {
+      "id": "92f5b6cb-4874-48a5-a4fb-b86fa1b1098e",
+      "tab": "dayToDay",
+      "title": "整理家庭BS-20260131",
+      "baseTitle": "整理家庭BS",
+      "periodKey": "20260131",
+      "categoryId": "sub-finance",
+      "sortKey": 1769485047942,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T03:37:27.000Z",
+      "updatedAt": "2026-02-09T02:34:20.000Z",
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:37:27.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:08.000Z",
+      "archivedAt": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "id": "05799b8c-84f8-436d-9a7a-a13bc1600e30",
+      "tab": "hitMyGoal",
+      "title": "和同事咖啡间闲聊八卦-20260126",
+      "baseTitle": "和同事咖啡间闲聊八卦",
+      "periodKey": "20260126",
+      "categoryId": "sub-work",
+      "sortKey": 1769488038962,
+      "status": "done",
+      "isArchived": false,
+      "isDone": true,
+      "createdAt": "2026-01-27T04:27:18.000Z",
+      "updatedAt": "2026-01-27T15:46:38.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T04:27:18.000Z",
+        "nextDue": "2026-01-27T05:00:00.000Z"
+      },
+      "completedAt": "2026-01-27T04:27:22.000Z",
+      "isDeleted": true,
+      "deletedAt": "2026-01-27T15:46:38.000Z"
+    },
+    {
+      "id": "cb459438-c014-4b02-8752-ab447d77c344",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260127",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260127",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769493224256,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 25,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-27T05:53:44.000Z",
+      "updatedAt": "2026-01-28T13:54:41.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-28T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-28T13:54:41.000Z"
+    },
+    {
+      "id": "544b2dd2-6548-4159-a1bc-4eec313aaa0c",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260127",
+      "baseTitle": "睡觉",
+      "periodKey": "20260127",
+      "categoryId": "sub-sleep",
+      "sortKey": 1769493224257,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 420,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-27T05:53:44.000Z",
+      "updatedAt": "2026-01-27T13:36:37.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-28T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-27T13:36:37.000Z"
+    },
+    {
+      "id": "99850667-5e35-4e44-ae3d-a798692006e5",
+      "tab": "hitMyGoal",
+      "title": "和同事咖啡间闲聊八卦-20260127",
+      "baseTitle": "和同事咖啡间闲聊八卦",
+      "periodKey": "20260127",
+      "categoryId": "sub-work",
+      "sortKey": 1769493224261,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-27T05:53:44.000Z",
+      "updatedAt": "2026-01-27T15:46:38.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T04:27:18.000Z",
+        "nextDue": "2026-01-28T05:00:00.000Z"
+      },
+      "isDeleted": true,
+      "deletedAt": "2026-01-27T15:46:38.000Z"
+    },
+    {
+      "id": "b5f4f1c0-d612-4170-b799-fed88f26e724",
+      "tab": "dayToDay",
+      "title": "兑支票",
+      "categoryId": "sub-finance",
+      "sortKey": 1769528656602,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T15:44:16.000Z",
+      "updatedAt": "2026-02-09T02:34:20.000Z",
+      "dueDate": "2026-01-31T04:59:59.000Z",
+      "completedAt": "2026-01-30T20:13:42.000Z",
+      "archivedAt": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "id": "668fb4d6-96a3-4a65-ab27-69c8a8e2e45d",
+      "tab": "hitMyGoal",
+      "title": "和同事在咖啡间闲聊-20260127",
+      "baseTitle": "和同事在咖啡间闲聊",
+      "periodKey": "20260127",
+      "categoryId": "sub-work",
+      "sortKey": 1769528839382,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-27T15:47:19.000Z",
+      "updatedAt": "2026-01-29T14:09:23.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T15:47:19.000Z",
+        "nextDue": "2026-01-28T05:00:00.000Z"
+      },
+      "notes": "西诺",
+      "completedAt": "2026-01-29T00:56:50.000Z",
+      "archivedAt": "2026-01-29T00:58:50.000Z",
+      "isDeleted": true,
+      "deletedAt": "2026-01-29T14:09:23.000Z"
+    },
+    {
+      "id": "bc80a186-8c3a-4e01-9a77-59f0b3dcc4a9",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260128",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260128",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769608421806,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 120,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-28T13:53:41.000Z",
+      "updatedAt": "2026-01-29T00:59:06.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-29T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-29T00:59:06.000Z"
+    },
+    {
+      "id": "a53a0b7c-32a3-4ee9-af98-1e63e5ae147f",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260128",
+      "baseTitle": "睡觉",
+      "periodKey": "20260128",
+      "categoryId": "sub-sleep",
+      "sortKey": 1769608421807,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 305,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-28T13:53:41.000Z",
+      "updatedAt": "2026-01-29T04:14:13.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-29T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-29T04:14:13.000Z"
+    },
+    {
+      "id": "f030ceda-934e-41ea-afb7-d7652df8f064",
+      "tab": "hitMyGoal",
+      "title": "和同事在咖啡间闲聊-20260128",
+      "baseTitle": "和同事在咖啡间闲聊",
+      "periodKey": "20260128",
+      "categoryId": "sub-work",
+      "sortKey": 1769608421809,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-28T13:53:41.000Z",
+      "updatedAt": "2026-01-29T14:09:23.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T15:47:19.000Z",
+        "nextDue": "2026-01-29T05:00:00.000Z"
+      },
+      "notes": "Sophia",
+      "completedAt": "2026-01-29T00:57:05.000Z",
+      "archivedAt": "2026-01-29T00:58:50.000Z",
+      "isDeleted": true,
+      "deletedAt": "2026-01-29T14:09:23.000Z"
+    },
+    {
+      "id": "7b871c93-968b-419e-84e2-8eb8236294dd",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260129",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260129",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769692966364,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 30,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-29T13:22:46.000Z",
+      "updatedAt": "2026-01-30T20:18:23.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-30T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-30T20:18:23.000Z"
+    },
+    {
+      "id": "68cbf493-304a-4dc5-86fd-3633c8546daa",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260129",
+      "baseTitle": "睡觉",
+      "periodKey": "20260129",
+      "categoryId": "sub-sleep",
+      "sortKey": 1769692966365,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 390,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-29T13:22:46.000Z",
+      "updatedAt": "2026-01-30T20:18:25.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-30T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-30T20:18:25.000Z"
+    },
+    {
+      "id": "9ae2a7c4-1539-439b-ad04-11a86f1162ff",
+      "tab": "hitMyGoal",
+      "title": "和同事在咖啡间闲聊-20260129",
+      "baseTitle": "和同事在咖啡间闲聊",
+      "periodKey": "20260129",
+      "categoryId": "sub-work",
+      "sortKey": 1769692966368,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-01-29T13:22:46.000Z",
+      "updatedAt": "2026-01-29T14:09:23.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T15:47:19.000Z",
+        "nextDue": "2026-01-30T05:00:00.000Z"
+      },
+      "isDeleted": true,
+      "deletedAt": "2026-01-29T14:09:23.000Z"
+    },
+    {
+      "id": "74dc2100-ae52-4894-a60b-fef1dc1ac360",
+      "tab": "hitMyGoal",
+      "title": "和同事闲聊-20260129",
+      "baseTitle": "和同事闲聊",
+      "periodKey": "20260129",
+      "categoryId": "sub-work",
+      "sortKey": 1769695787957,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-29T14:09:47.000Z",
+      "updatedAt": "2026-01-30T20:18:17.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-29T14:09:47.000Z",
+        "nextDue": "2026-01-30T05:00:00.000Z"
+      },
+      "completedAt": "2026-01-29T14:09:52.000Z",
+      "notes": "Sophia\nXinuo",
+      "archivedAt": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "id": "5d90dafb-128f-4b35-a45b-5907522232c5",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260130",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260130",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769779946027,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 30,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-30T13:32:26.000Z",
+      "updatedAt": "2026-01-31T10:18:26.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-31T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-31T10:18:26.000Z"
+    },
+    {
+      "id": "abd78d54-bbfc-4ddd-af38-59e414306959",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260130",
+      "baseTitle": "睡觉",
+      "periodKey": "20260130",
+      "categoryId": "sub-sleep",
+      "sortKey": 1769779946028,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 420,
+      "currentSessionStart": null,
+      "periodStart": "2026-01-26T05:00:00.000Z",
+      "periodEnd": "2026-02-02T04:59:59.000Z",
+      "createdAt": "2026-01-30T13:32:26.000Z",
+      "updatedAt": "2026-01-30T20:18:47.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-01-31T05:00:00.000Z"
+      },
+      "archivedAt": "2026-01-30T20:18:47.000Z"
+    },
+    {
+      "id": "d78508ff-72ce-47c5-9fb1-fd1586352f8e",
+      "tab": "hitMyGoal",
+      "title": "和同事闲聊-20260130",
+      "baseTitle": "和同事闲聊",
+      "periodKey": "20260130",
+      "categoryId": "sub-work",
+      "sortKey": 1769779946032,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-30T13:32:26.000Z",
+      "updatedAt": "2026-01-30T20:18:17.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-29T14:09:47.000Z",
+        "nextDue": "2026-01-31T05:00:00.000Z"
+      },
+      "notes": "欣桐 situ",
+      "completedAt": "2026-01-30T20:18:06.000Z",
+      "archivedAt": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "id": "0b7cbbcd-2868-4fa4-89a5-f5de7976d718",
+      "tab": "hitMyGoal",
+      "title": "集体社交-20260201",
+      "baseTitle": "集体社交",
+      "periodKey": "20260201",
+      "categoryId": "sub-social",
+      "sortKey": 1769779996473,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-30T13:33:16.000Z",
+      "updatedAt": "2026-01-30T20:18:17.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-30T13:33:16.000Z",
+        "nextDue": "2026-02-02T05:00:00.000Z"
+      },
+      "notes": "胡老师聚餐\n领航聚餐\nAron生日",
+      "completedAt": "2026-01-30T13:33:38.000Z",
+      "archivedAt": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "id": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260131",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260131",
+      "categoryId": "sub-childcare",
+      "sortKey": 1769854651740,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 30,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-31T10:17:31.000Z",
+      "updatedAt": "2026-02-09T02:34:58.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:34:58.000Z"
+    },
+    {
+      "id": "3256aa11-b5f0-470f-8f68-fff6fe668fe6",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260131",
+      "baseTitle": "睡觉",
+      "periodKey": "20260131",
+      "categoryId": "sub-sleep",
+      "sortKey": 1769854651741,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 420,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-01-31T10:17:31.000Z",
+      "updatedAt": "2026-02-09T02:36:20.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:20.000Z"
+    },
+    {
+      "id": "c66e142c-995a-4269-8928-6de604115811",
+      "tab": "hitMyGoal",
+      "title": "和同事闲聊-20260131",
+      "baseTitle": "和同事闲聊",
+      "periodKey": "20260131",
+      "categoryId": "sub-work",
+      "sortKey": 1769854651747,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-01-31T10:17:31.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-29T14:09:47.000Z",
+        "nextDue": "2026-02-01T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:32.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "e6521290-e3be-4c3e-bed7-05e346c1f37e",
+      "tab": "dayToDay",
+      "title": "收房租-20260228",
+      "baseTitle": "收房租",
+      "periodKey": "20260228",
+      "categoryId": "sub-finance",
+      "sortKey": 1770346951062,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-06T03:02:31.000Z",
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:31:24.000Z",
+        "nextDue": "2026-03-01T05:00:00.000Z"
+      }
+    },
+    {
+      "id": "652fa280-3833-41ec-b4b1-959306903e50",
+      "tab": "hitMyGoal",
+      "title": "高尔夫-20260228",
+      "baseTitle": "高尔夫",
+      "periodKey": "20260228",
+      "categoryId": "sub-fitness",
+      "sortKey": 1770346951064,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-06T03:02:31.000Z",
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-03-01T05:00:00.000Z"
+      }
+    },
+    {
+      "id": "bef032e7-a7a5-4770-a0b1-aa540c0b25e7",
+      "tab": "hitMyGoal",
+      "title": "旅行-20260228",
+      "baseTitle": "旅行",
+      "periodKey": "20260228",
+      "categoryId": "sub-travel",
+      "sortKey": 1770346951065,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-06T03:02:31.000Z",
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-03-01T05:00:00.000Z"
+      }
+    },
+    {
+      "id": "931d8533-b76a-4355-bc53-02587cb886fa",
+      "tab": "hitMyGoal",
+      "title": "带娃去社交活动-20260208",
+      "baseTitle": "带娃去社交活动",
+      "periodKey": "20260208",
+      "categoryId": "sub-childcare",
+      "sortKey": 1770346951066,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:36.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "84338f48-cc5a-44c9-8553-92686ab3ed46",
+      "tab": "hitMyGoal",
+      "title": "全家外出用餐或者聚会-20260208",
+      "baseTitle": "全家外出用餐或者聚会",
+      "periodKey": "20260208",
+      "categoryId": "sub-family",
+      "sortKey": 1770346951069,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:37.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "36705742-2614-4337-bc94-388ba8e5797c",
+      "tab": "hitMyGoal",
+      "title": "一对一社交-20260208",
+      "baseTitle": "一对一社交",
+      "periodKey": "20260208",
+      "categoryId": "sub-social",
+      "sortKey": 1770346951071,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:39.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "bd6910c0-2497-43d2-b9db-b4322b441bbd",
+      "tab": "hitMyGoal",
+      "title": "完成一个工作的major item-20260208",
+      "baseTitle": "完成一个工作的major item",
+      "periodKey": "20260208",
+      "categoryId": "sub-work",
+      "sortKey": 1770346951072,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:48.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "537bc9c0-fbda-4da1-b934-3d46ed01e2ef",
+      "tab": "hitMyGoal",
+      "title": "思考在公司当前战略中的位置-20260208",
+      "baseTitle": "思考在公司当前战略中的位置",
+      "periodKey": "20260208",
+      "categoryId": "sub-work",
+      "sortKey": 1770346951073,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:33:34.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:50.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "f260a88f-761c-4ea1-8e7c-196b35c259dd",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260205",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260205",
+      "categoryId": "sub-childcare",
+      "sortKey": 1770346951075,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 180,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:36:03.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-06T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:03.000Z"
+    },
+    {
+      "id": "2a7355dc-2d4b-4c94-a1a4-c498f8715f25",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260205",
+      "baseTitle": "睡觉",
+      "periodKey": "20260205",
+      "categoryId": "sub-sleep",
+      "sortKey": 1770346951077,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 420,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:36:02.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-06T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:02.000Z"
+    },
+    {
+      "id": "3e2f360b-36fd-402b-ad0f-4a24a691bd95",
+      "tab": "spendMyTime",
+      "title": "练钢琴曲一步之遥-20260208",
+      "baseTitle": "练钢琴曲一步之遥",
+      "periodKey": "20260208",
+      "categoryId": "sub-art",
+      "sortKey": 1770346951079,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:36:11.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:11.000Z"
+    },
+    {
+      "id": "9c1dfacf-380f-4c91-be9c-b58d1ccc59fe",
+      "tab": "spendMyTime",
+      "title": "健身-20260208",
+      "baseTitle": "健身",
+      "periodKey": "20260208",
+      "categoryId": "sub-fitness",
+      "sortKey": 1770346951081,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 120,
+      "completedMinutes": 120,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:35:38.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:35:38.000Z"
+    },
+    {
+      "id": "84ba1c4e-3d22-446e-a69a-69d1193baeb5",
+      "tab": "spendMyTime",
+      "title": "Squad/Opt-20260208",
+      "baseTitle": "Squad/Opt",
+      "periodKey": "20260208",
+      "categoryId": "sub-side-prep",
+      "sortKey": 1770346951084,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 240,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:35:21.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:35:21.000Z"
+    },
+    {
+      "id": "9d9d95bf-0725-4fbb-a10a-71c750dac35d",
+      "tab": "spendMyTime",
+      "title": "写作-20260208",
+      "baseTitle": "写作",
+      "periodKey": "20260208",
+      "categoryId": "sub-art",
+      "sortKey": 1770346951087,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:36:10.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:10.000Z"
+    },
+    {
+      "id": "3dd304b3-1aa1-4890-ab4f-243369ae9359",
+      "tab": "spendMyTime",
+      "title": "读书-20260208",
+      "baseTitle": "读书",
+      "periodKey": "20260208",
+      "categoryId": "sub-reading",
+      "sortKey": 1770346951089,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 0,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:36:23.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:36:23.000Z"
+    },
+    {
+      "id": "9bd31734-ca7d-4a2d-bb94-1d606e0fd3a9",
+      "tab": "spendMyTime",
+      "title": "AI微创业-20260208",
+      "baseTitle": "AI微创业",
+      "periodKey": "20260208",
+      "categoryId": "sub-side-prep",
+      "sortKey": 1770346951092,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 300,
+      "completedMinutes": 60,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:35:29.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": 3,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:35:29.000Z"
+    },
+    {
+      "id": "77baea60-a7ec-4f85-8480-d8fa4fbd1c03",
+      "tab": "spendMyTime",
+      "title": "工作-20260208",
+      "baseTitle": "工作",
+      "periodKey": "20260208",
+      "categoryId": "sub-work",
+      "sortKey": 1770346951094,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 2100,
+      "completedMinutes": 2700,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:35:31.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:35:31.000Z"
+    },
+    {
+      "id": "5baa0ff8-d65a-4e84-84ac-ee3b9bc24d23",
+      "tab": "dayToDay",
+      "title": "整理家庭BS-20260228",
+      "baseTitle": "整理家庭BS",
+      "periodKey": "20260228",
+      "categoryId": "sub-finance",
+      "sortKey": 1770346951094,
+      "status": "active",
+      "isArchived": false,
+      "isDone": false,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-06T03:02:31.000Z",
+      "recurrence": {
+        "frequency": "monthly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:37:27.000Z",
+        "nextDue": "2026-03-01T05:00:00.000Z"
+      }
+    },
+    {
+      "id": "d98122f8-64a9-40f7-8dca-8b4b0b7ce455",
+      "tab": "hitMyGoal",
+      "title": "和同事闲聊-20260205",
+      "baseTitle": "和同事闲聊",
+      "periodKey": "20260205",
+      "categoryId": "sub-work",
+      "sortKey": 1770346951099,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-29T14:09:47.000Z",
+        "nextDue": "2026-02-06T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:34.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "id": "6d75771a-edb8-4654-bc6b-29741fc26267",
+      "tab": "hitMyGoal",
+      "title": "集体社交-20260208",
+      "baseTitle": "集体社交",
+      "periodKey": "20260208",
+      "categoryId": "sub-social",
+      "sortKey": 1770346951108,
+      "status": "active",
+      "isArchived": true,
+      "isDone": false,
+      "createdAt": "2026-02-06T03:02:31.000Z",
+      "updatedAt": "2026-02-09T02:34:46.000Z",
+      "recurrence": {
+        "frequency": "weekly",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 1,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-30T13:33:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:34:46.000Z"
+    },
+    {
+      "id": "8e397cea-31ae-4e51-8e12-6b68fb70052a",
+      "tab": "spendMyTime",
+      "title": "陪娃玩-20260208",
+      "baseTitle": "陪娃玩",
+      "periodKey": "20260208",
+      "categoryId": "sub-childcare",
+      "sortKey": 1770604443158,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 60,
+      "completedMinutes": 480,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-09T02:34:03.000Z",
+      "updatedAt": "2026-02-09T02:35:45.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:35:45.000Z"
+    },
+    {
+      "id": "305ea35c-8c7f-433e-876f-23b85c9af4a0",
+      "tab": "spendMyTime",
+      "title": "睡觉-20260208",
+      "baseTitle": "睡觉",
+      "periodKey": "20260208",
+      "categoryId": "sub-sleep",
+      "sortKey": 1770604443159,
+      "status": "active",
+      "isArchived": true,
+      "requiredMinutes": 420,
+      "completedMinutes": 420,
+      "currentSessionStart": null,
+      "periodStart": "2026-02-02T05:00:00.000Z",
+      "periodEnd": "2026-02-09T04:59:59.000Z",
+      "createdAt": "2026-02-09T02:34:03.000Z",
+      "updatedAt": "2026-02-09T02:35:30.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "totalOccurrences": null,
+        "completedOccurrences": 0,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-27T03:36:16.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "archivedAt": "2026-02-09T02:35:30.000Z"
+    },
+    {
+      "id": "59787faa-6b3e-4db4-81fe-97a24bac334f",
+      "tab": "hitMyGoal",
+      "title": "和同事闲聊-20260208",
+      "baseTitle": "和同事闲聊",
+      "periodKey": "20260208",
+      "categoryId": "sub-work",
+      "sortKey": 1770604443172,
+      "status": "done",
+      "isArchived": true,
+      "isDone": true,
+      "createdAt": "2026-02-09T02:34:03.000Z",
+      "updatedAt": "2026-02-09T02:34:52.000Z",
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 2,
+        "totalOccurrences": null,
+        "completedOccurrences": 2,
+        "timezone": "America/New_York",
+        "startDate": "2026-01-29T14:09:47.000Z",
+        "nextDue": "2026-02-09T05:00:00.000Z"
+      },
+      "completedAt": "2026-02-09T02:34:47.000Z",
+      "archivedAt": "2026-02-09T02:34:52.000Z"
+    }
+  ],
+  "actions": [
+    {
+      "itemId": "d9eb2e29-97d2-4f6e-a6ec-b9ce0e267260",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "2e7f43fd-8cc6-4d90-bd58-e8443bc14f3c",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "420cc14d-0fc0-4f23-a721-3c5180da87f1",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "90ee8749-a97d-41dd-8dfd-b045705e2ba6",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "c7a3b80e-5a05-445b-ae22-c413cbe5dd0a",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "01786919-d0ab-48c4-b790-fb33f1c61b88",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "145244a7-d9c6-4257-8138-7c660145a70c",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "7ed41726-aadc-455d-827f-da967ccac35c",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "f38f7ea8-a063-414a-b900-d956f88b40ba",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "2251ee58-1cbe-4e24-9b02-d5e490c4a32e",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "0af92e65-48f4-421d-9de3-65030450d0bf",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "98717b1a-0839-4336-8cd3-f7a129813795",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "344c8958-19c1-48ea-b5e9-7ae1f63410d0",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "097c60f1-65e5-401f-8909-da0767e6c56e",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "cdc428df-5105-44bf-b54f-53660c17b057",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "2d55386d-3a47-4968-965b-710f3d20dbc9",
+      "tab": "dayToDay",
+      "type": "create",
+      "id": "d5cb7ee5-23ee-45b0-8af4-01a0fec1bcce",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "b452fc9d-9228-4929-88bf-ffebd0473d64",
+      "tab": "dayToDay",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "monthly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:31:24.000Z",
+          "nextDue": "2026-02-01T05:00:00.000Z"
+        },
+        "periodKey": "20260131"
+      },
+      "id": "0c62aba5-b380-49f3-a04f-2770171ef044",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "ab70469a-b02f-4aa0-8ebe-8b3d29cdaf22",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "monthly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:31:24.000Z",
+          "nextDue": "2026-02-01T05:00:00.000Z"
+        },
+        "periodKey": "20260131"
+      },
+      "id": "9ac78a8d-c618-49ad-a05a-003a6527010d",
+      "timestamp": "2026-01-27T03:31:24.000Z"
+    },
+    {
+      "itemId": "2caf29e8-99d7-451b-9978-da40e5b7e35e",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "monthly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:33:34.000Z",
+          "nextDue": "2026-02-01T05:00:00.000Z"
+        },
+        "periodKey": "20260131"
+      },
+      "id": "080884b7-c7aa-471a-a6f1-3d6c8920c5df",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "ca19aabe-ef8c-4edc-9c35-ced2939d171b",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "monthly",
+          "interval": 2,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:33:34.000Z",
+          "nextDue": "2026-02-01T05:00:00.000Z"
+        },
+        "periodKey": "20260131"
+      },
+      "id": "3a8e347e-5690-4ebc-8bc6-9f7b5dddf704",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "5ba180f1-c9e8-403b-9391-6cfb1b35f3dd",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:33:34.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "0a500ee7-efc0-4f95-ad8c-7404f3ca8099",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "eb0cd3b6-6391-4520-a9ae-8e64689536b2",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 2,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:33:34.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "91db0216-3299-439e-892c-1bedc99c3024",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "b05db444-0b9e-4dea-95d8-e0308b6f9711",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:33:34.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "eae68acb-8966-4cce-ac71-a4cfd12ff99e",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "12a1e1f5-2aa7-4ace-8c86-285759a804ad",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:33:34.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "b078f672-a4da-4f6f-a955-dfe7e0b848b5",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "bad0377a-18f3-4dfe-9e98-1fcdc12e98ff",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:33:34.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "e4e36887-ed61-4711-b51f-c7305063e1da",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "82b8894b-8bc9-405e-a187-d89e6b226073",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "id": "174f3552-774a-475b-8dbb-8d29cfe6cc01",
+      "timestamp": "2026-01-27T03:33:34.000Z"
+    },
+    {
+      "itemId": "71d3ca4c-2b6b-4f1c-ae15-b36e65de3d8c",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "daily",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-01-27T05:00:00.000Z"
+        },
+        "periodKey": "20260126"
+      },
+      "id": "3f2defb1-d777-4b58-9502-d9554b24b568",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "da65afa6-770b-436f-8abf-44c98b3036b5",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "daily",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-01-27T05:00:00.000Z"
+        },
+        "periodKey": "20260126"
+      },
+      "id": "0fb1fe53-e6f5-4d33-a75c-aab38f5e166e",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "60fd856b-7d2c-4c1c-a3df-fd4057f0953d",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "c2935334-c533-4552-889c-8c5934f408e3",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "136e6e05-d2db-4d0e-b734-c8486add634b",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "66939923-385f-457a-851f-5cfe082d08ea",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "306cb439-8965-45a7-a7a2-81c49006ed7f",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 2,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "283b626d-f628-4ca8-a375-47ea1411eec4",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "f59b98dc-0e9a-41d8-ab54-02b8ad9e4bd6",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 2,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "8fd1b4eb-df31-43dd-a3a0-f812bf31db89",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "5489b693-bc81-4645-b2b2-41f1bc36b6c6",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "8d7d6dbf-0d40-402a-a1af-8e00e01fdfc2",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": 3,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "157b48f0-7084-427c-acfb-a547d17f3930",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "eb005cf7-f0ed-4541-9bdb-1d882c313106",
+      "timestamp": "2026-01-27T03:36:16.000Z"
+    },
+    {
+      "itemId": "71d3ca4c-2b6b-4f1c-ae15-b36e65de3d8c",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260126",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 150
+      },
+      "id": "e737352b-fda3-4c0d-a5b9-7d8ca619d909",
+      "timestamp": "2026-01-27T03:36:32.000Z"
+    },
+    {
+      "itemId": "da65afa6-770b-436f-8abf-44c98b3036b5",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260126",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 480
+      },
+      "id": "8629903e-01c6-4f0b-a610-0137a23cb21c",
+      "timestamp": "2026-01-27T03:36:40.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 300
+      },
+      "id": "af59d212-1185-4d26-8d3e-f130bd1e7e8d",
+      "timestamp": "2026-01-27T03:36:48.000Z"
+    },
+    {
+      "itemId": "ab70469a-b02f-4aa0-8ebe-8b3d29cdaf22",
+      "tab": "spendMyTime",
+      "type": "delete",
+      "payload": {
+        "reason": "recurring_series_deleted",
+        "baseTitle": "整理家庭BS"
+      },
+      "id": "2ac4e467-63a6-4245-a841-6bdec9e8621d",
+      "timestamp": "2026-01-27T03:37:07.000Z"
+    },
+    {
+      "itemId": "92f5b6cb-4874-48a5-a4fb-b86fa1b1098e",
+      "tab": "dayToDay",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "monthly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:37:27.000Z",
+          "nextDue": "2026-02-01T05:00:00.000Z"
+        },
+        "periodKey": "20260131"
+      },
+      "id": "43fe7d8b-69f6-4ba6-857f-3a422d24b3ef",
+      "timestamp": "2026-01-27T03:37:27.000Z"
+    },
+    {
+      "itemId": "f38f7ea8-a063-414a-b900-d956f88b40ba",
+      "tab": "dayToDay",
+      "type": "update",
+      "payload": {
+        "title": "Renew condo insurance",
+        "categoryId": "sub-other",
+        "dueDate": "2026-01-31T04:59:59.000Z"
+      },
+      "id": "9ad0e1ed-0822-49bf-ac66-6c2efb845edf",
+      "timestamp": "2026-01-27T03:37:51.000Z"
+    },
+    {
+      "itemId": "2d55386d-3a47-4968-965b-710f3d20dbc9",
+      "tab": "dayToDay",
+      "type": "update",
+      "payload": {
+        "title": "给闫岩娃买生日礼物",
+        "categoryId": "sub-social",
+        "dueDate": "2026-02-07T04:59:59.000Z"
+      },
+      "id": "41ac1952-ac9d-4691-a751-8d3adb291813",
+      "timestamp": "2026-01-27T03:38:14.000Z"
+    },
+    {
+      "itemId": "145244a7-d9c6-4257-8138-7c660145a70c",
+      "tab": "dayToDay",
+      "type": "update",
+      "payload": {
+        "title": "陪娃排敏鸡蛋",
+        "categoryId": "sub-childcare",
+        "dueDate": "2026-01-31T04:59:59.000Z"
+      },
+      "id": "638d928e-09f5-4fb0-ac82-350bc2aea4c6",
+      "timestamp": "2026-01-27T03:38:26.000Z"
+    },
+    {
+      "itemId": "71d3ca4c-2b6b-4f1c-ae15-b36e65de3d8c",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "8e6f9786-7d21-4e35-b81e-cf0c0bb4b9ce",
+      "timestamp": "2026-01-27T03:38:42.000Z"
+    },
+    {
+      "itemId": "da65afa6-770b-436f-8abf-44c98b3036b5",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "ba5d116d-3cb1-40c9-9d50-3cd509ae7aad",
+      "timestamp": "2026-01-27T03:38:42.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "AI微创业-20260201",
+        "categoryId": "sub-side-prep",
+        "completedMinutes": 240
+      },
+      "id": "c75d59af-e1fe-42dc-911a-ae80b1eb3cb9",
+      "timestamp": "2026-01-27T03:40:30.000Z"
+    },
+    {
+      "itemId": "60fd856b-7d2c-4c1c-a3df-fd4057f0953d",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T03:36:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        }
+      },
+      "id": "6fc77fe1-4caf-4cea-b94a-7af759bcc41d",
+      "timestamp": "2026-01-27T03:41:01.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "AI微创业-20260201",
+        "categoryId": "sub-side-prep",
+        "completedMinutes": 300
+      },
+      "id": "5251b22e-efef-4d38-8075-d044d9c6af22",
+      "timestamp": "2026-01-27T04:10:31.000Z"
+    },
+    {
+      "itemId": "05799b8c-84f8-436d-9a7a-a13bc1600e30",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "daily",
+          "interval": 2,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T04:27:18.000Z",
+          "nextDue": "2026-01-27T05:00:00.000Z"
+        },
+        "periodKey": "20260126"
+      },
+      "id": "806f13ab-d167-4ef5-912b-cdb855f35cab",
+      "timestamp": "2026-01-27T04:27:18.000Z"
+    },
+    {
+      "itemId": "05799b8c-84f8-436d-9a7a-a13bc1600e30",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "a2d68866-9742-411f-b80d-86d101e9ac71",
+      "timestamp": "2026-01-27T04:27:22.000Z"
+    },
+    {
+      "itemId": "05799b8c-84f8-436d-9a7a-a13bc1600e30",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "e9550429-4ea2-4976-8851-01f4d6d48f73",
+      "timestamp": "2026-01-27T04:27:27.000Z"
+    },
+    {
+      "itemId": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "type": "update",
+      "payload": {
+        "title": "买车",
+        "categoryId": "sub-chores",
+        "dueDate": "2026-01-28T04:59:59.000Z"
+      },
+      "id": "5c117249-eb52-4d58-a368-503f71b0eb9a",
+      "timestamp": "2026-01-27T04:30:43.000Z"
+    },
+    {
+      "itemId": "544b2dd2-6548-4159-a1bc-4eec313aaa0c",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260127",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 420
+      },
+      "id": "bfb8fcc8-b8bf-4248-b8d7-94becdb753f9",
+      "timestamp": "2026-01-27T13:36:35.000Z"
+    },
+    {
+      "itemId": "544b2dd2-6548-4159-a1bc-4eec313aaa0c",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "2aefdc7c-02fc-4a70-aaf4-71d3a27e129b",
+      "timestamp": "2026-01-27T13:36:37.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 480
+      },
+      "id": "490ddc75-6e0f-4306-ac93-284532bdd66d",
+      "timestamp": "2026-01-27T15:43:56.000Z"
+    },
+    {
+      "itemId": "b5f4f1c0-d612-4170-b799-fed88f26e724",
+      "tab": "dayToDay",
+      "type": "create",
+      "payload": {
+        "dueDate": "2026-01-31T04:59:59.000Z"
+      },
+      "id": "22973e62-3232-4a9e-b37f-b9e5bf85d7ce",
+      "timestamp": "2026-01-27T15:44:16.000Z"
+    },
+    {
+      "itemId": "05799b8c-84f8-436d-9a7a-a13bc1600e30",
+      "tab": "hitMyGoal",
+      "type": "unarchive",
+      "id": "ad340af6-f20e-48ee-8480-1b307d2ff41e",
+      "timestamp": "2026-01-27T15:46:31.000Z"
+    },
+    {
+      "itemId": "05799b8c-84f8-436d-9a7a-a13bc1600e30",
+      "tab": "hitMyGoal",
+      "type": "delete",
+      "payload": {
+        "reason": "recurring_series_deleted",
+        "baseTitle": "和同事咖啡间闲聊八卦"
+      },
+      "id": "a9293b74-a2ac-45fc-9aab-97ee0facf609",
+      "timestamp": "2026-01-27T15:46:38.000Z"
+    },
+    {
+      "itemId": "99850667-5e35-4e44-ae3d-a798692006e5",
+      "tab": "hitMyGoal",
+      "type": "delete",
+      "payload": {
+        "reason": "recurring_series_deleted",
+        "baseTitle": "和同事咖啡间闲聊八卦"
+      },
+      "id": "ac5f2715-c726-449c-b189-f262e9910dc5",
+      "timestamp": "2026-01-27T15:46:38.000Z"
+    },
+    {
+      "itemId": "668fb4d6-96a3-4a65-ab27-69c8a8e2e45d",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "daily",
+          "interval": 2,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-27T15:47:19.000Z",
+          "nextDue": "2026-01-28T05:00:00.000Z"
+        },
+        "periodKey": "20260127"
+      },
+      "id": "fa8e064e-5cb7-4f86-802c-066fa77d58ef",
+      "timestamp": "2026-01-27T15:47:19.000Z"
+    },
+    {
+      "itemId": "668fb4d6-96a3-4a65-ab27-69c8a8e2e45d",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "title": "和同事在咖啡间闲聊-20260127",
+        "categoryId": "sub-work"
+      },
+      "id": "ad9af140-4676-4b9f-ab80-f13e2357e548",
+      "timestamp": "2026-01-27T15:47:26.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 720
+      },
+      "id": "7c63feb7-77b6-4084-8a61-5edca68b3f8f",
+      "timestamp": "2026-01-27T20:44:18.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "0b676736-3004-4933-a02b-8bc98cceeabc",
+      "timestamp": "2026-01-27T21:06:49.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 1007
+      },
+      "id": "945bd0f1-c342-41e7-926d-b568c6ed7d71",
+      "timestamp": "2026-01-28T13:53:49.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1127
+      },
+      "id": "32b0e9b0-486f-40ef-9d41-636706cfb968",
+      "timestamp": "2026-01-28T13:54:12.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1097
+      },
+      "id": "e4a2256e-b2fe-4fb1-82e5-e53e9084f077",
+      "timestamp": "2026-01-28T13:54:26.000Z"
+    },
+    {
+      "itemId": "cb459438-c014-4b02-8752-ab447d77c344",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260127",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 25
+      },
+      "id": "d6270982-fb0a-4296-8b4e-9edff90760ef",
+      "timestamp": "2026-01-28T13:54:39.000Z"
+    },
+    {
+      "itemId": "cb459438-c014-4b02-8752-ab447d77c344",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "32fec86d-e5d9-486a-b5c2-ffc8666555ed",
+      "timestamp": "2026-01-28T13:54:41.000Z"
+    },
+    {
+      "itemId": "bc80a186-8c3a-4e01-9a77-59f0b3dcc4a9",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260128",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 20
+      },
+      "id": "a4ca11e8-cee4-4d64-b324-588498c01039",
+      "timestamp": "2026-01-28T13:54:50.000Z"
+    },
+    {
+      "itemId": "a53a0b7c-32a3-4ee9-af98-1e63e5ae147f",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260128",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 275
+      },
+      "id": "aed322c4-d11c-43dc-877a-f2321b3443da",
+      "timestamp": "2026-01-28T13:55:14.000Z"
+    },
+    {
+      "itemId": "136e6e05-d2db-4d0e-b734-c8486add634b",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "72f639d3-7cd4-4fd7-a020-cf19cf53b583",
+      "timestamp": "2026-01-28T13:55:22.000Z"
+    },
+    {
+      "itemId": "136e6e05-d2db-4d0e-b734-c8486add634b",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "健身-20260201",
+        "categoryId": "sub-fitness",
+        "completedMinutes": 60
+      },
+      "id": "a94d6925-1c4c-4121-88fe-11fac8944ba9",
+      "timestamp": "2026-01-28T13:55:29.000Z"
+    },
+    {
+      "itemId": "136e6e05-d2db-4d0e-b734-c8486add634b",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "7d9a4df9-0039-44aa-a042-adc14804c861",
+      "timestamp": "2026-01-28T13:55:30.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "AI微创业-20260201",
+        "categoryId": "sub-side-prep",
+        "completedMinutes": 330
+      },
+      "id": "cad2bd1f-ef9d-4276-be0b-b9f873c512d1",
+      "timestamp": "2026-01-28T13:55:49.000Z"
+    },
+    {
+      "itemId": "12a1e1f5-2aa7-4ace-8c86-285759a804ad",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "7a178a4c-8db4-4b0a-a612-800126ba6b46",
+      "timestamp": "2026-01-28T13:56:09.000Z"
+    },
+    {
+      "itemId": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "type": "update",
+      "payload": {
+        "title": "买车",
+        "categoryId": "sub-chores",
+        "dueDate": "2026-01-31T04:59:59.000Z"
+      },
+      "id": "853f24a2-1830-4cf8-b2b0-4e8fd1639cbb",
+      "timestamp": "2026-01-28T18:07:55.000Z"
+    },
+    {
+      "itemId": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "type": "update",
+      "payload": {
+        "title": "买车",
+        "categoryId": "sub-chores",
+        "dueDate": "2026-01-30T04:59:59.000Z"
+      },
+      "id": "dceb3352-0793-4537-b0be-7fad7428758e",
+      "timestamp": "2026-01-28T18:08:05.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1397
+      },
+      "id": "edab01c3-1d11-4887-86ec-974fd5166fdb",
+      "timestamp": "2026-01-28T18:49:58.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1517
+      },
+      "id": "1ea4e2d7-ce7c-40cc-b3f7-20ba2b69a430",
+      "timestamp": "2026-01-28T23:24:25.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1457
+      },
+      "id": "ec04302a-2c83-4252-82b1-0fc3922e2e26",
+      "timestamp": "2026-01-28T23:24:49.000Z"
+    },
+    {
+      "itemId": "bc80a186-8c3a-4e01-9a77-59f0b3dcc4a9",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260128",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 60
+      },
+      "id": "d095c00f-1577-4d76-b5a6-209821aa0c0e",
+      "timestamp": "2026-01-28T23:25:00.000Z"
+    },
+    {
+      "itemId": "eb0cd3b6-6391-4520-a9ae-8e64689536b2",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "7eb4af5e-1173-4adf-b1f7-46ee84e2521d",
+      "timestamp": "2026-01-29T00:56:17.000Z"
+    },
+    {
+      "itemId": "eb0cd3b6-6391-4520-a9ae-8e64689536b2",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "91c78d49-4af9-4af2-aea0-2dafc300cfad",
+      "timestamp": "2026-01-29T00:56:21.000Z"
+    },
+    {
+      "itemId": "12a1e1f5-2aa7-4ace-8c86-285759a804ad",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "6ac11565-5518-4f59-a0f9-1a49161f1265",
+      "timestamp": "2026-01-29T00:56:21.000Z"
+    },
+    {
+      "itemId": "668fb4d6-96a3-4a65-ab27-69c8a8e2e45d",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "西诺"
+      },
+      "id": "758b0d51-1de0-444a-b3e7-06fbe8e523a1",
+      "timestamp": "2026-01-29T00:56:49.000Z"
+    },
+    {
+      "itemId": "668fb4d6-96a3-4a65-ab27-69c8a8e2e45d",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "d0483add-141e-4abe-a7ac-311134b1e197",
+      "timestamp": "2026-01-29T00:56:50.000Z"
+    },
+    {
+      "itemId": "f030ceda-934e-41ea-afb7-d7652df8f064",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "Sophia"
+      },
+      "id": "195bd5e8-4390-4e1b-84c8-a039025de277",
+      "timestamp": "2026-01-29T00:57:04.000Z"
+    },
+    {
+      "itemId": "f030ceda-934e-41ea-afb7-d7652df8f064",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "9e5a140b-b93b-4f22-80f2-95d99a2bb983",
+      "timestamp": "2026-01-29T00:57:05.000Z"
+    },
+    {
+      "itemId": "bad0377a-18f3-4dfe-9e98-1fcdc12e98ff",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "从奖金看还是值点钱吧，未来还是可以在保持技术的同时，考虑判断和统筹，不急于回答具体问题"
+      },
+      "id": "08e1806a-1da0-49c4-9ab9-c6617b32ccdb",
+      "timestamp": "2026-01-29T00:58:42.000Z"
+    },
+    {
+      "itemId": "bad0377a-18f3-4dfe-9e98-1fcdc12e98ff",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "708bed00-6a68-4cd2-826c-6fd11a3c43d8",
+      "timestamp": "2026-01-29T00:58:45.000Z"
+    },
+    {
+      "itemId": "bad0377a-18f3-4dfe-9e98-1fcdc12e98ff",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "19887967-34b3-43da-9092-8206406254b9",
+      "timestamp": "2026-01-29T00:58:50.000Z"
+    },
+    {
+      "itemId": "668fb4d6-96a3-4a65-ab27-69c8a8e2e45d",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "cdc86220-f0bb-408a-bc43-494584ff29d3",
+      "timestamp": "2026-01-29T00:58:50.000Z"
+    },
+    {
+      "itemId": "f030ceda-934e-41ea-afb7-d7652df8f064",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "f43fcb47-5f62-4d07-8a16-d14ffae372a3",
+      "timestamp": "2026-01-29T00:58:50.000Z"
+    },
+    {
+      "itemId": "bc80a186-8c3a-4e01-9a77-59f0b3dcc4a9",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260128",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 120
+      },
+      "id": "7615c477-bb10-4f1b-99b2-70d0b7d5f148",
+      "timestamp": "2026-01-29T00:59:03.000Z"
+    },
+    {
+      "itemId": "bc80a186-8c3a-4e01-9a77-59f0b3dcc4a9",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "cdb4e5e7-58ae-40e7-abeb-840fe0e18a99",
+      "timestamp": "2026-01-29T00:59:06.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1530
+      },
+      "id": "6ab6cb47-5ee1-42a3-a485-412417f58e41",
+      "timestamp": "2026-01-29T03:16:05.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "8a4c0137-841a-48c0-9bb7-7d9a06f380e5",
+      "timestamp": "2026-01-29T04:13:46.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "0bcece30-53d6-4e84-ab42-57ff24093783",
+      "timestamp": "2026-01-29T04:13:47.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1555
+      },
+      "id": "a5e905d5-7cda-4f58-a5e8-8bb8a38192e9",
+      "timestamp": "2026-01-29T04:13:55.000Z"
+    },
+    {
+      "itemId": "a53a0b7c-32a3-4ee9-af98-1e63e5ae147f",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260128",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 305
+      },
+      "id": "21d529a1-d270-46e3-be1c-fa039c8805ad",
+      "timestamp": "2026-01-29T04:14:11.000Z"
+    },
+    {
+      "itemId": "a53a0b7c-32a3-4ee9-af98-1e63e5ae147f",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "7b3e0427-5870-41be-8a68-a259cca04724",
+      "timestamp": "2026-01-29T04:14:13.000Z"
+    },
+    {
+      "itemId": "7b871c93-968b-419e-84e2-8eb8236294dd",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260129",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 30
+      },
+      "id": "a30a1600-3fdb-4b32-a482-ca54743761df",
+      "timestamp": "2026-01-29T13:23:02.000Z"
+    },
+    {
+      "itemId": "68cbf493-304a-4dc5-86fd-3633c8546daa",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260129",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 390
+      },
+      "id": "4f1e443b-c8f9-4768-b2bd-10edc3f9dc51",
+      "timestamp": "2026-01-29T13:23:17.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1575
+      },
+      "id": "dec92f79-afbc-410a-b6c5-8ea4e212b021",
+      "timestamp": "2026-01-29T13:57:22.000Z"
+    },
+    {
+      "itemId": "668fb4d6-96a3-4a65-ab27-69c8a8e2e45d",
+      "tab": "hitMyGoal",
+      "type": "delete",
+      "payload": {
+        "reason": "recurring_series_deleted",
+        "baseTitle": "和同事在咖啡间闲聊"
+      },
+      "id": "10de6ac1-c69f-4845-82a8-5229b6df6fbf",
+      "timestamp": "2026-01-29T14:09:23.000Z"
+    },
+    {
+      "itemId": "f030ceda-934e-41ea-afb7-d7652df8f064",
+      "tab": "hitMyGoal",
+      "type": "delete",
+      "payload": {
+        "reason": "recurring_series_deleted",
+        "baseTitle": "和同事在咖啡间闲聊"
+      },
+      "id": "41d886ff-a086-4180-893e-2d0821736e22",
+      "timestamp": "2026-01-29T14:09:23.000Z"
+    },
+    {
+      "itemId": "9ae2a7c4-1539-439b-ad04-11a86f1162ff",
+      "tab": "hitMyGoal",
+      "type": "delete",
+      "payload": {
+        "reason": "recurring_series_deleted",
+        "baseTitle": "和同事在咖啡间闲聊"
+      },
+      "id": "0508fd92-d740-4fcf-85e0-281d1e2878c5",
+      "timestamp": "2026-01-29T14:09:23.000Z"
+    },
+    {
+      "itemId": "74dc2100-ae52-4894-a60b-fef1dc1ac360",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "daily",
+          "interval": 2,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-29T14:09:47.000Z",
+          "nextDue": "2026-01-30T05:00:00.000Z"
+        },
+        "periodKey": "20260129"
+      },
+      "id": "642e5cd9-5b91-4133-8833-373acc6643b8",
+      "timestamp": "2026-01-29T14:09:47.000Z"
+    },
+    {
+      "itemId": "74dc2100-ae52-4894-a60b-fef1dc1ac360",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "f8472432-3817-4060-8f53-eb48784ca541",
+      "timestamp": "2026-01-29T14:09:52.000Z"
+    },
+    {
+      "itemId": "74dc2100-ae52-4894-a60b-fef1dc1ac360",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "Sophia\nXinuo"
+      },
+      "id": "63e1fa1f-28c9-4528-bbb3-4738765a5fa0",
+      "timestamp": "2026-01-29T14:10:07.000Z"
+    },
+    {
+      "itemId": "5489b693-bc81-4645-b2b2-41f1bc36b6c6",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "54d4786b-96a8-4696-8ece-1fcf3e0654ee",
+      "timestamp": "2026-01-29T14:13:40.000Z"
+    },
+    {
+      "itemId": "5489b693-bc81-4645-b2b2-41f1bc36b6c6",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "读书-20260201",
+        "categoryId": "sub-reading",
+        "completedMinutes": 15
+      },
+      "id": "021f5efb-2f0f-4a4c-9e7a-09e1561c2161",
+      "timestamp": "2026-01-29T14:13:44.000Z"
+    },
+    {
+      "itemId": "5489b693-bc81-4645-b2b2-41f1bc36b6c6",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "725a6d49-e25e-4c20-96a3-200b60a5d282",
+      "timestamp": "2026-01-29T14:13:45.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 1660
+      },
+      "id": "1832edbc-8fb2-476b-889d-c926d81166bf",
+      "timestamp": "2026-01-29T15:33:48.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "c42af9ae-829e-465f-a393-c9ddce09a03b",
+      "timestamp": "2026-01-29T15:33:49.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 181
+      },
+      "id": "0cb0ab09-40cf-400f-b3a2-200afc434718",
+      "timestamp": "2026-01-29T18:35:40.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "102b70b2-ea9e-44a3-a247-94fe95eeb79e",
+      "timestamp": "2026-01-29T18:35:42.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "6bd984e5-d363-4c72-bcb7-7e473c3f6640",
+      "timestamp": "2026-01-29T18:35:43.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "83d0122e-7ed8-4350-9cbc-88572ad9d094",
+      "timestamp": "2026-01-29T18:37:42.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 272
+      },
+      "id": "7226945c-6733-49bf-b7e3-da3c3b675d09",
+      "timestamp": "2026-01-29T23:10:33.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "complete",
+      "payload": {
+        "completedMinutes": 2113,
+        "requiredMinutes": 2100,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null
+        }
+      },
+      "id": "29a77bb1-735b-4b7c-a8f5-1111fd3caf99",
+      "timestamp": "2026-01-29T23:10:33.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 2100
+      },
+      "id": "2124ccf1-10ba-4fa6-afd4-596a4cfdf70f",
+      "timestamp": "2026-01-29T23:10:40.000Z"
+    },
+    {
+      "itemId": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "type": "update",
+      "payload": {
+        "title": "买车",
+        "categoryId": "sub-chores",
+        "dueDate": "2026-02-02T04:59:59.000Z"
+      },
+      "id": "5d6bfa21-16f5-421b-860f-d993667aa6bd",
+      "timestamp": "2026-01-29T23:11:09.000Z"
+    },
+    {
+      "itemId": "b05db444-0b9e-4dea-95d8-e0308b6f9711",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "钱宇颖"
+      },
+      "id": "aa00d002-6fb6-42b5-ab70-3344e25e28ee",
+      "timestamp": "2026-01-30T13:32:40.000Z"
+    },
+    {
+      "itemId": "b05db444-0b9e-4dea-95d8-e0308b6f9711",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "c7e767b3-91b2-4ad3-88fb-49ff02529f2f",
+      "timestamp": "2026-01-30T13:32:45.000Z"
+    },
+    {
+      "itemId": "0b7cbbcd-2868-4fa4-89a5-f5de7976d718",
+      "tab": "hitMyGoal",
+      "type": "create",
+      "payload": {
+        "recurrence": {
+          "frequency": "weekly",
+          "interval": 1,
+          "totalOccurrences": null,
+          "completedOccurrences": 0,
+          "timezone": "America/New_York",
+          "startDate": "2026-01-30T13:33:16.000Z",
+          "nextDue": "2026-02-02T05:00:00.000Z"
+        },
+        "periodKey": "20260201"
+      },
+      "id": "2a19aca1-b0c6-4459-99d7-10e8b217e271",
+      "timestamp": "2026-01-30T13:33:16.000Z"
+    },
+    {
+      "itemId": "0b7cbbcd-2868-4fa4-89a5-f5de7976d718",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "胡老师聚餐\n领航聚餐\nAron生日"
+      },
+      "id": "885720ec-d93a-4148-b90f-658ac703faf8",
+      "timestamp": "2026-01-30T13:33:34.000Z"
+    },
+    {
+      "itemId": "0b7cbbcd-2868-4fa4-89a5-f5de7976d718",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "b71f1e59-e46d-4810-a17b-8360a431da94",
+      "timestamp": "2026-01-30T13:33:38.000Z"
+    },
+    {
+      "itemId": "d78508ff-72ce-47c5-9fb1-fd1586352f8e",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "Sophia, xinuo"
+      },
+      "id": "a00bd66b-c2e6-401b-b00c-dade94f192f0",
+      "timestamp": "2026-01-30T13:34:03.000Z"
+    },
+    {
+      "itemId": "d78508ff-72ce-47c5-9fb1-fd1586352f8e",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "5363d09a-b1df-460b-8545-42c3db3fe902",
+      "timestamp": "2026-01-30T13:34:04.000Z"
+    },
+    {
+      "itemId": "d78508ff-72ce-47c5-9fb1-fd1586352f8e",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": false
+      },
+      "id": "36d837be-9d2a-4d67-9e86-cdb53c902114",
+      "timestamp": "2026-01-30T13:34:15.000Z"
+    },
+    {
+      "itemId": "b5f4f1c0-d612-4170-b799-fed88f26e724",
+      "tab": "dayToDay",
+      "type": "complete",
+      "payload": {
+        "isDone": true
+      },
+      "id": "486addad-188c-4bf4-924b-5f2bb60df9cd",
+      "timestamp": "2026-01-30T20:13:42.000Z"
+    },
+    {
+      "itemId": "d78508ff-72ce-47c5-9fb1-fd1586352f8e",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "欣桐 situ"
+      },
+      "id": "aefa627e-4c8d-4861-a1e4-b8ba40516bc3",
+      "timestamp": "2026-01-30T20:18:03.000Z"
+    },
+    {
+      "itemId": "d78508ff-72ce-47c5-9fb1-fd1586352f8e",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "52bb0229-713d-4329-a3b5-0db7c242961c",
+      "timestamp": "2026-01-30T20:18:06.000Z"
+    },
+    {
+      "itemId": "0b7cbbcd-2868-4fa4-89a5-f5de7976d718",
+      "tab": "hitMyGoal",
+      "type": "update",
+      "payload": {
+        "notes": "胡老师聚餐\n领航聚餐\nAron生日"
+      },
+      "id": "2df4fa7d-d61b-4cb5-bca1-46e21e6e4feb",
+      "timestamp": "2026-01-30T20:18:16.000Z"
+    },
+    {
+      "itemId": "b05db444-0b9e-4dea-95d8-e0308b6f9711",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "2ab33e8c-4b3b-4a32-9d6d-7297590bdf17",
+      "timestamp": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "itemId": "74dc2100-ae52-4894-a60b-fef1dc1ac360",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "fde1ccd9-5645-494f-970a-a3609830a9a1",
+      "timestamp": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "itemId": "d78508ff-72ce-47c5-9fb1-fd1586352f8e",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "42cd08a9-37e3-4b9f-a568-a42f710155a2",
+      "timestamp": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "itemId": "0b7cbbcd-2868-4fa4-89a5-f5de7976d718",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "d9fedfdf-b801-4b6f-b8ee-918a413626e6",
+      "timestamp": "2026-01-30T20:18:17.000Z"
+    },
+    {
+      "itemId": "7b871c93-968b-419e-84e2-8eb8236294dd",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "2c0cc914-0057-4b05-9af7-a9d19ef32c9f",
+      "timestamp": "2026-01-30T20:18:23.000Z"
+    },
+    {
+      "itemId": "68cbf493-304a-4dc5-86fd-3633c8546daa",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "c53ed306-69ce-4f2d-8f4c-6764f88aa2fc",
+      "timestamp": "2026-01-30T20:18:25.000Z"
+    },
+    {
+      "itemId": "abd78d54-bbfc-4ddd-af38-59e414306959",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260130",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 420
+      },
+      "id": "ff4d6622-86ec-47ed-8bc7-7142c8d4ffb2",
+      "timestamp": "2026-01-30T20:18:30.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "AI微创业-20260201",
+        "categoryId": "sub-side-prep",
+        "completedMinutes": 370
+      },
+      "id": "00282eb4-4ea8-406b-9677-c9ee54904603",
+      "timestamp": "2026-01-30T20:18:39.000Z"
+    },
+    {
+      "itemId": "abd78d54-bbfc-4ddd-af38-59e414306959",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "97945891-1f15-473c-9b6c-1615a495435a",
+      "timestamp": "2026-01-30T20:18:47.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "e88e2546-942f-4cc3-98c9-04b14fa078ce",
+      "timestamp": "2026-01-30T20:18:49.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "0b4bfd63-465f-4154-a449-20e310b25b2c",
+      "timestamp": "2026-01-30T20:18:50.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260201",
+        "categoryId": "sub-work",
+        "completedMinutes": 2280
+      },
+      "id": "29700884-1ee1-4d13-ad4d-6e0ea4a5a4c6",
+      "timestamp": "2026-01-30T20:19:04.000Z"
+    },
+    {
+      "itemId": "3e027a43-9bd5-4b8b-814a-e6d10ab94806",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "c9169dec-d8a5-497a-9f4f-4ed740d641ec",
+      "timestamp": "2026-01-30T20:19:09.000Z"
+    },
+    {
+      "itemId": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "type": "complete",
+      "payload": {
+        "isDone": true
+      },
+      "id": "e81b5473-31a9-40bb-a47d-100507fcdb46",
+      "timestamp": "2026-01-31T10:17:37.000Z"
+    },
+    {
+      "itemId": "5d90dafb-128f-4b35-a45b-5907522232c5",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260130",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 30
+      },
+      "id": "27bf57a7-0a34-469e-93e9-37c546c9a50a",
+      "timestamp": "2026-01-31T10:18:13.000Z"
+    },
+    {
+      "itemId": "5d90dafb-128f-4b35-a45b-5907522232c5",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "26c09347-2fcd-4efe-91a4-19438e88f108",
+      "timestamp": "2026-01-31T10:18:26.000Z"
+    },
+    {
+      "itemId": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260131",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 30
+      },
+      "id": "875f9751-12d5-4f11-8284-b76695bac686",
+      "timestamp": "2026-01-31T13:05:42.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "AI微创业-20260201",
+        "categoryId": "sub-side-prep",
+        "completedMinutes": 390
+      },
+      "id": "5e81b618-1ca4-4c45-acd7-c7436363d592",
+      "timestamp": "2026-01-31T13:06:02.000Z"
+    },
+    {
+      "itemId": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "0af4a819-48bf-4a18-affb-e663e8bd681c",
+      "timestamp": "2026-01-31T18:08:33.000Z"
+    },
+    {
+      "itemId": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "de4ca18c-21d2-417a-8c36-dad61cd1cd46",
+      "timestamp": "2026-01-31T18:08:35.000Z"
+    },
+    {
+      "itemId": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260131",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 30
+      },
+      "id": "f207cfbd-a201-4e79-a1dd-402c943fdd2d",
+      "timestamp": "2026-01-31T18:08:40.000Z"
+    },
+    {
+      "itemId": "2caf29e8-99d7-451b-9978-da40e5b7e35e",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "id": "6a710fd1-84ed-497b-b9df-4edb1961a47b",
+      "timestamp": "2026-01-31T18:45:01.000Z"
+    },
+    {
+      "itemId": "bad0377a-18f3-4dfe-9e98-1fcdc12e98ff",
+      "tab": "hitMyGoal",
+      "type": "unarchive",
+      "id": "806467de-4c03-483c-8326-152b053e3a7f",
+      "timestamp": "2026-01-31T18:45:06.000Z"
+    },
+    {
+      "itemId": "12a1e1f5-2aa7-4ace-8c86-285759a804ad",
+      "tab": "hitMyGoal",
+      "type": "unarchive",
+      "id": "4d52a606-0852-4da4-9829-2c4be4af8d59",
+      "timestamp": "2026-01-31T18:45:07.000Z"
+    },
+    {
+      "itemId": "2d55386d-3a47-4968-965b-710f3d20dbc9",
+      "tab": "dayToDay",
+      "type": "archive",
+      "id": "468a760e-a8be-48c0-be98-fe8e6ee6ed9b",
+      "timestamp": "2026-01-31T18:45:20.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "0a7bd00a-fe65-446f-a832-c4cdec96fd6b",
+      "timestamp": "2026-01-31T18:58:01.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 2
+      },
+      "id": "53b1862a-ee76-4ca9-8ef2-e0b9e815eff5",
+      "timestamp": "2026-01-31T19:00:14.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "971f8a9f-a0c0-44dd-a491-b0498c38398b",
+      "timestamp": "2026-01-31T19:00:15.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "fdd6958b-02d0-4dd6-8d82-be0cac136de2",
+      "timestamp": "2026-01-31T19:00:16.000Z"
+    },
+    {
+      "itemId": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "7e28579b-fc28-4e0f-81d5-d4caac3df58d",
+      "timestamp": "2026-01-31T19:13:28.000Z"
+    },
+    {
+      "itemId": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "5431d5b9-19a8-4e09-a939-eaa356c62c2a",
+      "timestamp": "2026-01-31T19:13:29.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "timer_start",
+      "id": "76e6cb75-626b-4b28-8102-2d3856814f62",
+      "timestamp": "2026-01-31T19:13:38.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "timer_stop",
+      "payload": {
+        "durationMinutes": 0
+      },
+      "id": "2c8045a7-c612-4d2f-b09f-c2e7bde35581",
+      "timestamp": "2026-01-31T19:13:40.000Z"
+    },
+    {
+      "itemId": "145244a7-d9c6-4257-8138-7c660145a70c",
+      "tab": "dayToDay",
+      "type": "complete",
+      "payload": {
+        "isDone": true
+      },
+      "id": "0cacd764-577c-4943-a69e-0004905d9a8e",
+      "timestamp": "2026-02-09T02:34:05.000Z"
+    },
+    {
+      "itemId": "f38f7ea8-a063-414a-b900-d956f88b40ba",
+      "tab": "dayToDay",
+      "type": "complete",
+      "payload": {
+        "isDone": true
+      },
+      "id": "e909db66-6996-406b-9100-58c6ac126b0d",
+      "timestamp": "2026-02-09T02:34:06.000Z"
+    },
+    {
+      "itemId": "b452fc9d-9228-4929-88bf-ffebd0473d64",
+      "tab": "dayToDay",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "1ce5aa44-6389-417c-a823-776579c6ac52",
+      "timestamp": "2026-02-09T02:34:07.000Z"
+    },
+    {
+      "itemId": "92f5b6cb-4874-48a5-a4fb-b86fa1b1098e",
+      "tab": "dayToDay",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "49f8548d-9ab8-4c72-9aa2-b060b3b0ac6d",
+      "timestamp": "2026-02-09T02:34:08.000Z"
+    },
+    {
+      "itemId": "344c8958-19c1-48ea-b5e9-7ae1f63410d0",
+      "tab": "dayToDay",
+      "type": "delete",
+      "id": "045ddec8-577f-4a24-9021-3fb4bc470e8b",
+      "timestamp": "2026-02-09T02:34:16.000Z"
+    },
+    {
+      "itemId": "145244a7-d9c6-4257-8138-7c660145a70c",
+      "tab": "dayToDay",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "059fae18-a659-4d6a-b419-a91b5deefb02",
+      "timestamp": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "itemId": "f38f7ea8-a063-414a-b900-d956f88b40ba",
+      "tab": "dayToDay",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "f17f325b-c7c3-4bed-bf89-7c8b288c527e",
+      "timestamp": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "itemId": "07773281-9937-4b2c-8502-50039c3dbeea",
+      "tab": "dayToDay",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "e9e8dba0-dbbe-4b34-8ce3-31b353e4736c",
+      "timestamp": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "itemId": "b452fc9d-9228-4929-88bf-ffebd0473d64",
+      "tab": "dayToDay",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "2f94c24b-81ac-4967-b32b-197c32460508",
+      "timestamp": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "itemId": "92f5b6cb-4874-48a5-a4fb-b86fa1b1098e",
+      "tab": "dayToDay",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "1a6875c7-a597-4f04-a95d-cc3b8348e256",
+      "timestamp": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "itemId": "b5f4f1c0-d612-4170-b799-fed88f26e724",
+      "tab": "dayToDay",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "ad4957f2-fd4f-4646-8c88-9808653b9490",
+      "timestamp": "2026-02-09T02:34:20.000Z"
+    },
+    {
+      "itemId": "ca19aabe-ef8c-4edc-9c35-ced2939d171b",
+      "tab": "hitMyGoal",
+      "type": "delete",
+      "id": "23a4cf66-593e-4b6a-8061-d928a54d2e82",
+      "timestamp": "2026-02-09T02:34:30.000Z"
+    },
+    {
+      "itemId": "c66e142c-995a-4269-8928-6de604115811",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "126c4a93-64b3-4912-9e29-e6e3ad0ed988",
+      "timestamp": "2026-02-09T02:34:32.000Z"
+    },
+    {
+      "itemId": "5ba180f1-c9e8-403b-9391-6cfb1b35f3dd",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "9f4dd1d6-cf40-4147-9a30-b650252eba1a",
+      "timestamp": "2026-02-09T02:34:33.000Z"
+    },
+    {
+      "itemId": "d98122f8-64a9-40f7-8dca-8b4b0b7ce455",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "8a96847f-40a8-4ed9-aac4-c50ceab35152",
+      "timestamp": "2026-02-09T02:34:34.000Z"
+    },
+    {
+      "itemId": "931d8533-b76a-4355-bc53-02587cb886fa",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 1,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "b7199ac3-8a61-4d38-b4e3-ee38c7279ba7",
+      "timestamp": "2026-02-09T02:34:36.000Z"
+    },
+    {
+      "itemId": "84338f48-cc5a-44c9-8553-92686ab3ed46",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "271a43f8-4e95-411b-9a26-4c88eb902473",
+      "timestamp": "2026-02-09T02:34:37.000Z"
+    },
+    {
+      "itemId": "36705742-2614-4337-bc94-388ba8e5797c",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "c37cf8f6-269b-4db3-b4b8-efd08f7ac3b7",
+      "timestamp": "2026-02-09T02:34:39.000Z"
+    },
+    {
+      "itemId": "6d75771a-edb8-4654-bc6b-29741fc26267",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "id": "5ad9c269-7c26-4358-bd9d-8cbf3377841b",
+      "timestamp": "2026-02-09T02:34:46.000Z"
+    },
+    {
+      "itemId": "59787faa-6b3e-4db4-81fe-97a24bac334f",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "20b257fa-6ec1-4c0f-ad44-e0de00f679b8",
+      "timestamp": "2026-02-09T02:34:47.000Z"
+    },
+    {
+      "itemId": "bd6910c0-2497-43d2-b9db-b4322b441bbd",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "2806466b-0e2f-4340-8faa-6966a9a0903d",
+      "timestamp": "2026-02-09T02:34:48.000Z"
+    },
+    {
+      "itemId": "537bc9c0-fbda-4da1-b934-3d46ed01e2ef",
+      "tab": "hitMyGoal",
+      "type": "complete",
+      "payload": {
+        "isDone": true,
+        "recurrence": {
+          "completedOccurrence": 2,
+          "totalOccurrences": null,
+          "reachedLimit": false,
+          "autoReset": true
+        }
+      },
+      "id": "224a9d0c-ead1-4df2-bf59-2a724486cc85",
+      "timestamp": "2026-02-09T02:34:50.000Z"
+    },
+    {
+      "itemId": "5ba180f1-c9e8-403b-9391-6cfb1b35f3dd",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "e1fd6430-8543-43c2-a705-5505b7649125",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "12a1e1f5-2aa7-4ace-8c86-285759a804ad",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "4a496b51-9e6b-42ea-bc10-86b923ec0da5",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "bad0377a-18f3-4dfe-9e98-1fcdc12e98ff",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "8fcf116d-1e4b-482c-a2cb-694fe99a8a01",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "c66e142c-995a-4269-8928-6de604115811",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "107eb422-bd6e-40bc-ac38-c059b99f5311",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "931d8533-b76a-4355-bc53-02587cb886fa",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "d0263501-ac73-4590-b6f4-663d4f1c317d",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "84338f48-cc5a-44c9-8553-92686ab3ed46",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "c77bd9cf-c624-4cd3-802b-e7306885c859",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "36705742-2614-4337-bc94-388ba8e5797c",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "c8edee6d-df53-4e26-880c-57be77082735",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "bd6910c0-2497-43d2-b9db-b4322b441bbd",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "c10f62e6-d215-410a-923b-e92f8f032f5c",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "537bc9c0-fbda-4da1-b934-3d46ed01e2ef",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "dc16cc88-a16b-4991-978e-3fc7dc6d98f7",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "d98122f8-64a9-40f7-8dca-8b4b0b7ce455",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "5d9f492b-40e7-4c9c-876e-210519c680a7",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "59787faa-6b3e-4db4-81fe-97a24bac334f",
+      "tab": "hitMyGoal",
+      "type": "archive",
+      "payload": {
+        "reason": "batch_archive_completed"
+      },
+      "id": "885d3709-c089-46cd-99a7-98b9b5e000aa",
+      "timestamp": "2026-02-09T02:34:52.000Z"
+    },
+    {
+      "itemId": "86388988-00de-4177-b2d7-2d1bba94e669",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "9dc191c7-49b5-4fe3-90fd-718a5a028ef6",
+      "timestamp": "2026-02-09T02:34:58.000Z"
+    },
+    {
+      "itemId": "77baea60-a7ec-4f85-8480-d8fa4fbd1c03",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "工作-20260208",
+        "categoryId": "sub-work",
+        "completedMinutes": 2700
+      },
+      "id": "9bb03bea-9428-48a6-9758-fa9f8c7f6b50",
+      "timestamp": "2026-02-09T02:35:10.000Z"
+    },
+    {
+      "itemId": "305ea35c-8c7f-433e-876f-23b85c9af4a0",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260208",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 420
+      },
+      "id": "c484368b-afd9-4023-819b-fa46ea4c0308",
+      "timestamp": "2026-02-09T02:35:15.000Z"
+    },
+    {
+      "itemId": "84ba1c4e-3d22-446e-a69a-69d1193baeb5",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "a308a22a-9b61-41af-8ca9-4df2772925b4",
+      "timestamp": "2026-02-09T02:35:21.000Z"
+    },
+    {
+      "itemId": "ca3bdc1f-c078-483a-95e2-52d72c61c70e",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "d8e8fa8c-a05c-4d79-a7be-cc594b688482",
+      "timestamp": "2026-02-09T02:35:22.000Z"
+    },
+    {
+      "itemId": "9bd31734-ca7d-4a2d-bb94-1d606e0fd3a9",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "AI微创业-20260208",
+        "categoryId": "sub-side-prep",
+        "completedMinutes": 60
+      },
+      "id": "f542dd24-666f-46d0-99e3-253816bff9b6",
+      "timestamp": "2026-02-09T02:35:28.000Z"
+    },
+    {
+      "itemId": "9bd31734-ca7d-4a2d-bb94-1d606e0fd3a9",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "b0bbdd3c-5d59-4692-a4bb-a7f2a4c70069",
+      "timestamp": "2026-02-09T02:35:29.000Z"
+    },
+    {
+      "itemId": "305ea35c-8c7f-433e-876f-23b85c9af4a0",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "bc52d130-ebae-4dd7-be35-f01accc7da1f",
+      "timestamp": "2026-02-09T02:35:30.000Z"
+    },
+    {
+      "itemId": "77baea60-a7ec-4f85-8480-d8fa4fbd1c03",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "b6c30f22-a87d-47e1-a9a5-b10d315d6aca",
+      "timestamp": "2026-02-09T02:35:31.000Z"
+    },
+    {
+      "itemId": "9c1dfacf-380f-4c91-be9c-b58d1ccc59fe",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "健身-20260208",
+        "categoryId": "sub-fitness",
+        "completedMinutes": 120
+      },
+      "id": "62df53cd-e858-43f0-8416-049ed37a9e5b",
+      "timestamp": "2026-02-09T02:35:37.000Z"
+    },
+    {
+      "itemId": "9c1dfacf-380f-4c91-be9c-b58d1ccc59fe",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "8223444f-07cd-48c6-bf14-4760a8a2ec29",
+      "timestamp": "2026-02-09T02:35:38.000Z"
+    },
+    {
+      "itemId": "8e397cea-31ae-4e51-8e12-6b68fb70052a",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260208",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 480
+      },
+      "id": "8b9328eb-466a-46d8-b77d-e4b167fad470",
+      "timestamp": "2026-02-09T02:35:43.000Z"
+    },
+    {
+      "itemId": "8e397cea-31ae-4e51-8e12-6b68fb70052a",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "8e124c01-4d4d-4ec7-be4a-0a30d2058bcf",
+      "timestamp": "2026-02-09T02:35:45.000Z"
+    },
+    {
+      "itemId": "2a7355dc-2d4b-4c94-a1a4-c498f8715f25",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260205",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 420
+      },
+      "id": "4e021f09-dd77-4cb1-8226-cc6eebb6a2b2",
+      "timestamp": "2026-02-09T02:35:51.000Z"
+    },
+    {
+      "itemId": "f260a88f-761c-4ea1-8e7c-196b35c259dd",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "陪娃玩-20260205",
+        "categoryId": "sub-childcare",
+        "completedMinutes": 180
+      },
+      "id": "461b7643-df57-438e-89f7-69e4ffa8e5aa",
+      "timestamp": "2026-02-09T02:36:00.000Z"
+    },
+    {
+      "itemId": "2a7355dc-2d4b-4c94-a1a4-c498f8715f25",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "75a5cf1f-74a8-4fc7-94e8-7a4fe2507377",
+      "timestamp": "2026-02-09T02:36:02.000Z"
+    },
+    {
+      "itemId": "f260a88f-761c-4ea1-8e7c-196b35c259dd",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "57513c14-48d1-4f37-83a4-c46ff202612f",
+      "timestamp": "2026-02-09T02:36:03.000Z"
+    },
+    {
+      "itemId": "306cb439-8965-45a7-a7a2-81c49006ed7f",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "3232ea71-c13d-40a4-acfe-7b087d218f9f",
+      "timestamp": "2026-02-09T02:36:05.000Z"
+    },
+    {
+      "itemId": "60fd856b-7d2c-4c1c-a3df-fd4057f0953d",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "243ba7ff-5355-422e-98d4-a1d1c0c66f82",
+      "timestamp": "2026-02-09T02:36:06.000Z"
+    },
+    {
+      "itemId": "f59b98dc-0e9a-41d8-ab54-02b8ad9e4bd6",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "13f462b0-5c48-40cc-9278-38ae28ee03df",
+      "timestamp": "2026-02-09T02:36:07.000Z"
+    },
+    {
+      "itemId": "9d9d95bf-0725-4fbb-a10a-71c750dac35d",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "9a16e30c-95be-4b06-be42-5f6ca681691e",
+      "timestamp": "2026-02-09T02:36:10.000Z"
+    },
+    {
+      "itemId": "3e2f360b-36fd-402b-ad0f-4a24a691bd95",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "3de3bb03-0df6-4f5c-a11c-b8b58fa372f5",
+      "timestamp": "2026-02-09T02:36:11.000Z"
+    },
+    {
+      "itemId": "5489b693-bc81-4645-b2b2-41f1bc36b6c6",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "6ce5d3f5-afdc-47b9-b0df-554bdef0d1b4",
+      "timestamp": "2026-02-09T02:36:12.000Z"
+    },
+    {
+      "itemId": "136e6e05-d2db-4d0e-b734-c8486add634b",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "e20f9cef-c095-4736-9291-a24c09df45c4",
+      "timestamp": "2026-02-09T02:36:13.000Z"
+    },
+    {
+      "itemId": "3256aa11-b5f0-470f-8f68-fff6fe668fe6",
+      "tab": "spendMyTime",
+      "type": "update",
+      "payload": {
+        "title": "睡觉-20260131",
+        "categoryId": "sub-sleep",
+        "completedMinutes": 420
+      },
+      "id": "4ed36bd7-597a-4cf1-b96d-0d82515f4c66",
+      "timestamp": "2026-02-09T02:36:19.000Z"
+    },
+    {
+      "itemId": "3256aa11-b5f0-470f-8f68-fff6fe668fe6",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "94d252b3-d235-48c7-8b65-b32287266d0f",
+      "timestamp": "2026-02-09T02:36:20.000Z"
+    },
+    {
+      "itemId": "3dd304b3-1aa1-4890-ab4f-243369ae9359",
+      "tab": "spendMyTime",
+      "type": "archive",
+      "id": "ec2c43d6-1e99-4f95-884d-c90d5e11902e",
+      "timestamp": "2026-02-09T02:36:23.000Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-default",
+      "name": "Default",
+      "color": "#3b82f6",
+      "subcategories": [
+        {
+          "id": "sub-default",
+          "name": "General",
+          "icon": "🔵",
+          "parentId": "cat-default"
+        }
+      ]
+    },
+    {
+      "id": "cat-daily-essentials",
+      "name": "必要日常",
+      "color": "#000000",
+      "subcategories": [
+        {
+          "id": "sub-sleep",
+          "name": "睡觉/休息",
+          "icon": "🛏️",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-work",
+          "name": "工作",
+          "icon": "💼",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-hygiene",
+          "name": "洗漱/臭美",
+          "icon": "💄",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-eating",
+          "name": "吃饭",
+          "icon": "🍽️",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-chores",
+          "name": "家务",
+          "icon": "🧹",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-commute",
+          "name": "通勤",
+          "icon": "🚗",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-family",
+          "name": "家庭",
+          "icon": "👨‍👩‍👧‍👦",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-medical",
+          "name": "医疗",
+          "icon": "💊",
+          "parentId": "cat-daily-essentials"
+        },
+        {
+          "id": "sub-other",
+          "name": "其他杂事",
+          "icon": "🛠️",
+          "parentId": "cat-daily-essentials"
+        }
+      ]
+    },
+    {
+      "id": "cat-side-business",
+      "name": "副业",
+      "color": "#eab308",
+      "subcategories": [
+        {
+          "id": "sub-side-prep",
+          "name": "副业筹备",
+          "icon": "🚀",
+          "parentId": "cat-side-business"
+        },
+        {
+          "id": "sub-job-change",
+          "name": "换工作",
+          "icon": "🔄",
+          "parentId": "cat-side-business"
+        },
+        {
+          "id": "sub-finance",
+          "name": "理财",
+          "icon": "💲",
+          "parentId": "cat-side-business"
+        },
+        {
+          "id": "sub-volunteer",
+          "name": "志愿",
+          "icon": "❤️",
+          "parentId": "cat-side-business"
+        }
+      ]
+    },
+    {
+      "id": "cat-growth",
+      "name": "兴趣/成长",
+      "color": "#10b981",
+      "subcategories": [
+        {
+          "id": "sub-fitness",
+          "name": "健身/按摩/拉伸",
+          "icon": "💪",
+          "parentId": "cat-growth"
+        },
+        {
+          "id": "sub-social",
+          "name": "社交/助人/seminar",
+          "icon": "🔑",
+          "parentId": "cat-growth"
+        },
+        {
+          "id": "sub-reading",
+          "name": "读书",
+          "icon": "📚",
+          "parentId": "cat-growth"
+        },
+        {
+          "id": "sub-learning",
+          "name": "专项学习",
+          "icon": "🎓",
+          "parentId": "cat-growth"
+        },
+        {
+          "id": "sub-planning",
+          "name": "规划",
+          "icon": "📋",
+          "parentId": "cat-growth"
+        },
+        {
+          "id": "sub-art",
+          "name": "艺术/爱好",
+          "icon": "🎨",
+          "parentId": "cat-growth"
+        },
+        {
+          "id": "sub-language",
+          "name": "语言学习",
+          "icon": "🌍",
+          "parentId": "cat-growth"
+        }
+      ]
+    },
+    {
+      "id": "cat-leisure",
+      "name": "休闲放松",
+      "color": "#ef4444",
+      "subcategories": [
+        {
+          "id": "sub-entertainment",
+          "name": "娱乐/购物",
+          "icon": "🎤",
+          "parentId": "cat-leisure"
+        },
+        {
+          "id": "sub-gathering",
+          "name": "聚会",
+          "icon": "🥂",
+          "parentId": "cat-leisure"
+        },
+        {
+          "id": "sub-travel",
+          "name": "旅行",
+          "icon": "✈️",
+          "parentId": "cat-leisure"
+        }
+      ]
+    },
+    {
+      "id": "cat-kids",
+      "name": "娃事相关",
+      "color": "#f97316",
+      "subcategories": [
+        {
+          "id": "sub-childcare",
+          "name": "带娃",
+          "icon": "👶",
+          "parentId": "cat-kids"
+        },
+        {
+          "id": "sub-education",
+          "name": "卷娃",
+          "icon": "🏆",
+          "parentId": "cat-kids"
+        },
+        {
+          "id": "sub-parenting",
+          "name": "育儿知识",
+          "icon": "🧩",
+          "parentId": "cat-kids"
+        },
+        {
+          "id": "sub-pregnancy",
+          "name": "孕产相关",
+          "icon": "🤰",
+          "parentId": "cat-kids"
+        }
+      ]
+    }
+  ]
+}

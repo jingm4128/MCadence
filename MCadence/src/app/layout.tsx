@@ -68,7 +68,7 @@ export default function RootLayout({
           </div>
         </AppStateProvider>
         
-        {/* Service Worker Registration */}
+        {/* Service Worker Registration with Update Check */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -77,6 +77,21 @@ export default function RootLayout({
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
                       console.log('SW registered: ', registration);
+                      
+                      // Check for updates every time
+                      registration.update();
+                      
+                      // Listen for updates
+                      registration.addEventListener('updatefound', function() {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', function() {
+                          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New service worker available, reload to get new content
+                            console.log('New service worker available, reloading...');
+                            window.location.reload();
+                          }
+                        });
+                      });
                     })
                     .catch(function(registrationError) {
                       console.log('SW registration failed: ', registrationError);
