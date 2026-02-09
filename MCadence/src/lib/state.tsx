@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings, WeekStartDay } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE, ITEM_STATUS } from './constants';
-import { saveState, loadState, loadSettings } from './storage';
+import { saveState, loadState, loadStateAsync, loadSettings } from './storage';
 import { generateId } from '@/utils/uuid';
 import {
   toISOStringLocal,
@@ -317,12 +317,58 @@ const AppStateContext = createContext<{
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appStateReducer, { items: [], actions: [], categories: DEFAULT_CATEGORIES });
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Track if we've already processed recurring items to prevent infinite loops
+  const [processedOnce, setProcessedOnce] = useState(false);
 
-  // Load state from localStorage on mount
+  // Load state from localStorage on mount (async to prevent blocking on large data)
   useEffect(() => {
-    const loadedState = loadState();
-    dispatch({ type: 'LOAD_STATE', payload: loadedState });
-    setIsHydrated(true);
+    let cancelled = false;
+    let timeoutId: NodeJS.Timeout;
+    
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Set a maximum timeout of 30 seconds to prevent infinite loading
+        timeoutId = setTimeout(() => {
+          if (!cancelled) {
+            console.warn('Loading timeout exceeded (30s). Falling back to empty state.');
+            dispatch({ type: 'LOAD_STATE', payload: { items: [], actions: [], categories: DEFAULT_CATEGORIES } });
+            setIsHydrated(true);
+            setIsLoading(false);
+          }
+        }, 30000);
+        
+        // Use async loading to prevent blocking the main thread
+        const loadedState = await loadStateAsync();
+        
+        if (!cancelled) {
+          clearTimeout(timeoutId);
+          dispatch({ type: 'LOAD_STATE', payload: loadedState });
+          setIsHydrated(true);
+          setIsLoading(false);
+          console.log('State loaded successfully. Items:', loadedState.items.length, 'Actions:', loadedState.actions.length);
+        }
+      } catch (error) {
+        console.error('Failed to load state:', error);
+        if (!cancelled) {
+          clearTimeout(timeoutId);
+          // Fallback to empty state on error
+          dispatch({ type: 'LOAD_STATE', payload: { items: [], actions: [], categories: DEFAULT_CATEGORIES } });
+          setIsHydrated(true);
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   // Save state to localStorage whenever it changes (only after hydration)
@@ -334,9 +380,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state, isHydrated]);
 
-  // Check for weekly period reset
+  // Check for weekly period reset (ONLY ONCE after hydration to prevent infinite loop)
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || processedOnce) return;
     
     const timeItems = state.items.filter((item): item is TimeItem => 'periodEnd' in item);
     const needsReset = timeItems.some(item => needsWeekReset(item.periodEnd));
@@ -344,23 +390,27 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     if (needsReset) {
       dispatch({ type: 'RESET_WEEKLY_PERIODS' });
     }
-  }, [state.items, isHydrated]);
+  }, [isHydrated, processedOnce]);
 
   // Auto-create new period items when period passes (for date-tagged recurring items)
+  // Deferred to prevent blocking UI on large datasets
+  // ONLY RUNS ONCE after hydration to prevent infinite loop
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || processedOnce) return;
     
-    // Find all recurring items with periodKey
-    // Note: We include archived items because we still want to create new period items
-    // for recurring tasks even if the previous period's item was archived
-    // But we exclude deleted items - they should not generate new occurrences
-    const recurringItems = state.items.filter(item =>
-      item.periodKey &&
-      item.recurrence &&
-      !item.isDeleted
-    );
-    
-    if (recurringItems.length === 0) return;
+    // Defer processing to not block UI on initial load
+    const timeoutId = setTimeout(() => {
+      // Find all recurring items with periodKey
+      // Note: We include archived items because we still want to create new period items
+      // for recurring tasks even if the previous period's item was archived
+      // But we exclude deleted items - they should not generate new occurrences
+      const recurringItems = state.items.filter(item =>
+        item.periodKey &&
+        item.recurrence &&
+        !item.isDeleted
+      );
+      
+      if (recurringItems.length === 0) return;
     
     const newItems: Item[] = [];
     const updates: { id: string; updates: Partial<Item> }[] = [];
@@ -474,23 +524,39 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           },
         };
         newItems.push(newTimeItem);
+        }
       }
-    }
+      
+      // Dispatch updates for old items (mark as missed)
+      if (updates.length > 0) {
+        dispatch({ type: 'UPDATE_ITEMS', payload: updates });
+      }
+      
+      // Dispatch new items
+      if (newItems.length > 0) {
+        dispatch({ type: 'ADD_ITEMS', payload: newItems });
+      }
+      
+      // Mark as processed to prevent re-running
+      setProcessedOnce(true);
+    }, 100); // 100ms delay to let UI render first
     
-    // Dispatch updates for old items (mark as missed)
-    if (updates.length > 0) {
-      dispatch({ type: 'UPDATE_ITEMS', payload: updates });
-    }
-    
-    // Dispatch new items
-    if (newItems.length > 0) {
-      dispatch({ type: 'ADD_ITEMS', payload: newItems });
-    }
-  }, [state.items, isHydrated]);
+    return () => clearTimeout(timeoutId);
+  }, [isHydrated, processedOnce]);
 
   return (
     <AppStateContext.Provider value={{ state, dispatch, isHydrated }}>
-      {children}
+      {isLoading ? (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your data...</p>
+            <p className="text-sm text-gray-500 mt-2">This may take a moment for large datasets</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AppStateContext.Provider>
   );
 }

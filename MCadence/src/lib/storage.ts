@@ -11,7 +11,7 @@ export const SETTINGS_STORAGE_KEY = 'mcadence_settings_v1';
 // Storage key for backup folder path
 export const BACKUP_FOLDER_KEY = 'mcadence_backup_folder';
 
-// Read state from localStorage
+// Read state from localStorage (synchronous - kept for compatibility)
 export function loadState(): AppState {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -36,6 +36,46 @@ export function loadState(): AppState {
     console.error('Error loading state from localStorage:', error);
     return { items: [], actions: [], categories: [] };
   }
+}
+
+// Async version of loadState for large datasets - prevents UI blocking
+export async function loadStateAsync(): Promise<AppState> {
+  return new Promise((resolve) => {
+    // Use setTimeout to yield to the browser and prevent blocking
+    setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          resolve({ items: [], actions: [], categories: [] });
+          return;
+        }
+        
+        // Check size - if data is large, warn
+        const sizeInMB = new Blob([stored]).size / (1024 * 1024);
+        if (sizeInMB > 1) {
+          console.log(`Loading large dataset: ${sizeInMB.toFixed(2)}MB`);
+        }
+        
+        const parsed = JSON.parse(stored);
+        
+        // Validate the parsed state
+        if (!parsed || !Array.isArray(parsed.items) || !Array.isArray(parsed.actions)) {
+          console.warn('Invalid state structure in localStorage, initializing empty state');
+          resolve({ items: [], actions: [], categories: [] });
+          return;
+        }
+        
+        resolve({
+          items: parsed.items || [],
+          actions: parsed.actions || [],
+          categories: parsed.categories || []
+        });
+      } catch (error) {
+        console.error('Error loading state from localStorage:', error);
+        resolve({ items: [], actions: [], categories: [] });
+      }
+    }, 0);
+  });
 }
 
 // Check if there is any meaningful data (items) in localStorage
@@ -102,9 +142,16 @@ export function saveState(state: AppState): void {
   
   saveTimeout = setTimeout(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      console.error('Error saving state to localStorage:', error);
+      const dataString = JSON.stringify(state);
+      localStorage.setItem(STORAGE_KEY, dataString);
+    } catch (error: any) {
+      // Handle quota exceeded error
+      if (error.name === 'QuotaExceededError' || error.code === 22) {
+        console.error('LocalStorage quota exceeded. Data size:', new Blob([JSON.stringify(state)]).size / (1024 * 1024), 'MB');
+        alert('Storage quota exceeded. Please archive or delete old items to free up space.');
+      } else {
+        console.error('Error saving state to localStorage:', error);
+      }
     }
   }, DEBOUNCE_MS);
 }
@@ -112,9 +159,16 @@ export function saveState(state: AppState): void {
 // Force immediate save (bypass debounce)
 export function saveStateImmediate(state: AppState): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (error) {
-    console.error('Error saving state to localStorage:', error);
+    const dataString = JSON.stringify(state);
+    localStorage.setItem(STORAGE_KEY, dataString);
+  } catch (error: any) {
+    // Handle quota exceeded error
+    if (error.name === 'QuotaExceededError' || error.code === 22) {
+      console.error('LocalStorage quota exceeded. Data size:', new Blob([JSON.stringify(state)]).size / (1024 * 1024), 'MB');
+      alert('Storage quota exceeded. Please archive or delete old items to free up space.');
+    } else {
+      console.error('Error saving state to localStorage:', error);
+    }
   }
 }
 
