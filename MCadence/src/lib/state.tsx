@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useState, useCallback } from 'react';
 import { AppState, Item, ChecklistItem, TimeItem, ActionLog, TabId, ChecklistItemForm, TimeItemForm, RecurrenceSettings, RecurrenceFormSettings, WeekStartDay } from './types';
 import { DEFAULT_CATEGORIES, DEFAULT_TIMEZONE, ITEM_STATUS } from './constants';
-import { saveState, loadState, loadSettings } from './storage';
+import { saveState, loadState, loadStateAsync, loadSettings } from './storage';
 import { generateId } from '@/utils/uuid';
 import {
   toISOStringLocal,
@@ -317,12 +317,39 @@ const AppStateContext = createContext<{
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(appStateReducer, { items: [], actions: [], categories: DEFAULT_CATEGORIES });
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load state from localStorage on mount
+  // Load state from localStorage on mount (async to prevent blocking on large data)
   useEffect(() => {
-    const loadedState = loadState();
-    dispatch({ type: 'LOAD_STATE', payload: loadedState });
-    setIsHydrated(true);
+    let cancelled = false;
+    
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        // Use async loading to prevent blocking the main thread
+        const loadedState = await loadStateAsync();
+        
+        if (!cancelled) {
+          dispatch({ type: 'LOAD_STATE', payload: loadedState });
+          setIsHydrated(true);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Failed to load state:', error);
+        if (!cancelled) {
+          // Fallback to empty state on error
+          dispatch({ type: 'LOAD_STATE', payload: { items: [], actions: [], categories: DEFAULT_CATEGORIES } });
+          setIsHydrated(true);
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Save state to localStorage whenever it changes (only after hydration)
@@ -490,7 +517,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppStateContext.Provider value={{ state, dispatch, isHydrated }}>
-      {children}
+      {isLoading ? (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your data...</p>
+            <p className="text-sm text-gray-500 mt-2">This may take a moment for large datasets</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AppStateContext.Provider>
   );
 }
