@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mcadence-v2';
+const CACHE_NAME = 'mcadence-v3';
 const urlsToCache = [
   '/',
   '/manifest.json',
